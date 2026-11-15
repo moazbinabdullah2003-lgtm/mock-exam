@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>MCQ Mock Exam</title>
+<style>
+:root{--p:#4f46e5;--pl:#eef2ff;--g:#16a34a;--gl:#dcfce7;--r:#dc2626;--rl:#fee2e2;--t:#111827;--m:#6b7280;--b:#e5e7eb;--bg:#f3f4f6}
+*{box-sizing:border-box}
+body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans Bengali",sans-serif;background:var(--bg);color:var(--t);line-height:1.45}
+#app{max-width:760px;margin:0 auto;padding:12px 12px 40px}
+.card{background:#fff;border-radius:14px;padding:16px;margin:12px 0;box-shadow:0 1px 3px rgba(0,0,0,.08)}
+h1{font-size:22px;margin:8px 0}h2{font-size:17px;margin:0 0 10px}h3{font-size:15px;margin:14px 0 6px}
+.muted,small{color:var(--m);font-size:13px}
+input,select{width:100%;padding:12px;font-size:16px;border:1px solid var(--b);border-radius:10px;margin:6px 0;background:#fff}
+.btn{background:var(--p);color:#fff;border:0;border-radius:10px;padding:12px 18px;font-size:15px;font-weight:600;cursor:pointer}
+.btn.ghost{background:var(--pl);color:var(--p)}.btn.full{width:100%;margin-top:10px}.btn.red{background:var(--r)}.btn.sm{padding:7px 12px;font-size:13px}
+.btn:disabled{opacity:.4}
+.link{background:none;border:0;color:var(--p);font-size:14px;cursor:pointer;padding:6px}
+.row{display:flex;gap:8px;align-items:center;justify-content:space-between;margin-top:14px;flex-wrap:wrap}
+.top{display:flex;justify-content:space-between;align-items:center;gap:8px;position:sticky;top:0;background:var(--bg);padding:8px 0;z-index:5}
+.tm{font-weight:700;font-size:18px;background:#fff;border-radius:10px;padding:6px 12px;font-variant-numeric:tabular-nums}.tm.low{color:var(--r)}
+.q{font-size:17px;font-weight:600;margin:8px 0 12px}
+.opt{display:flex;gap:10px;align-items:flex-start;width:100%;text-align:left;background:#fff;border:2px solid var(--b);border-radius:12px;padding:12px;margin:8px 0;font-size:15px;cursor:pointer;color:var(--t)}
+.opt.sel{border-color:var(--p);background:var(--pl)}
+.opt.ok{border-color:var(--g);background:var(--gl)}.opt.bad{border-color:var(--r);background:var(--rl)}
+.L{font-weight:700;min-width:22px;color:var(--p)}
+.pal{display:flex;flex-wrap:wrap;gap:6px}
+.pn{width:38px;height:38px;border-radius:8px;border:1px solid var(--b);background:#fff;font-size:14px;cursor:pointer}
+.pn.done{background:var(--p);color:#fff;border-color:var(--p)}.pn.cur{outline:3px solid #a5b4fc}
+.stats{display:flex;gap:8px}.stat{flex:1;background:var(--pl);border-radius:12px;padding:10px;text-align:center}.stat b{display:block;font-size:20px}
+.bar{height:10px;background:var(--b);border-radius:6px;overflow:hidden}.bar i{display:block;height:100%}
+.trow{display:grid;grid-template-columns:1fr 80px 46px;gap:8px;align-items:center;margin:7px 0;font-size:14px}
+.hist{border-top:1px solid var(--b);padding:10px 0;display:flex;justify-content:space-between;gap:8px;align-items:center;font-size:14px}
+.tag{font-size:11px;background:var(--pl);color:var(--p);border-radius:6px;padding:2px 6px;margin-left:4px}
+.tr{display:flex;align-items:flex-end;gap:4px;height:70px}.tr div{flex:1;border-radius:4px 4px 0 0;min-width:8px;background:var(--p);position:relative}
+.err{color:var(--r);font-size:14px;margin:6px 0}.warn{background:#fef9c3;border-radius:10px;padding:10px;font-size:13px;margin:8px 0}
+.big{font-size:42px;font-weight:800;color:var(--p);text-align:center;margin:0}
+.exp{background:#f9fafb;border-radius:8px;padding:8px;font-size:13px;margin-top:6px}
+.scroll{overflow-x:auto}table{border-collapse:collapse;font-size:13px;width:100%}th,td{padding:6px 8px;border-bottom:1px solid var(--b);text-align:left;white-space:nowrap}
+td.h{text-align:center;font-weight:600}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;padding:20px;z-index:20}
+.modal .card{max-width:380px;width:100%}
+tr.click{cursor:pointer}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+/* ============================================================
+   CONFIG  (teacher only edits this part)
+   ============================================================ */
+const CONFIG = {
+  // RECOMMENDED: Google Apps Script Web App URL (Code.gs deploy করার পর যে /exec link পাবে)
+  SCRIPT_URL: "https://script.google.com/macros/s/AKfycbx2xuErMRJf9XPij0Yt28hqLXf79oAN3MnQva2ERw4rTJLQsFrkmQwO6qpFxTCG3IRPjw/exec",
+  // (পুরোনো Form পদ্ধতি — SCRIPT_URL থাকলে দরকার নেই) Google Form "Get pre-filled link" (see setup steps). Dummy values must be: SID,NAME,EXAM,AID,MODE,SCORE,TOTAL,SECS,DETAILS
+  PREFILLED_LINK: "",
+  // Google Sheet -> File -> Share -> Publish to web -> (Form Responses sheet) -> CSV -> paste link
+  SHEET_CSV_URL: "",
+  TEACHER_PASS: "teacher123"
+};
+
+/* Exam code (UPPERCASE) -> exam.
+   minutes: timer | neg: negative mark per wrong (0 = none) | shuffle: question order random | open:false = close the exam
+   Question: q = text, o = options, a = correct option index (0 = first), t = topic, e = explanation (optional) */
+const EXAMS = {
+  "DEMO1": {
+    title: "Demo Mock Test", minutes: 5, neg: 0, shuffle: true, open: true,
+    questions: [
+      {q:"2x + 3 = 11 হলে x = ?", o:["2","3","4","5"], a:2, t:"Algebra", e:"2x = 8, x = 4"},
+      {q:"sin 30° = ?", o:["1/2","√3/2","1","0"], a:0, t:"Trigonometry", e:"sin 30° = 1/2"},
+      {q:"d/dx (x²) = ?", o:["x","2x","x²","2"], a:1, t:"Calculus", e:"Power rule"},
+      {q:"x² − 5x + 6 = 0 এর roots কী?", o:["1,6","2,3","−2,−3","−1,6"], a:1, t:"Algebra", e:"(x−2)(x−3)=0"},
+      {q:"cos 0° = ?", o:["0","1/2","1","−1"], a:2, t:"Trigonometry", e:"cos 0° = 1"},
+      {q:"∫ 2x dx = ?", o:["x²+C","2x²+C","x+C","2+C"], a:0, t:"Calculus", e:"∫2x dx = x² + C"}
+    ]
+  }
+};
+
+/* ============================================================
+   Helpers
+   ============================================================ */
+const $ = s => document.querySelector(s);
+const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])).replace(/\n/g,'<br>');
+const norm = s => String(s == null ? '' : s).trim().toUpperCase().replace(/^0+(?=\d)/, '');
+const LS = {
+  get(k, d){ try{ const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; }catch(e){ return d; } },
+  set(k, v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} },
+  del(k){ try{ localStorage.removeItem(k); }catch(e){} }
+};
+const fmt = s => { s = Math.max(0, Math.round(s)); const h = Math.floor(s/3600), m = Math.floor(s%3600/60), x = s%60; return (h ? h+':' : '') + String(m).padStart(h?2:1,'0') + ':' + String(x).padStart(2,'0'); };
+const pct = r => r.total ? Math.round(r.score / r.total * 100) : 0;
+const avg = a => a.length ? Math.round(a.reduce((x,y)=>x+y,0) / a.length) : 0;
+const heat = p => `hsl(${Math.round(Math.max(0,Math.min(1,p))*120)},65%,82%)`;
+const shuffle = a => { for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; };
+const aidTime = aid => parseInt(String(aid).slice(0,-2), 36) || 0;
+const newAid = () => Date.now().toString(36) + Math.floor(Math.random()*1296).toString(36).padStart(2,'0');
+const LET = 'ABCDEFGH';
+
+function parseCSV(t){
+  const rows=[]; let r=[], c='', q=false;
+  for(let i=0;i<t.length;i++){
+    const ch=t[i];
+    if(q){ if(ch==='"'){ if(t[i+1]==='"'){ c+='"'; i++; } else q=false; } else c+=ch; }
+    else if(ch==='"') q=true;
+    else if(ch===','){ r.push(c); c=''; }
+    else if(ch==='\n'){ r.push(c); rows.push(r); r=[]; c=''; }
+    else if(ch!=='\r') c+=ch;
+  }
+  if(c!==''||r.length){ r.push(c); rows.push(r); }
+  return rows;
+}
+
+/* ============================================================
+   Google Form (write) + Published Sheet (read)
+   ============================================================ */
+const FORM = (() => {
+  try{
+    const u = new URL(CONFIG.PREFILLED_LINK), map = {};
+    u.searchParams.forEach((v,k) => { if(k.indexOf('entry.')===0) map[String(v).toUpperCase()] = k; });
+    return { action: u.origin + u.pathname.replace(/\/viewform.*$/, '/formResponse'), map };
+  }catch(e){ return null; }
+})();
+
+const CAN_SYNC = () => !!(CONFIG.SCRIPT_URL || FORM);
+async function send(rec){
+  if(CONFIG.SCRIPT_URL){
+    const b = new URLSearchParams({sid:rec.sid,name:rec.name,exam:rec.exam,aid:rec.aid,mode:rec.mode,score:rec.score,total:rec.total,secs:rec.secs,details:JSON.stringify(rec.d)});
+    try{
+      await fetch(CONFIG.SCRIPT_URL, {method:'POST', mode:'no-cors', headers:{'Content-Type':'application/x-www-form-urlencoded'}, body:b});
+      return true;
+    }catch(e){ return false; }
+  }
+  if(!FORM) return false;
+  const v = {SID:rec.sid,NAME:rec.name,EXAM:rec.exam,AID:rec.aid,MODE:rec.mode,SCORE:rec.score,TOTAL:rec.total,SECS:rec.secs,DETAILS:JSON.stringify(rec.d)};
+  const b = new URLSearchParams();
+  for(const k in v){ if(!FORM.map[k]) return false; b.append(FORM.map[k], v[k]); }
+  try{
+    await fetch(FORM.action, {method:'POST', mode:'no-cors', headers:{'Content-Type':'application/x-www-form-urlencoded'}, body:b});
+    return true;
+  }catch(e){ return false; }
+}
+let flushing = false;
+async function flush(){
+  if(flushing) return -1;
+  flushing = true;
+  try{
+    const ob = LS.get('mq_out', []), rest = [];
+    for(const r of ob){ if(!(await send(r))) rest.push(r); }
+    LS.set('mq_out', rest);
+    return rest.length;
+  } finally { flushing = false; }
+}
+
+let REMOTE = [], remoteMsg = '';
+async function loadRemote(){
+  if(CONFIG.SCRIPT_URL){
+    if(!SESS) return;
+    try{
+      const u = CONFIG.SCRIPT_URL + '?' + (SESS.teacher ? 'key=' + encodeURIComponent(CONFIG.TEACHER_PASS) : 'sid=' + encodeURIComponent(SESS.sid)) + '&t=' + Date.now();
+      const arr = await (await fetch(u)).json();
+      REMOTE = arr.map(r => {
+        let d = []; try{ d = JSON.parse(r.details); }catch(e){}
+        return {sid:norm(r.sid),name:r.name,exam:String(r.exam||'').trim().toUpperCase(),aid:String(r.aid||'').trim(),mode:r.mode,score:parseFloat(r.score)||0,total:parseInt(r.total)||0,secs:parseInt(r.secs)||0,d:Array.isArray(d)?d:[]};
+      }).filter(x => x.aid && x.d.length);
+      remoteMsg = '';
+    }catch(e){ remoteMsg = 'Server থেকে data আনা যায়নি (offline? বা Script deploy ঠিক নেই)'; }
+    return;
+  }
+  if(!CONFIG.SHEET_CSV_URL){ remoteMsg = 'Sheet URL set করা নেই (শুধু এই device-এর data দেখাচ্ছে)'; return; }
+  try{
+    const u = CONFIG.SHEET_CSV_URL + (CONFIG.SHEET_CSV_URL.indexOf('?')>=0 ? '&' : '?') + 't=' + Date.now();
+    const res = await fetch(u);
+    const rows = parseCSV(await res.text());
+    const h = rows[0].map(x => x.trim().toUpperCase());
+    const col = (k, i) => { const j = h.indexOf(k); return j >= 0 ? j : i; };
+    const C = {sid:col('SID',1),name:col('NAME',2),exam:col('EXAM',3),aid:col('AID',4),mode:col('MODE',5),score:col('SCORE',6),total:col('TOTAL',7),secs:col('SECS',8),d:col('DETAILS',9)};
+    REMOTE = rows.slice(1).map(r => {
+      let d = []; try{ d = JSON.parse(r[C.d]); }catch(e){}
+      return {sid:norm(r[C.sid]),name:r[C.name],exam:String(r[C.exam]||'').trim().toUpperCase(),aid:String(r[C.aid]||'').trim(),mode:r[C.mode],score:parseFloat(r[C.score])||0,total:parseInt(r[C.total])||0,secs:parseInt(r[C.secs])||0,d:Array.isArray(d)?d:[]};
+    }).filter(x => x.aid && x.d.length);
+    remoteMsg = '';
+  }catch(e){ remoteMsg = 'Sheet load হয়নি (offline, বা Sheet publish করা হয়নি)'; }
+}
+function allRecs(){
+  const m = new Map();
+  [...REMOTE, ...LS.get('mq_local', [])].forEach(r => { if(!m.has(r.aid)) m.set(r.aid, r); });
+  return [...m.values()].sort((a,b) => aidTime(a.aid) - aidTime(b.aid));
+}
+
+/* ============================================================
+   Analytics
+   ============================================================ */
+const qinfo = (exam, i) => EXAMS[exam] && EXAMS[exam].questions[i];
+function topicStats(recs){
+  const m = {};
+  recs.forEach(r => r.d.forEach(([i,c,ok]) => {
+    const q = qinfo(r.exam, i), t = (q && q.t) || 'General';
+    const o = m[t] = m[t] || {t, n:0, ok:0};
+    o.n++; o.ok += ok ? 1 : 0;
+  }));
+  return Object.values(m).map(x => ({...x, p: x.ok / x.n})).sort((a,b) => a.p - b.p);
+}
+function wrongIdx(sid, exam){
+  const st = {};
+  allRecs().filter(r => norm(r.sid) === norm(sid) && r.exam === exam).forEach(r => r.d.forEach(([i,c,ok]) => { st[i] = ok; }));
+  return Object.keys(st).filter(i => !st[i]).map(Number);
+}
+
+/* ============================================================
+   State
+   ============================================================ */
+let SESS = LS.get('mq_sess', null), RUN = LS.get('mq_run', null);
+let view = 'login', BACK = 'home', LAST = null, TM = null, TF = '', TSTU = null;
+let msg = '', loading = false, confirming = false, syncMsg = '', showT = false;
+
+function render(keep){
+  const a = $('#app');
+  if(!a) return;
+  let h = '';
+  if(view === 'login') h = vLogin();
+  else if(view === 'home') h = vHome();
+  else if(view === 'quiz') h = vQuiz();
+  else if(view === 'result') h = vResult(LAST);
+  else if(view === 'teacher') h = vTeacher();
+  a.innerHTML = h;
+  if(view === 'quiz') tick();
+  if(!keep) window.scrollTo(0, 0);
+}
+
+/* ============================================================
+   Views
+   ============================================================ */
+function banner(){
+  let s = '';
+  if(!CAN_SYNC()) s += '<div class="warn">⚠ Script URL / Google Form link set করা নেই — result শুধু এই device-এ save হবে।</div>';
+  return s;
+}
+function vLogin(){
+  return `<h1>📝 MCQ Mock Exam</h1>${banner()}
+  <div class="card">
+    ${showT ? `<h2>Teacher login</h2>
+      <input id="tp" type="password" placeholder="Teacher password">
+      <div class="err">${esc(msg)}</div>
+      <button class="btn full" onclick="doTeacher()">Login</button>
+      <div class="row"><button class="link" onclick="showT=false;msg='';render()">← Student login</button></div>`
+    : `<h2>Student login</h2>
+      <input id="sid" placeholder="Student ID / Roll" autocomplete="off">
+      <input id="nm" placeholder="Name" autocomplete="off">
+      <div class="err">${esc(msg)}</div>
+      <button class="btn full" onclick="doLogin()">Continue</button>
+      <div class="row"><span></span><button class="link" onclick="showT=true;msg='';render()">Teacher login</button></div>`}
+  </div>`;
+}
+function doLogin(){
+  const sid = norm($('#sid').value), name = $('#nm').value.trim();
+  if(!sid || !name){ msg = 'ID আর Name দুটোই দাও'; return render(true); }
+  SESS = {sid, name, teacher:false}; LS.set('mq_sess', SESS); msg = ''; view = 'home'; render(); refresh();
+}
+function doTeacher(){
+  if($('#tp').value !== CONFIG.TEACHER_PASS){ msg = 'Wrong password'; return render(true); }
+  SESS = {sid:'TEACHER', name:'Teacher', teacher:true}; LS.set('mq_sess', SESS); msg = ''; view = 'teacher'; render(); refresh();
+}
+function logout(){ SESS = null; LS.del('mq_sess'); view = 'login'; showT = false; TSTU = null; render(); }
+async function refresh(){
+  loading = true; render(true);
+  await loadRemote(); await flush();
+  loading = false;
+  if(view === 'home' || view === 'teacher') render(true);
+}
+
+function vHome(){
+  const s = SESS;
+  return `<div class="top"><div><b>${esc(s.name)}</b> <small>ID: ${esc(s.sid)}</small></div><button class="link" onclick="logout()">Logout</button></div>
+  ${banner()}
+  <div class="card"><h2>Start exam</h2>
+    <input id="code" placeholder="Exam code" autocapitalize="characters" autocomplete="off">
+    <div class="err">${esc(msg)}</div>
+    <button class="btn full" onclick="startCode()">Start ▶</button>
+  </div>
+  ${vBoard(s.sid, false)}`;
+}
+function startCode(){
+  const c = $('#code').value.trim().toUpperCase(), e = EXAMS[c];
+  if(!e){ msg = 'Exam code ভুল'; return render(true); }
+  if(e.open === false){ msg = 'এই exam এখন বন্ধ'; return render(true); }
+  msg = ''; startRun(c, 'full');
+}
+function startRun(exam, mode, idxs){
+  const e = EXAMS[exam];
+  let order = idxs && idxs.length ? idxs.slice() : e.questions.map((_, i) => i);
+  if(e.shuffle !== false) shuffle(order);
+  const perQ = e.minutes * 60 / e.questions.length;
+  const dur = mode === 'mistakes' ? Math.max(60, Math.ceil(order.length * perQ)) : e.minutes * 60;
+  RUN = {sid:SESS.sid, name:SESS.name, exam, mode, order, ans:{}, secs:{}, cur:0, start:Date.now(), dur, last:Date.now()};
+  LS.set('mq_run', RUN); confirming = false; view = 'quiz'; render(); startTimer();
+}
+function retake(exam, mode){
+  const e = EXAMS[exam];
+  if(!e) return;
+  if(mode === 'mistakes'){
+    const w = wrongIdx(SESS.sid, exam);
+    if(!w.length){ msg = 'কোনো ভুল নেই 🎉'; return render(); }
+    startRun(exam, 'mistakes', w);
+  } else startRun(exam, 'full');
+}
+
+/* ---------- Dashboard (student; teacher reuses) ---------- */
+function vBoard(sid, isT){
+  const recs = allRecs().filter(r => norm(r.sid) === norm(sid));
+  let h = '';
+  if(remoteMsg) h += `<div class="warn">${esc(remoteMsg)}</div>`;
+  h += `<div class="row" style="margin:0"><h2 style="margin:0">${isT ? esc((recs[recs.length-1]||{}).name || sid) + ' — ' : ''}My Analytics</h2><button class="btn ghost sm" onclick="refresh()">${loading ? 'Syncing…' : '↻ Refresh'}</button></div>`;
+  if(!recs.length) return h + '<div class="card muted">এখনো কোনো attempt নেই। Exam code দিয়ে শুরু করো।</div>';
+  const ps = recs.map(pct), ts = topicStats(recs);
+  h += `<div class="card"><div class="stats">
+    <div class="stat"><b>${recs.length}</b><small>Attempts</small></div>
+    <div class="stat"><b>${avg(ps)}%</b><small>Average</small></div>
+    <div class="stat"><b>${Math.max(...ps)}%</b><small>Best</small></div></div>
+    <h3>Trend (last ${Math.min(12, ps.length)})</h3>
+    <div class="tr">${ps.slice(-12).map(p => `<div style="height:${Math.max(4,Math.min(100,p))}%" title="${p}%"></div>`).join('')}</div></div>`;
+  const weak = ts.filter(t => t.p < 0.8).slice(0, 5);
+  h += `<div class="card"><h2>🎯 Focus next</h2>${weak.length ? '' : '<div class="muted">সব topic ভালো আছে 👍</div>'}` +
+    ts.map(t => `<div class="trow"><span>${esc(t.t)}</span><div class="bar"><i style="width:${Math.round(t.p*100)}%;background:${t.p<0.5?'var(--r)':t.p<0.8?'#f59e0b':'var(--g)'}"></i></div><b>${Math.round(t.p*100)}%</b></div>`).join('') +
+    `<small class="muted">${ts.map(t => t.ok + '/' + t.n).length ? 'সবচেয়ে দুর্বল topic উপরে' : ''}</small></div>`;
+  if(!isT){
+    const exams = [...new Set(recs.map(r => r.exam))].filter(c => EXAMS[c]);
+    if(exams.length){
+      h += `<div class="card"><h2>🔁 Retake</h2>` + exams.map(c => {
+        const w = wrongIdx(sid, c).length;
+        return `<div class="hist"><div><b>${esc(EXAMS[c].title)}</b> <small>${esc(c)}</small></div><div>
+          <button class="btn sm ghost" ${w ? '' : 'disabled'} data-c="${esc(c)}" onclick="retake(this.dataset.c,'mistakes')">Mistakes (${w})</button>
+          <button class="btn sm" data-c="${esc(c)}" onclick="retake(this.dataset.c,'full')">Full</button></div></div>`;
+      }).join('') + '</div>';
+    }
+  }
+  h += `<div class="card"><h2>History</h2>` + recs.slice().reverse().map(r =>
+    `<div class="hist"><div><b>${esc(r.exam)}</b>${r.mode==='mistakes'?'<span class="tag">mistakes</span>':''}<br><small>${new Date(aidTime(r.aid)).toLocaleString()} · ${fmt(r.secs)}</small></div>
+     <div style="text-align:right"><b>${r.score}/${r.total}</b> <small>(${pct(r)}%)</small><br><button class="link" data-a="${esc(r.aid)}" onclick="openRec(this.dataset.a)">Review</button></div></div>`).join('') + '</div>';
+  return h;
+}
+function openRec(aid){
+  const r = allRecs().find(x => x.aid === aid);
+  if(!r) return;
+  BACK = SESS && SESS.teacher ? 'teacher' : 'home'; LAST = r; view = 'result'; render();
+}
+
+/* ---------- Quiz ---------- */
+function vQuiz(){
+  const e = EXAMS[RUN.exam], p = RUN.cur, last = RUN.order.length - 1, q = e.questions[RUN.order[p]], a = RUN.ans[p];
+  const un = RUN.order.length - Object.keys(RUN.ans).length;
+  return `<div class="top"><div><b>${esc(e.title)}</b>${RUN.mode==='mistakes'?'<span class="tag">mistakes</span>':''}</div><div id="tm" class="tm"></div></div>
+  <div class="card"><div class="muted">Question ${p+1} / ${last+1}</div><div class="q">${esc(q.q)}</div>
+    ${q.o.map((o,i) => `<button class="opt ${a===i?'sel':''}" onclick="pick(${i})"><span class="L">${LET[i]}</span><span>${esc(o)}</span></button>`).join('')}
+    <div class="row"><button class="btn ghost" onclick="go(${p-1})" ${p===0?'disabled':''}>← Prev</button>
+      ${a!==undefined ? '<button class="link" onclick="pick(-1)">Clear</button>' : '<span></span>'}
+      <button class="btn" onclick="go(${p+1})" ${p===last?'disabled':''}>Next →</button></div></div>
+  <div class="card"><div class="pal">${RUN.order.map((_,i) => `<button class="pn ${RUN.ans[i]!==undefined?'done':''} ${i===p?'cur':''}" onclick="go(${i})">${i+1}</button>`).join('')}</div>
+    <button class="btn full" onclick="confirming=true;render(true)">Submit</button></div>
+  ${confirming ? `<div class="modal"><div class="card"><h2>Submit করবে?</h2><p>${un ? un + 'টা question unanswered আছে।' : 'সব answer দেওয়া হয়েছে।'}</p>
+    <div class="row"><button class="btn ghost" onclick="confirming=false;render(true)">Cancel</button><button class="btn" onclick="finish(false)">Yes, Submit</button></div></div></div>` : ''}`;
+}
+function pick(i){
+  if(!RUN) return;
+  if(i < 0) delete RUN.ans[RUN.cur]; else RUN.ans[RUN.cur] = i;
+  LS.set('mq_run', RUN); render(true);
+}
+function addTime(){
+  const now = Date.now();
+  RUN.secs[RUN.cur] = (RUN.secs[RUN.cur] || 0) + (now - RUN.last) / 1000;
+  RUN.last = now;
+}
+function go(n){
+  if(!RUN || n < 0 || n >= RUN.order.length) return;
+  addTime(); RUN.cur = n; LS.set('mq_run', RUN); render(true);
+}
+function startTimer(){ clearInterval(TM); TM = setInterval(tick, 1000); tick(); }
+function tick(){
+  if(!RUN) return;
+  const rem = Math.max(0, RUN.dur - Math.floor((Date.now() - RUN.start) / 1000));
+  const el = $('#tm');
+  if(el){ el.textContent = '⏱ ' + fmt(rem); el.classList.toggle('low', rem < 60); }
+  if(rem <= 0) finish(true);
+}
+function finish(auto){
+  if(!RUN) return;
+  clearInterval(TM); addTime();
+  const e = EXAMS[RUN.exam], neg = e.neg || 0;
+  let ok = 0, wr = 0;
+  const d = RUN.order.map((qi, p) => {
+    const q = e.questions[qi], c = RUN.ans[p] === undefined ? -1 : RUN.ans[p], g = c === q.a ? 1 : 0;
+    if(c >= 0){ if(g) ok++; else wr++; }
+    return [qi, c, g, Math.round(RUN.secs[p] || 0)];
+  });
+  const rec = {aid:newAid(), sid:RUN.sid, name:RUN.name, exam:RUN.exam, mode:RUN.mode,
+    score:+(ok - wr * neg).toFixed(2), total:RUN.order.length,
+    secs:Math.min(RUN.dur, Math.round((Date.now() - RUN.start) / 1000)), d};
+  const loc = LS.get('mq_local', []); loc.push(rec); LS.set('mq_local', loc);
+  const ob = LS.get('mq_out', []); ob.push(rec); LS.set('mq_out', ob);
+  LS.del('mq_run'); RUN = null; confirming = false;
+  LAST = rec; BACK = 'home'; view = 'result'; syncMsg = CAN_SYNC() ? 'Saving…' : '';
+  render();
+  if(CAN_SYNC()) flush().then(n => { syncMsg = n === 0 ? 'Saved ✓' : n > 0 ? 'Network নেই — পরে auto save হবে' : syncMsg; const el = $('#sync'); if(el) el.textContent = syncMsg; });
+}
+
+/* ---------- Result / review ---------- */
+function vResult(r){
+  const e = EXAMS[r.exam];
+  const okN = r.d.filter(x => x[2]).length, wrN = r.d.filter(x => !x[2] && x[1] >= 0).length, skN = r.d.filter(x => x[1] < 0).length;
+  const ts = topicStats([r]);
+  const mine = SESS && !SESS.teacher && norm(SESS.sid) === norm(r.sid);
+  const w = mine ? wrongIdx(r.sid, r.exam).length : 0;
+  let h = `<div class="top"><button class="link" onclick="view=BACK;render();refresh()">← Back</button><small id="sync">${esc(syncMsg)}</small></div>
+  <div class="card"><div class="muted" style="text-align:center">${esc(e ? e.title : r.exam)}${r.mode==='mistakes'?' · mistakes':''}</div>
+    <p class="big">${r.score}/${r.total}</p><div style="text-align:center" class="muted">${pct(r)}% · ${fmt(r.secs)}</div>
+    <div class="stats" style="margin-top:12px"><div class="stat"><b style="color:var(--g)">${okN}</b><small>Correct</small></div>
+      <div class="stat"><b style="color:var(--r)">${wrN}</b><small>Wrong</small></div><div class="stat"><b>${skN}</b><small>Skipped</small></div></div>
+    ${mine && e ? `<div class="row"><button class="btn ghost" ${w?'':'disabled'} onclick="retake('${esc(r.exam)}','mistakes')">Retake mistakes (${w})</button><button class="btn" onclick="retake('${esc(r.exam)}','full')">Full again</button></div>` : ''}</div>
+  <div class="card"><h2>Topic-wise</h2>${ts.map(t => `<div class="trow"><span>${esc(t.t)} <small>${t.ok}/${t.n}</small></span><div class="bar"><i style="width:${Math.round(t.p*100)}%;background:${t.p<0.5?'var(--r)':t.p<0.8?'#f59e0b':'var(--g)'}"></i></div><b>${Math.round(t.p*100)}%</b></div>`).join('')}</div>
+  <div class="card"><h2>Review</h2>`;
+  r.d.forEach(([qi, c, g, s], n) => {
+    const q = qinfo(r.exam, qi);
+    if(!q) return;
+    h += `<div style="margin-bottom:18px"><div class="muted">Q${n+1} · ${esc(q.t || '')} · ${s}s</div><div class="q" style="font-size:15px">${esc(q.q)}</div>` +
+      q.o.map((o, i) => `<div class="opt ${i===q.a?'ok':i===c?'bad':''}" style="margin:4px 0;padding:8px"><span class="L">${LET[i]}</span><span>${esc(o)}${i===c?' <small>(তোমার answer)</small>':''}</span></div>`).join('') +
+      (c < 0 ? '<small class="err">Skipped</small>' : '') + (q.e ? `<div class="exp">💡 ${esc(q.e)}</div>` : '') + '</div>';
+  });
+  return h + '</div>';
+}
+
+/* ---------- Teacher ---------- */
+function openStu(sid){ TSTU = sid; render(); }
+function vTeacher(){
+  if(TSTU) return `<div class="top"><button class="link" onclick="TSTU=null;render()">← All students</button></div>` + vBoard(TSTU, true);
+  let recs = allRecs();
+  if(TF) recs = recs.filter(r => r.exam === TF);
+  const exams = [...new Set(allRecs().map(r => r.exam))];
+  const by = {};
+  recs.forEach(r => { (by[norm(r.sid)] = by[norm(r.sid)] || []).push(r); });
+  const rows = Object.entries(by).map(([sid, rs]) => {
+    const ps = rs.map(pct), ts = topicStats(rs);
+    return {sid, name:rs[rs.length-1].name, n:rs.length, avg:avg(ps), best:Math.max(...ps), last:ps[ps.length-1], weak:ts[0] ? ts[0].t : '-', ts};
+  }).sort((a,b) => a.avg - b.avg);
+  const topics = topicStats(recs);
+  const qs = {};
+  recs.forEach(r => r.d.forEach(([i,c,ok]) => {
+    const k = r.exam + '|' + i, o = qs[k] = qs[k] || {exam:r.exam, i, n:0, ok:0, pick:{}};
+    o.n++; o.ok += ok ? 1 : 0;
+    if(c >= 0 && !ok) o.pick[c] = (o.pick[c] || 0) + 1;
+  }));
+  const hard = Object.values(qs).filter(o => qinfo(o.exam, o.i)).sort((a,b) => a.ok/a.n - b.ok/b.n).slice(0, 10);
+  return `<div class="top"><b>👩‍🏫 Teacher Dashboard</b><button class="link" onclick="logout()">Logout</button></div>
+  ${banner()}${remoteMsg ? `<div class="warn">${esc(remoteMsg)}</div>` : ''}
+  <div class="card"><div class="row" style="margin:0"><select id="tf" style="width:auto;flex:1" onchange="TF=this.value;render(true)">
+      <option value="">All exams</option>${exams.map(c => `<option ${c===TF?'selected':''} value="${esc(c)}">${esc(c)}</option>`).join('')}</select>
+      <button class="btn ghost sm" onclick="refresh()">${loading ? 'Syncing…' : '↻ Refresh'}</button></div>
+    <small>${recs.length} attempts · ${rows.length} students</small></div>
+  ${!recs.length ? '<div class="card muted">এখনো কোনো data নেই।</div>' : `
+  <div class="card"><h2>Students (weakest first)</h2><div class="scroll"><table>
+    <tr><th>ID</th><th>Name</th><th>Att.</th><th>Avg</th><th>Best</th><th>Last</th><th>Weak topic</th></tr>
+    ${rows.map(r => `<tr class="click" data-s="${esc(r.sid)}" onclick="openStu(this.dataset.s)"><td>${esc(r.sid)}</td><td>${esc(r.name)}</td><td>${r.n}</td><td class="h" style="background:${heat(r.avg/100)}">${r.avg}%</td><td>${r.best}%</td><td>${r.last}%</td><td>${esc(r.weak)}</td></tr>`).join('')}
+  </table></div><small>Row-এ tap করলে ওই student-এর details</small></div>
+  <div class="card"><h2>Class topic accuracy</h2>${topics.map(t => `<div class="trow"><span>${esc(t.t)} <small>${t.ok}/${t.n}</small></span><div class="bar"><i style="width:${Math.round(t.p*100)}%;background:${t.p<0.5?'var(--r)':t.p<0.8?'#f59e0b':'var(--g)'}"></i></div><b>${Math.round(t.p*100)}%</b></div>`).join('')}</div>
+  <div class="card"><h2>Student × Topic heatmap</h2><div class="scroll"><table>
+    <tr><th>Student</th>${topics.map(t => `<th>${esc(t.t)}</th>`).join('')}</tr>
+    ${rows.map(r => { const m = {}; r.ts.forEach(t => m[t.t] = t); return `<tr><td>${esc(r.name)}</td>${topics.map(t => m[t.t] ? `<td class="h" style="background:${heat(m[t.t].p)}">${Math.round(m[t.t].p*100)}</td>` : '<td class="h">–</td>').join('')}</tr>`; }).join('')}
+  </table></div></div>
+  <div class="card"><h2>সবচেয়ে বেশি ভুল হওয়া Questions</h2>${hard.map(o => {
+    const q = qinfo(o.exam, o.i), top = Object.entries(o.pick).sort((a,b) => b[1]-a[1])[0];
+    return `<div class="hist" style="display:block"><div class="muted">${esc(o.exam)} · ${esc(q.t || '')} · ${Math.round(o.ok/o.n*100)}% correct (${o.ok}/${o.n})</div>
+      <div>${esc(q.q)}</div><small>সঠিক: ${LET[q.a]}${top ? ' · সবাই বেশি দিয়েছে ভুল: ' + LET[top[0]] : ''}</small></div>`;
+  }).join('')}</div>`}`;
+}
+
+/* ============================================================
+   Boot
+   ============================================================ */
+function boot(){
+  if(SESS){
+    view = SESS.teacher ? 'teacher' : 'home';
+    if(RUN && !SESS.teacher && RUN.sid === SESS.sid && EXAMS[RUN.exam]){ RUN.last = Date.now(); view = 'quiz'; }
+    else if(RUN){ RUN = null; LS.del('mq_run'); }
+  } else { RUN = null; }
+  render();
+  if(view === 'quiz') startTimer();
+  if(view !== 'quiz') refresh(); else flush();
+}
+if(typeof document !== 'undefined' && document.getElementById('app') && !window.__TEST__) boot();
+</script>
+</body>
+</html>
