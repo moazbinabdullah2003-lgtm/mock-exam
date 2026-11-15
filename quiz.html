@@ -173,7 +173,7 @@ const DEF_CFG = {
   text:   {},
   access: {mode:'open', needPin:false},
   rules:  {review:'full', explain:true, showScore:true, passMark:0, retake:true, mistakes:true, maxAttempts:0,
-           shuffleQ:true, shuffleO:false, timer:true, confirm:true, analytics:true, history:true},
+           timer:true, confirm:true, analytics:true, history:true},
   exams:  {}   // per exam: {maxAttempts, start, end, intro, shuffle:''|'yes'|'no'}
 };
 /* UI label defaults (teacher "Texts" section-এ যেকোনোটা বদলানো যায়) */
@@ -235,7 +235,7 @@ const exOv = code => (CFG.exams && CFG.exams[code]) || {};
 function applyOv(e, code){
   if(!e || typeof e !== 'object') return e;
   const ov = exOv(code);
-  e.shuffle = ov.shuffle === 'yes' ? true : ov.shuffle === 'no' ? false : CFG.rules.shuffleQ;
+  e.shuffle = true;   // shuffle সবসময় চালু (বন্ধ করার option নেই)
   return e;
 }
 const attemptsOf = (sid, code) => allRecs().filter(r => norm(r.sid) === norm(sid) && r.exam === code && r.mode === 'full').length;
@@ -485,13 +485,25 @@ async function startCode(){
   if(introOf(c)){ introFor = c; return render(true); }
   startRun(c, 'full');
 }
+const RUNKEY = (sid, exam, mode) => norm(sid) + '_' + exam + '_' + mode;
 function startRun(exam, mode, idxs){
   const e = EXAMS[exam];
   applyOv(e, exam);
   let order = idxs && idxs.length ? idxs.slice() : e.questions.map((_, i) => i);
-  if(e.shuffle !== false) shuffle(order);
+  /* সবসময় shuffle (settings দিয়ে বন্ধ করা যায় না): প্রতি attempt-এ question order আর option order নতুন করে এলোমেলো।
+     একই student-এর আগের attempt-এর সাথে question order হুবহু এক হলে আবার shuffle করা হয়। */
+  shuffle(order);
+  const lk = 'mq_lo_' + RUNKEY(SESS.sid, exam, mode), prev = LS.get(lk, null);
+  for(let k = 0; k < 20 && order.length > 1 && prev && prev.join() === order.join(); k++) shuffle(order);
+  LS.set(lk, order);
   const op = {};
-  if(CFG.rules.shuffleO) order.forEach(qi => { op[qi] = shuffle(e.questions[qi].o.map((_, i) => i)); });
+  /* "None of these / All of the above / Both…" option সবসময় শেষে থাকে, বাকিগুলো shuffle হয় */
+  const PIN = /^\s*(none of (these|the above)|all of (these|the above)|both\b|উপরের সবগুলো|কোনোটিই নয়)/i;
+  order.forEach(qi => {
+    const pin = [], mv = [];
+    e.questions[qi].o.forEach((t, i) => (PIN.test(t) ? pin : mv).push(i));
+    op[qi] = shuffle(mv).concat(pin);
+  });
   const perQ = e.minutes * 60 / e.questions.length;
   const dur = mode === 'mistakes' ? Math.max(60, Math.ceil(order.length * perQ)) : e.minutes * 60;
   RUN = {sid:SESS.sid, name:SESS.name, exam, mode, order, op, ans:{}, secs:{}, cur:0, start:Date.now(), dur, last:Date.now()};
@@ -911,7 +923,7 @@ function vSettings(){
   const rules = `${fS('rules.review', '📝 Exam শেষে student কী দেখবে (review)', [['full','Full — সঠিক উত্তর + explanation'],['marks','শুধু ✅/❌ (সঠিক উত্তর দেখাবে না)'],['none','কিছুই না (review বন্ধ)']])}
     ${fK('rules.showScore', 'Score / percentage দেখাবে')}${fK('rules.explain', 'Explanation (solution) দেখাবে')}${fN('rules.passMark', 'Pass mark % (0 = বন্ধ)', 0, 100)}
     ${fK('rules.retake', 'Full exam আবার দেওয়া যাবে')}${fK('rules.mistakes', '"Retake mistakes" button')}${fN('rules.maxAttempts', 'প্রতি exam-এ max attempt (0 = unlimited)', 0)}
-    ${fK('rules.shuffleQ', 'Question order এলোমেলো')}${fK('rules.shuffleO', 'Option order এলোমেলো')}${fK('rules.timer', 'Timer দেখাবে')}${fK('rules.confirm', 'Submit-এর আগে confirm জিজ্ঞেস করবে')}
+    <small class="muted">🔀 Question আর option order প্রতি attempt-এ সবসময় এলোমেলো হয় (বন্ধ করা যায় না)।</small>${fK('rules.timer', 'Timer দেখাবে')}${fK('rules.confirm', 'Submit-এর আগে confirm জিজ্ঞেস করবে')}
     ${fK('rules.analytics', 'Student নিজের Analytics দেখবে')}${fK('rules.history', 'Student নিজের History দেখবে')}
     <button class="btn ghost sm" onclick="resetSec('rules')">↺ Reset rules</button>`;
   const sec2 = `<small class="muted">Teacher password বদলাও (কমপক্ষে ৪ অক্ষর)। বদলালে নতুন password দিয়ে আবার login করতে হবে।</small>
@@ -1035,7 +1047,7 @@ function vExamEditor(){
       <label class="fld"><span>Negative mark / wrong</span><input type="number" step="0.05" min="0" value="${eA(x.neg)}" oninput="edHead('neg',this.value)"></label></div>
       <label class="chk"><input type="checkbox" ${x.open ? 'checked' : ''} onchange="edHead('open',this.checked)"><span>Exam open (student-রা দিতে পারবে)</span></label></div>
     <div class="card"><h2>Exam rules (শুধু এই exam-এর জন্য)</h2>
-      <div class="g2">${fN(ovp + '.maxAttempts', 'Max attempts (0 = global rule)', 0)}${fS(ovp + '.shuffle', 'Question shuffle', [['','Global rule follow'],['yes','Always shuffle'],['no','Never shuffle']])}
+      <div class="g2">${fN(ovp + '.maxAttempts', 'Max attempts (0 = global rule)', 0)}<div></div>
       <label class="fld"><span>Start time</span><input type="datetime-local" data-p="${eA(ovp + '.start')}" value="${eA(gp(ovp + '.start'))}" oninput="sp(this.dataset.p,this.value)"></label>
       <label class="fld"><span>End time</span><input type="datetime-local" data-p="${eA(ovp + '.end')}" value="${eA(gp(ovp + '.end'))}" oninput="sp(this.dataset.p,this.value)"></label></div>
       ${fA(ovp + '.intro', 'Instructions (শুধু এই exam শুরুর আগে দেখাবে)', '', 3)}
