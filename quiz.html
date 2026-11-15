@@ -12,7 +12,7 @@ body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans B
 .card{background:#fff;border-radius:14px;padding:16px;margin:12px 0;box-shadow:0 1px 3px rgba(0,0,0,.08)}
 h1{font-size:22px;margin:8px 0}h2{font-size:17px;margin:0 0 10px}h3{font-size:15px;margin:14px 0 6px}
 .muted,small{color:var(--m);font-size:13px}
-input,select{width:100%;padding:12px;font-size:16px;border:1px solid var(--b);border-radius:10px;margin:6px 0;background:#fff}
+input,select,textarea{width:100%;padding:12px;font-size:16px;border:1px solid var(--b);border-radius:10px;margin:6px 0;background:#fff}
 .btn{background:var(--p);color:#fff;border:0;border-radius:10px;padding:12px 18px;font-size:15px;font-weight:600;cursor:pointer}
 .btn.ghost{background:var(--pl);color:var(--p)}.btn.full{width:100%;margin-top:10px}.btn.red{background:var(--r)}.btn.sm{padding:7px 12px;font-size:13px}
 .btn:disabled{opacity:.4}
@@ -97,13 +97,14 @@ const aidTime = aid => parseInt(String(aid).slice(0,-2), 36) || 0;
 const newAid = () => Date.now().toString(36) + Math.floor(Math.random()*1296).toString(36).padStart(2,'0');
 const LET = 'ABCDEFGH';
 
-function parseCSV(t){
+function parseCSV(t, d){
+  d = d || ',';
   const rows=[]; let r=[], c='', q=false;
   for(let i=0;i<t.length;i++){
     const ch=t[i];
     if(q){ if(ch==='"'){ if(t[i+1]==='"'){ c+='"'; i++; } else q=false; } else c+=ch; }
     else if(ch==='"') q=true;
-    else if(ch===','){ r.push(c); c=''; }
+    else if(ch===d){ r.push(c); c=''; }
     else if(ch==='\n'){ r.push(c); rows.push(r); r=[]; c=''; }
     else if(ch!=='\r') c+=ch;
   }
@@ -210,8 +211,10 @@ function wrongIdx(sid, exam){
 /* ============================================================
    State
    ============================================================ */
+Object.assign(EXAMS, LS.get('mq_exams', {}));
 let SESS = LS.get('mq_sess', null), RUN = LS.get('mq_run', null);
 let view = 'login', BACK = 'home', LAST = null, TM = null, TF = '', TSTU = null;
+let EXL = [], UP = null, PASTE = '', upMsg = '', DELC = '';
 let msg = '', loading = false, confirming = false, syncMsg = '', showT = false;
 
 function render(keep){
@@ -223,7 +226,9 @@ function render(keep){
   else if(view === 'quiz') h = vQuiz();
   else if(view === 'result') h = vResult(LAST);
   else if(view === 'teacher') h = vTeacher();
+  const cv = $('#code') ? $('#code').value : '';
   a.innerHTML = h;
+  if(cv && $('#code')) $('#code').value = cv;
   if(view === 'quiz') tick();
   if(!keep) window.scrollTo(0, 0);
 }
@@ -264,7 +269,7 @@ function doTeacher(){
 function logout(){ SESS = null; LS.del('mq_sess'); view = 'login'; showT = false; TSTU = null; render(); }
 async function refresh(){
   loading = true; render(true);
-  await loadRemote(); await flush();
+  await loadRemote(); if(SESS && SESS.teacher) await loadExamList(); await ensureExams(); await flush();
   loading = false;
   if(view === 'home' || view === 'teacher') render(true);
 }
@@ -280,8 +285,27 @@ function vHome(){
   </div>
   ${vBoard(s.sid, false)}`;
 }
-function startCode(){
-  const c = $('#code').value.trim().toUpperCase(), e = EXAMS[c];
+async function getExam(code){
+  if(CONFIG.SCRIPT_URL){
+    let r;
+    try{ r = await (await fetch(CONFIG.SCRIPT_URL + '?action=exam&code=' + encodeURIComponent(code) + '&t=' + Date.now())).json(); }
+    catch(e){ return EXAMS[code] || 'offline'; }
+    if(r && r.questions && r.questions.length){ EXAMS[code] = r; LS.set('mq_exams', EXAMS); return r; }
+    return null;
+  }
+  return EXAMS[code] || null;
+}
+async function ensureExams(){
+  if(!CONFIG.SCRIPT_URL) return;
+  const codes = [...new Set(allRecs().map(r => r.exam))].filter(Boolean);
+  await Promise.all(codes.map(c => getExam(c)));
+}
+async function startCode(){
+  const c = $('#code').value.trim().toUpperCase();
+  if(!c){ msg = 'Exam code দাও'; return render(true); }
+  const er = document.querySelector('.err'); if(er) er.textContent = 'Loading…';
+  const e = await getExam(c);
+  if(e === 'offline'){ msg = 'Network নেই, আবার try করো'; return render(true); }
   if(!e){ msg = 'Exam code ভুল'; return render(true); }
   if(e.open === false){ msg = 'এই exam এখন বন্ধ'; return render(true); }
   msg = ''; startRun(c, 'full');
@@ -451,6 +475,7 @@ function vTeacher(){
   const hard = Object.values(qs).filter(o => qinfo(o.exam, o.i)).sort((a,b) => a.ok/a.n - b.ok/b.n).slice(0, 10);
   return `<div class="top"><b>👩‍🏫 Teacher Dashboard</b><button class="link" onclick="logout()">Logout</button></div>
   ${banner()}${remoteMsg ? `<div class="warn">${esc(remoteMsg)}</div>` : ''}
+  ${vExams()}
   <div class="card"><div class="row" style="margin:0"><select id="tf" style="width:auto;flex:1" onchange="TF=this.value;render(true)">
       <option value="">All exams</option>${exams.map(c => `<option ${c===TF?'selected':''} value="${esc(c)}">${esc(c)}</option>`).join('')}</select>
       <button class="btn ghost sm" onclick="refresh()">${loading ? 'Syncing…' : '↻ Refresh'}</button></div>
@@ -470,6 +495,115 @@ function vTeacher(){
     return `<div class="hist" style="display:block"><div class="muted">${esc(o.exam)} · ${esc(q.t || '')} · ${Math.round(o.ok/o.n*100)}% correct (${o.ok}/${o.n})</div>
       <div>${esc(q.q)}</div><small>সঠিক: ${LET[q.a]}${top ? ' · সবাই বেশি দিয়েছে ভুল: ' + LET[top[0]] : ''}</small></div>`;
   }).join('')}</div>`}`;
+}
+
+/* ---------- Teacher: exam upload / manage ---------- */
+const escT = s => String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;');
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+async function tPost(o){
+  const b = new URLSearchParams({...o, key: CONFIG.TEACHER_PASS});
+  try{ await fetch(CONFIG.SCRIPT_URL, {method:'POST', mode:'no-cors', headers:{'Content-Type':'application/x-www-form-urlencoded'}, body:b}); return true; }catch(e){ return false; }
+}
+async function loadExamList(){
+  if(!CONFIG.SCRIPT_URL) return;
+  try{ EXL = await (await fetch(CONFIG.SCRIPT_URL + '?action=exams&key=' + encodeURIComponent(CONFIG.TEACHER_PASS) + '&t=' + Date.now())).json(); if(!Array.isArray(EXL)) EXL = []; }catch(e){}
+}
+function parseQ(text){
+  text = String(text || '').replace(/^\uFEFF/, '');
+  const errs = [];
+  if(text.indexOf('\uFFFD') >= 0) errs.push('Bengali লেখা ভেঙে গেছে — CSV "UTF-8" format-এ save করো।');
+  const first = text.split('\n')[0] || '';
+  const delim = first.split('\t').length > first.split(',').length ? '\t' : ',';
+  const rows = parseCSV(text, delim);
+  if(!rows.length || rows.length < 2) return {errors:['ফাঁকা বা শুধু header আছে'], exams:{}};
+  const H = rows[0].map(x => String(x).trim().toUpperCase()), ix = k => H.indexOf(k);
+  ['Q','A','B','ANS'].forEach(k => { if(ix(k) < 0) errs.push('Header-এ "' + k + '" column নেই'); });
+  if(errs.length) return {errors:errs, exams:{}};
+  const exams = {}; let code = '';
+  rows.slice(1).forEach((r, n) => {
+    const g = k => { const j = ix(k); return j >= 0 && r[j] != null ? String(r[j]).trim() : ''; };
+    const rn = n + 2;
+    if(!g('Q') && !g('A') && !g('B')) return;
+    const c = (g('CODE') || code).toUpperCase();
+    if(!c){ errs.push('Row ' + rn + ': CODE নেই'); return; }
+    code = c;
+    if(!g('Q')){ errs.push('Row ' + rn + ': Question লেখা নেই'); return; }
+    const opts = ['A','B','C','D','E'].map(g); let last = opts.length;
+    while(last > 0 && !opts[last-1]) last--;
+    const o = opts.slice(0, last);
+    if(o.length < 2 || o.some(x => !x)){ errs.push('Row ' + rn + ': Option ঠিক নেই (অন্তত ২টা, মাঝে ফাঁকা নয়)'); return; }
+    const a = 'ABCDE'.indexOf(g('ANS').toUpperCase());
+    if(g('ANS').length !== 1 || a < 0 || a >= o.length){ errs.push('Row ' + rn + ': ANS ভুল ("' + g('ANS') + '")'); return; }
+    const ex = exams[c] = exams[c] || {code:c, rows:[]};
+    if(!ex.rows.length){ ex.title = g('TITLE') || c; ex.minutes = g('MINUTES') || '10'; ex.neg = g('NEG') || '0'; ex.open = g('OPEN').toUpperCase() === 'NO' ? 'NO' : 'YES'; }
+    ex.rows.push({q:g('Q'), o, a, t:g('TOPIC') || 'General', e:g('EXPLANATION')});
+  });
+  if(!Object.keys(exams).length && !errs.length) errs.push('কোনো valid question পাওয়া যায়নি');
+  return {errors:errs, exams};
+}
+const rowsOf = ex => ex.rows.map((r, i) => [ex.code, i ? '' : ex.title, i ? '' : ex.minutes, i ? '' : ex.neg, i ? '' : ex.open, r.q, r.o[0]||'', r.o[1]||'', r.o[2]||'', r.o[3]||'', r.o[4]||'', 'ABCDE'[r.a], r.t, r.e]);
+function onFile(f){ if(!f) return; const rd = new FileReader(); rd.onload = () => { PASTE = String(rd.result); doPreview(); }; rd.readAsText(f, 'UTF-8'); }
+function doPreview(){ UP = parseQ(PASTE); upMsg = ''; render(true); }
+async function verifyExam(ex){
+  for(let i = 0; i < 6; i++){
+    await sleep(1500);
+    try{
+      const r = await (await fetch(CONFIG.SCRIPT_URL + '?action=exam&code=' + encodeURIComponent(ex.code) + '&t=' + Date.now())).json();
+      if(r && r.questions && r.questions.length === ex.rows.length && r.questions[0].q === ex.rows[0].q) return true;
+    }catch(e){}
+  }
+  return false;
+}
+async function publishUp(){
+  if(!UP || UP.errors.length || !CONFIG.SCRIPT_URL) return;
+  upMsg = 'Upload হচ্ছে… একটু অপেক্ষা করো'; render(true);
+  const codes = [];
+  for(const ex of Object.values(UP.exams)){
+    await tPost({action:'upload', code:ex.code, rows:JSON.stringify(rowsOf(ex))});
+    if(!(await verifyExam(ex))){ upMsg = '⚠ ' + ex.code + ' confirm হয়নি। Password ' + 'Code.gs-এর সাথে মিলছে কিনা আর Script নতুন version-এ deploy করা কিনা দেখো।'; return render(true); }
+    codes.push(ex.code);
+  }
+  upMsg = '✅ Ready! Students এখন এই code দিয়ে exam দিতে পারবে: ' + codes.join(', ');
+  UP = null; PASTE = '';
+  await loadExamList(); render(true);
+}
+async function setOpen(code, open){
+  upMsg = ''; await tPost({action:'setopen', code, open: open ? 'YES' : 'NO'});
+  for(let i = 0; i < 6; i++){ await sleep(1200); await loadExamList(); const x = EXL.find(e => e.code === code); if(x && x.open === open) break; }
+  render(true);
+}
+async function delExam(code){
+  if(DELC !== code){ DELC = code; return render(true); }
+  DELC = ''; await tPost({action:'delete', code});
+  for(let i = 0; i < 6; i++){ await sleep(1200); await loadExamList(); if(!EXL.find(e => e.code === code)) break; }
+  render(true);
+}
+function vExams(){
+  if(!CONFIG.SCRIPT_URL) return '';
+  let h = '<div class="card"><h2>📚 Exams</h2>';
+  h += EXL.length ? EXL.map(x => `<div class="hist"><div><b>${esc(x.code)}</b> <small>${esc(x.title)} · ${x.count}Q · ${x.minutes}min${x.neg ? ' · −' + x.neg : ''}</small>${x.open ? '' : '<span class="tag" style="background:#fee2e2;color:#dc2626">closed</span>'}</div>
+    <div style="white-space:nowrap"><button class="btn sm ghost" data-c="${esc(x.code)}" onclick="setOpen(this.dataset.c, ${!x.open})">${x.open ? 'Close' : 'Open'}</button>
+    <button class="btn sm ${DELC === x.code ? 'red' : 'ghost'}" data-c="${esc(x.code)}" onclick="delExam(this.dataset.c)">${DELC === x.code ? 'Sure?' : 'Delete'}</button></div></div>`).join('')
+    : '<div class="muted">এখনো কোনো exam নেই</div>';
+  h += `<h3>⬆ নতুন exam upload (CSV)</h3>
+    <input type="file" accept=".csv,.tsv,.txt,text/csv,text/plain" onchange="onFile(this.files[0])">
+    <small class="muted">অথবা CSV text এখানে paste করো:</small>
+    <textarea id="paste" rows="4" placeholder="CODE,TITLE,MINUTES,NEG,OPEN,Q,A,B,C,D,E,ANS,TOPIC,EXPLANATION" oninput="PASTE=this.value">${escT(PASTE)}</textarea>
+    <button class="btn ghost full" onclick="doPreview()">Preview</button>`;
+  if(upMsg) h += `<div class="warn">${esc(upMsg)}</div>`;
+  if(UP){
+    if(UP.errors.length) h += `<div class="warn" style="background:#fee2e2"><b>ভুল পাওয়া গেছে — ঠিক করে আবার upload করো:</b><br>${UP.errors.slice(0, 12).map(esc).join('<br>')}${UP.errors.length > 12 ? '<br>…' : ''}</div>`;
+    else {
+      h += Object.values(UP.exams).map(ex => {
+        const tc = {}; ex.rows.forEach(r => tc[r.t] = (tc[r.t] || 0) + 1);
+        const exists = EXL.find(e => e.code === ex.code);
+        return `<div class="card" style="background:#f9fafb;margin:8px 0"><b>${esc(ex.code)}</b> — ${esc(ex.title)}${exists ? '<span class="tag" style="background:#fef9c3;color:#a16207">আগেরটা replace হবে</span>' : '<span class="tag">নতুন</span>'}<br>
+          <small>${ex.rows.length} questions · ${esc(ex.minutes)} min · negative ${esc(ex.neg)} · ${ex.open === 'NO' ? 'closed' : 'open'}</small><br>
+          <small>Topics: ${Object.entries(tc).map(([k, v]) => esc(k) + ' (' + v + ')').join(', ')}</small><br><small class="muted">Q1: ${esc(ex.rows[0].q.slice(0, 80))}</small></div>`;
+      }).join('') + '<button class="btn full" onclick="publishUp()">✅ Publish — exam ready করো</button>';
+    }
+  }
+  return h + '</div>';
 }
 
 /* ============================================================
