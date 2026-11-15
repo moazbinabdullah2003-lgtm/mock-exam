@@ -4,6 +4,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>MCQ Mock Exam</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"></script>
 <style>
 :root{--p:#4f46e5;--pl:#eef2ff;--g:#16a34a;--gl:#dcfce7;--r:#dc2626;--rl:#fee2e2;--t:#111827;--m:#6b7280;--b:#e5e7eb;--bg:#f3f4f6}
 *{box-sizing:border-box}
@@ -36,7 +39,8 @@ input,select,textarea{width:100%;padding:12px;font-size:16px;border:1px solid va
 .tr{display:flex;align-items:flex-end;gap:4px;height:70px}.tr div{flex:1;border-radius:4px 4px 0 0;min-width:8px;background:var(--p);position:relative}
 .err{color:var(--r);font-size:14px;margin:6px 0}.warn{background:#fef9c3;border-radius:10px;padding:10px;font-size:13px;margin:8px 0}
 .big{font-size:42px;font-weight:800;color:var(--p);text-align:center;margin:0}
-.exp{background:#f9fafb;border-radius:8px;padding:8px;font-size:13px;margin-top:6px}
+.exp{background:#f9fafb;border-radius:8px;padding:10px;font-size:14px;margin-top:6px;line-height:1.7}
+.katex{font-size:1.05em}.opt .katex-display,.exp .katex-display{margin:.4em 0}
 .scroll{overflow-x:auto}table{border-collapse:collapse;font-size:13px;width:100%}th,td{padding:6px 8px;border-bottom:1px solid var(--b);text-align:left;white-space:nowrap}
 td.h{text-align:center;font-weight:600}
 .modal{position:fixed;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;padding:20px;z-index:20}
@@ -112,6 +116,15 @@ function parseCSV(t, d){
   return rows;
 }
 
+
+/* Math (KaTeX): renders $...$ and $$...$$ ; silently skipped if CDN/offline */
+function mathify(el){
+  try{
+    if(typeof renderMathInElement !== 'function' || !el) return;
+    renderMathInElement(el, {delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}], throwOnError:false});
+  }catch(e){}
+}
+if(typeof addEventListener === 'function') addEventListener('load', () => mathify(document.getElementById('app')));
 /* ============================================================
    Google Form (write) + Published Sheet (read)
    ============================================================ */
@@ -228,6 +241,7 @@ function render(keep){
   else if(view === 'teacher') h = vTeacher();
   const cv = $('#code') ? $('#code').value : '';
   a.innerHTML = h;
+  mathify(a);
   if(cv && $('#code')) $('#code').value = cv;
   if(view === 'quiz') tick();
   if(!keep) window.scrollTo(0, 0);
