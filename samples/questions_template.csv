@@ -1,0 +1,4 @@
+CODE,TITLE,MINUTES,NEG,OPEN,Q,A,B,C,D,E,ANS,TOPIC,EXPLANATION
+CT1,Class Test 1,20,0.25,YES,"2x + 3 = 11 হলে x = ?",2,3,4,5,,C,Algebra,"2x = 8, তাই x = 4"
+CT1,,,,,"sin 30° = ?",1/2,√3/2,1,0,,A,Trigonometry,sin 30° = 1/2
+CT1,,,,,"d/dx (x²) = ?",x,2x,x²,2,,B,Calculus,Power rule

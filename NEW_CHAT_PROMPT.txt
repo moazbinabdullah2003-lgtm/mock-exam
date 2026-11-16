@@ -1,0 +1,13 @@
+এটা আমার "Quiz Server" (MCQ Mock Exam) প্রজেক্ট। Folder: /Users/mac/claude code/quiz-server
+(quiz.html on GitHub Pages + Google Apps Script backend + Google Sheet; teacher panel দিয়ে সব control হয়।)
+
+নিয়ম (token বাঁচাতে):
+1. আগে শুধু docs/PROJECT_CONTEXT.md আর docs/INDEX.md পড়ো। বাকি কিছু আগে খুলো না। (dist/quiz.html কখনো পুরোটা পড়বে না।)
+2. আমি যা বদলাতে বলব, INDEX.md-এর "Task -> where to edit" টেবিল দেখে শুধু ওই module(s) খোলো।
+3. src/ এ edit করো, তারপর `python3 build.py`; test করো browser pane-এ (docs/DEPLOY.md §C, tools/browser_fake_backend.js) — এই Mac-এ node নেই।
+4. Deploy: আমি বললে docs/DEPLOY.md অনুযায়ী নিজে করো (আগে Code.gs যদি বদলায়, তারপর quiz.html)। আমি Google/GitHub-এ built-in browser pane-এ sign in করা আছে বলে ধরো; না থাকলে আমাকে sign in করতে বলো।
+5. আমার সাথে বাংলায় (Banglish ঠিক আছে) কথা বলো, technical term English-এ। ছোট উত্তর দাও। Manual ধাপ থাকলে একবারে একটা ধাপ বলো।
+6. আমার Claude Pro আছে, API নেই — API-ভিত্তিক সমাধান দিও না।
+7. কাজ শেষে docs আপডেট করো (PROJECT_CONTEXT.md-এর §12 status সহ)।
+
+আমার কাজ: 

@@ -1,0 +1,174 @@
+/* ============================================================
+   Teacher control panel: tabs, Settings, Students (roster), Save
+   ============================================================ */
+let CD = null, ROSTER = [], ROSTER_OK = false, SO = {theme:true}, saveMsg = '', EDX = null;
+const eA = s => String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');
+const clone = o => JSON.parse(JSON.stringify(o));
+const gp = p => p.split('.').reduce((x, k) => x == null ? x : x[k], CD);
+function sp(path, v){
+  const k = path.split('.'); let o = CD;
+  for(let i = 0; i < k.length - 1; i++) o = o[k[i]] = o[k[i]] || {};
+  o[k[k.length - 1]] = v; DIRTY = true; saveMsg = '';
+  CFG = deepMerge(DEF_CFG, CD); applyTheme();
+  const m = document.getElementById('dirty'); if(m) m.textContent = '● unsaved changes';
+}
+/* field builders (data-p keeps odd characters safe) */
+const fT = (p, l, ph) => `<label class="fld"><span>${l}</span><input data-p="${eA(p)}" value="${eA(gp(p))}" placeholder="${eA(ph || '')}" oninput="sp(this.dataset.p,this.value)"></label>`;
+const fA = (p, l, ph, rows) => `<label class="fld"><span>${l}</span><textarea data-p="${eA(p)}" rows="${rows || 3}" placeholder="${eA(ph || '')}" oninput="sp(this.dataset.p,this.value)">${escT(gp(p))}</textarea></label>`;
+const fN = (p, l, min, max) => `<label class="fld"><span>${l}</span><input type="number" min="${min == null ? 0 : min}" ${max != null ? 'max="' + max + '"' : ''} data-p="${eA(p)}" value="${eA(gp(p))}" oninput="sp(this.dataset.p,this.value===''?0:Number(this.value))"></label>`;
+const fC = (p, l) => `<label class="fld"><span>${l}</span><input type="color" data-p="${eA(p)}" value="${eA(gp(p))}" oninput="sp(this.dataset.p,this.value)"></label>`;
+const fR = (p, l, min, max) => `<label class="fld"><span>${l}: <b>${eA(gp(p))}</b></span><input type="range" min="${min}" max="${max}" data-p="${eA(p)}" value="${eA(gp(p))}" oninput="this.previousElementSibling.lastElementChild.textContent=this.value;sp(this.dataset.p,Number(this.value))"></label>`;
+const fS = (p, l, opts) => `<label class="fld"><span>${l}</span><select data-p="${eA(p)}" onchange="sp(this.dataset.p,this.value)">${opts.map(([v, t]) => `<option value="${eA(v)}" ${String(gp(p)) === String(v) ? 'selected' : ''}>${eA(t)}</option>`).join('')}</select></label>`;
+const fK = (p, l) => `<label class="chk"><input type="checkbox" data-p="${eA(p)}" ${gp(p) ? 'checked' : ''} onchange="sp(this.dataset.p,this.checked)"><span>${l}</span></label>`;
+const sec = (id, title, body) => `<details class="sec" ${SO[id] ? 'open' : ''} ontoggle="SO['${id}']=this.open"><summary>${title}</summary><div class="in">${body}</div></details>`;
+
+function vTabs(){
+  const t = [['dash','📊 Dashboard'],['exams','📚 Exams'],['stu','👥 Students'],['set','⚙ Settings']];
+  return `<div class="tabs">${t.map(([k, l]) => `<button class="${TTAB === k ? 'on' : ''}" onclick="gotoTab('${k}')">${l}</button>`).join('')}</div>`;
+}
+async function gotoTab(k){
+  TTAB = k; EDX = null; TSTU = null;
+  if(!DIRTY || !CD) CD = clone(CFG);
+  render();
+  if(k === 'stu' && !ROSTER_OK) await loadRoster();
+}
+async function loadRoster(){
+  if(!CONFIG.SCRIPT_URL) return;
+  try{
+    const r = await (await fetch(CONFIG.SCRIPT_URL + '?action=roster&key=' + encodeURIComponent(TKEY()) + '&t=' + Date.now())).json();
+    if(Array.isArray(r)){ ROSTER = r; ROSTER_OK = true; }
+  }catch(e){}
+  render(true);
+}
+function vSaveBar(){
+  return `<div class="savebar"><button class="btn full" id="savebtn" onclick="saveAll()">💾 Save all changes</button>
+    <div style="text-align:center;font-size:13px;margin-top:4px;color:${saveMsg.charAt(0) === '✅' ? 'var(--g)' : 'var(--r)'}" id="dirty">${DIRTY ? '● unsaved changes' : ''}${esc(saveMsg)}</div></div>`;
+}
+async function saveAll(){
+  if(!CD) return;
+  if(!CONFIG.SCRIPT_URL){ saveMsg = 'Script URL নেই'; return render(true); }
+  saveMsg = 'Saving…'; render(true);
+  const cfgStr = JSON.stringify(CD);
+  await tPost({action:'savecfg', cfg:cfgStr});
+  let rosterStr = null;
+  if(ROSTER_OK){ rosterStr = JSON.stringify(ROSTER.filter(r => String(r.id).trim())); await tPost({action:'saveroster', roster:rosterStr}); }
+  let okC = false, okR = rosterStr === null;
+  for(let i = 0; i < 7 && !(okC && okR); i++){
+    await sleep(1300);
+    try{
+      if(!okC){ const r = await (await fetch(CONFIG.SCRIPT_URL + '?action=settings&t=' + Date.now())).json(); okC = !!(r && r.ok && JSON.stringify(r.cfg) === cfgStr); }
+      if(!okR){ const r = await (await fetch(CONFIG.SCRIPT_URL + '?action=roster&key=' + encodeURIComponent(TKEY()) + '&t=' + Date.now())).json(); okR = Array.isArray(r) && JSON.stringify(r) === rosterStr; }
+    }catch(e){}
+  }
+  if(okC && okR){ DIRTY = false; LS.set('mq_cfg', clone(CD)); saveMsg = '✅ Saved — student-রা এখন নতুন settings দেখবে'; }
+  else saveMsg = '⚠ Save confirm হয়নি। Code.gs-এর নতুন version deploy করা আছে কিনা, আর password ঠিক কিনা দেখো।';
+  render(true);
+}
+
+/* ---------------- Settings tab ---------------- */
+function applyPreset(n){
+  CD.theme = {...CD.theme, ...PRESETS[n], preset:n}; DIRTY = true; saveMsg = '';
+  CFG = deepMerge(DEF_CFG, CD); applyTheme(); render(true);
+}
+function resetSec(k){
+  if(k === 'theme') CD.theme = clone(DEF_CFG.theme);
+  if(k === 'text') CD.text = {};
+  if(k === 'rules') CD.rules = clone(DEF_CFG.rules);
+  if(k === 'brand') CD.brand = clone(DEF_CFG.brand);
+  DIRTY = true; CFG = deepMerge(DEF_CFG, CD); applyTheme(); render(true);
+}
+function vSettings(){
+  if(!CD) CD = clone(CFG);
+  const sw = Object.entries(PRESETS).map(([n, p]) => `<button style="background:${p.primary};${p.bg === '#000000' || p.bg === '#0f172a' ? 'outline:2px solid #888' : ''}" onclick="applyPreset('${n}')">${n}</button>`).join('');
+  const theme = `<div class="sw">${sw}</div>
+    <div class="g2">${fC('theme.primary', 'Main color')}${fC('theme.bg', 'Page background')}${fC('theme.card', 'Card background')}${fC('theme.text', 'Text color')}${fC('theme.ok', 'Correct color')}${fC('theme.bad', 'Wrong color')}</div>
+    ${fR('theme.radius', 'Corner roundness', 0, 28)}${fR('theme.font', 'Font size', 13, 20)}
+    ${fS('theme.family', 'Font style', [['system','Default (clean)'],['serif','Serif (book)'],['mono','Monospace'],['round','Rounded']])}
+    <button class="btn ghost sm" onclick="resetSec('theme')">↺ Reset theme</button>`;
+  const brand = `${fT('brand.title', 'App title')}${fT('brand.emoji', 'Logo emoji')}
+    ${fA('brand.notice', '📢 Notice / announcement (login + home page-এ দেখাবে)', 'যেমন: কাল CT, সবাই প্রস্তুত থাকো', 3)}
+    ${fS('brand.noticeType', 'Notice style', [['info','Info (blue)'],['warn','Warning (yellow)'],['good','Good (green)'],['bad','Alert (red)']])}
+    ${fA('brand.intro', '📋 Exam instructions (exam শুরুর আগে popup হিসেবে দেখাবে; ফাঁকা = দেখাবে না)', 'যেমন: ১ ঘণ্টা সময়। Negative marking আছে।', 4)}
+    ${fT('brand.footer', 'Footer text')}
+    <button class="btn ghost sm" onclick="resetSec('brand')">↺ Reset</button>`;
+  const texts = `<small class="muted">ফাঁকা রাখলে default text থাকবে। Placeholder-এ default দেখানো আছে।</small>` +
+    Object.keys(TX).map(k => fT('text.' + k, k, TX[k])).join('') + `<button class="btn ghost sm" onclick="resetSec('text')">↺ Reset all texts</button>`;
+  const rules = `${fS('rules.review', '📝 Exam শেষে student কী দেখবে (review)', [['full','Full — সঠিক উত্তর + explanation'],['marks','শুধু ✅/❌ (সঠিক উত্তর দেখাবে না)'],['none','কিছুই না (review বন্ধ)']])}
+    ${fK('rules.showScore', 'Score / percentage দেখাবে')}${fK('rules.explain', 'Explanation (solution) দেখাবে')}${fN('rules.passMark', 'Pass mark % (0 = বন্ধ)', 0, 100)}
+    ${fK('rules.retake', 'Full exam আবার দেওয়া যাবে')}${fK('rules.mistakes', '"Retake mistakes" button')}${fN('rules.maxAttempts', 'প্রতি exam-এ max attempt (0 = unlimited)', 0)}
+    <small class="muted">🔀 Question আর option order প্রতি attempt-এ সবসময় এলোমেলো হয় (বন্ধ করা যায় না)।</small>${fK('rules.timer', 'Timer দেখাবে')}${fK('rules.confirm', 'Submit-এর আগে confirm জিজ্ঞেস করবে')}
+    ${fK('rules.analytics', 'Student নিজের Analytics দেখবে')}${fK('rules.history', 'Student নিজের History দেখবে')}
+    <button class="btn ghost sm" onclick="resetSec('rules')">↺ Reset rules</button>`;
+  const sec2 = `${fT('access.teacherId', 'Teacher ID (login-এ এটা লাগবে)', 'teacher')}<small class="muted">Teacher password বদলাও (কমপক্ষে ৪ অক্ষর)। বদলালে নতুন password দিয়ে আবার login করতে হবে।</small>
+    <input id="np1" type="password" placeholder="New password"><input id="np2" type="password" placeholder="Confirm new password">
+    <button class="btn ghost full" onclick="changePass()">🔐 Change password</button>`;
+  return `<h2 style="margin:6px 0">⚙ App Settings</h2><small class="muted">যা বদলাবে তা সাথে সাথে preview হবে। শেষে নিচের Save চাপলে সব student দেখবে।</small>
+    ${sec('theme', '🎨 Theme & look', theme)}${sec('brand', '🏷 Branding, notice & instructions', brand)}${sec('rules', '📋 Exam rules & features', rules)}${sec('texts', '✏️ All button / label texts', texts)}${sec('pw', '🔐 Security', sec2)}${vSaveBar()}`;
+}
+async function changePass(){
+  const a = $('#np1').value, b = $('#np2').value;
+  if(a.length < 4){ saveMsg = 'Password কমপক্ষে ৪ অক্ষর'; return render(true); }
+  if(a !== b){ saveMsg = 'দুটো password মিলছে না'; return render(true); }
+  await tPost({action:'setpass', newpass:a});
+  for(let i = 0; i < 6; i++){
+    await sleep(1300);
+    try{ const r = await (await fetch(CONFIG.SCRIPT_URL + '?action=tlogin&key=' + encodeURIComponent(a) + '&t=' + Date.now())).json(); if(r && r.ok){ SESS.key = a; LS.set('mq_sess', SESS); saveMsg = '✅ Password বদলেছে'; return render(true); } }catch(e){}
+  }
+  saveMsg = '⚠ Password বদলানো confirm হয়নি';
+  render(true);
+}
+
+/* ---------------- Students tab ---------------- */
+function rset(i, k, v){ ROSTER[i][k] = v; DIRTY = true; saveMsg = ''; const m = document.getElementById('dirty'); if(m) m.textContent = '● unsaved changes'; }
+function radd(){ ROSTER.push({id:'', name:'', pin:'', blocked:false}); DIRTY = true; render(true); }
+function rdel(i){ ROSTER.splice(i, 1); DIRTY = true; render(true); }
+function rbulk(){
+  const t = ($('#bulk') || {}).value || '';
+  t.split('\n').forEach(l => {
+    const p = l.split(/[,\t;]/).map(x => x.trim());
+    if(!p[0]) return;
+    const ex = ROSTER.find(r => norm(r.id) === norm(p[0]));
+    if(ex){ ex.pin = p[1] || ex.pin; ex.name = p[2] || ex.name; } else ROSTER.push({id:p[0], pin:p[1] || '', name:p[2] || '', blocked:false});
+  });
+  DIRTY = true; render(true);
+}
+function rgen(){
+  ROSTER.forEach(r => { if(!String(r.pin || '').trim()) r.pin = String(Math.floor(1000 + Math.random() * 9000)); });
+  DIRTY = true; saveMsg = ''; render(true);
+}
+function rfromAttempts(){
+  const seen = {};
+  allRecs().forEach(r => { seen[norm(r.sid)] = r.name; });
+  Object.entries(seen).forEach(([id, name]) => { if(!ROSTER.find(r => norm(r.id) === id)) ROSTER.push({id, name, pin:'', blocked:false}); });
+  DIRTY = true; render(true);
+}
+function vStudents(){
+  if(!CD) CD = clone(CFG);
+  const cnt = {}; allRecs().forEach(r => { cnt[norm(r.sid)] = (cnt[norm(r.sid)] || 0) + 1; });
+  const rows = ROSTER.map((r, i) => `<div class="card" style="margin:8px 0;padding:10px"><div class="g2">
+      <input placeholder="ID" value="${eA(r.id)}" oninput="rset(${i},'id',this.value)"><input placeholder="Password" value="${eA(r.pin)}" oninput="rset(${i},'pin',this.value)" style="${String(r.pin || '').trim() ? '' : 'border-color:var(--r)'}">
+      <input placeholder="Name (optional)" value="${eA(r.name)}" oninput="rset(${i},'name',this.value)">
+      <div class="row" style="margin:0"><label class="chk" style="margin:0"><input type="checkbox" ${r.blocked ? 'checked' : ''} onchange="rset(${i},'blocked',this.checked)"><span>Block</span></label>
+      <small>${cnt[norm(r.id)] || 0} attempts</small><button class="btn sm ghost" onclick="rdel(${i})">✕</button></div></div></div>`).join('');
+  return `<h2 style="margin:6px 0">👥 Students & Access</h2>
+    <div class="card">${fK('access.guest', '👤 Guest login চালু (শুধু exam code দিয়ে ওই exam দিতে পারবে)')}
+    <small class="muted">Student শুধু <b>ID + Password</b> দিয়ে ঢোকে। নিচের তালিকায় যাদের ID আর Password আছে শুধু তারাই ঢুকতে পারবে। Password খালি থাকলে ওই ID ঢুকতে পারবে না।</small></div>
+    ${!CONFIG.SCRIPT_URL ? '<div class="warn">Script URL নেই</div>' : !ROSTER_OK ? '<div class="card muted">Loading roster…</div>' : `
+    <div class="card"><b>${ROSTER.length} students in roster</b>
+      <div class="row"><button class="btn sm ghost" onclick="radd()">+ Add student</button><button class="btn sm ghost" onclick="rfromAttempts()">⇣ Import from past attempts</button></div>
+      <div class="row" style="margin-top:6px"><button class="btn sm ghost" onclick="rgen()">🎲 Password নেই এমন সবাইকে random password দাও</button></div>
+      <h3>Bulk add (প্রতি লাইনে: ID, Password, Name — Name না দিলেও চলবে)</h3>
+      <textarea id="bulk" rows="4" placeholder="101, 1234, Rahim&#10;102, 5678"></textarea>
+      <button class="btn ghost full" onclick="rbulk()">Add / update from list</button></div>${rows}`}
+    ${vSaveBar()}`;
+}
+
+/* ---------------- Export ---------------- */
+function exportCSV(){
+  const q = s => '"' + String(s == null ? '' : s).replace(/"/g, '""') + '"';
+  const lines = ['Date,SID,Name,Exam,Mode,Score,Total,Percent,Seconds'].concat(allRecs().map(r =>
+    [new Date(aidTime(r.aid)).toLocaleString(), r.sid, r.name, r.exam, r.mode, r.score, r.total, pct(r), r.secs].map(q).join(',')));
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob(['﻿' + lines.join('\n')], {type:'text/csv;charset=utf-8'}));
+  a.download = 'results.csv'; document.body.appendChild(a); a.click(); a.remove();
+}

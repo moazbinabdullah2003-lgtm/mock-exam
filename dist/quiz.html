@@ -1,0 +1,1176 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>MCQ Mock Exam</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"></script>
+<style>
+:root{--card:#fff;--rad:14px;--p:#4f46e5;--pl:#eef2ff;--g:#16a34a;--gl:#dcfce7;--r:#dc2626;--rl:#fee2e2;--t:#111827;--m:#6b7280;--b:#e5e7eb;--bg:#f3f4f6}
+*{box-sizing:border-box}
+body{margin:0;font-size:16px;font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans Bengali",sans-serif;background:var(--bg);color:var(--t);line-height:1.45}
+#app{max-width:760px;margin:0 auto;padding:12px 12px 40px}
+.card{background:var(--card);border-radius:var(--rad);padding:16px;margin:12px 0;box-shadow:0 1px 3px rgba(0,0,0,.08)}
+h1{font-size:22px;margin:8px 0}h2{font-size:17px;margin:0 0 10px}h3{font-size:15px;margin:14px 0 6px}
+.muted,small{color:var(--m);font-size:13px}
+input,select,textarea{width:100%;padding:12px;font-size:16px;border:1px solid var(--b);border-radius:10px;margin:6px 0;background:var(--card);color:var(--t);font-family:inherit}
+.btn{background:var(--p);color:#fff;border:0;border-radius:10px;padding:12px 18px;font-size:15px;font-weight:600;cursor:pointer}
+.btn.ghost{background:var(--pl);color:var(--p)}.btn.full{width:100%;margin-top:10px}.btn.red{background:var(--r)}.btn.sm{padding:7px 12px;font-size:13px}
+.btn:disabled{opacity:.4}
+.link{background:none;border:0;color:var(--p);font-size:14px;cursor:pointer;padding:6px}
+.row{display:flex;gap:8px;align-items:center;justify-content:space-between;margin-top:14px;flex-wrap:wrap}
+.top{display:flex;justify-content:space-between;align-items:center;gap:8px;position:sticky;top:0;background:var(--bg);padding:8px 0;z-index:5}
+.tm{font-weight:700;font-size:18px;background:var(--card);border-radius:10px;padding:6px 12px;font-variant-numeric:tabular-nums}.tm.low{color:var(--r)}
+.q{font-size:1.06em;font-weight:600;margin:8px 0 12px}
+.opt{display:flex;gap:10px;align-items:flex-start;width:100%;text-align:left;background:var(--card);border:2px solid var(--b);border-radius:calc(var(--rad) - 2px);padding:12px;margin:8px 0;font-size:15px;cursor:pointer;color:var(--t)}
+.opt.sel{border-color:var(--p);background:var(--pl)}
+.opt.ok{border-color:var(--g);background:var(--gl)}.opt.bad{border-color:var(--r);background:var(--rl)}
+.L{font-weight:700;min-width:22px;color:var(--p)}
+.pal{display:flex;flex-wrap:wrap;gap:6px}
+.pn{width:38px;height:38px;border-radius:8px;border:1px solid var(--b);background:var(--card);color:var(--t);font-size:14px;cursor:pointer}
+.pn.done{background:var(--p);color:#fff;border-color:var(--p)}.pn.cur{outline:3px solid #a5b4fc}
+.stats{display:flex;gap:8px}.stat{flex:1;background:var(--pl);border-radius:12px;padding:10px;text-align:center}.stat b{display:block;font-size:20px}
+.bar{height:10px;background:var(--b);border-radius:6px;overflow:hidden}.bar i{display:block;height:100%}
+.trow{display:grid;grid-template-columns:1fr 80px 46px;gap:8px;align-items:center;margin:7px 0;font-size:14px}
+.hist{border-top:1px solid var(--b);padding:10px 0;display:flex;justify-content:space-between;gap:8px;align-items:center;font-size:14px}
+.tag{font-size:11px;background:var(--pl);color:var(--p);border-radius:6px;padding:2px 6px;margin-left:4px}
+.tr{display:flex;align-items:flex-end;gap:4px;height:70px}.tr div{flex:1;border-radius:4px 4px 0 0;min-width:8px;background:var(--p);position:relative}
+.err{color:var(--r);font-size:14px;margin:6px 0}.warn{background:#fef9c3;color:#713f12;border-radius:10px;padding:10px;font-size:13px;margin:8px 0}
+.big{font-size:42px;font-weight:800;color:var(--p);text-align:center;margin:0}
+.exp{background:color-mix(in srgb,var(--t) 5%,var(--card));border-radius:8px;padding:10px;font-size:14px;margin-top:6px;line-height:1.7}
+.katex{font-size:1.05em}.opt .katex-display,.exp .katex-display{margin:.4em 0}
+.scroll{overflow-x:auto}table{border-collapse:collapse;font-size:13px;width:100%}th,td{padding:6px 8px;border-bottom:1px solid var(--b);text-align:left;white-space:nowrap}
+td.h{text-align:center;font-weight:600}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;padding:20px;z-index:20}
+.modal .card{max-width:380px;width:100%}
+tr.click{cursor:pointer}
+
+.notice{border-radius:var(--rad);padding:12px 14px;margin:10px 0;font-size:14px;background:var(--pl);color:var(--t);border-left:4px solid var(--p)}
+.notice.warn{background:#fef9c3;color:#713f12;border-color:#eab308}.notice.good{background:var(--gl);border-color:var(--g)}.notice.bad{background:var(--rl);border-color:var(--r)}
+.foot{text-align:center;color:var(--m);font-size:12px;margin:24px 0 0}
+.tabs{display:flex;gap:6px;overflow-x:auto;margin:6px 0 10px;padding-bottom:2px}
+.tabs button{flex:1;white-space:nowrap;background:var(--card);color:var(--t);border:1px solid var(--b);border-radius:10px;padding:9px 12px;font-size:14px;cursor:pointer}
+.tabs button.on{background:var(--p);color:#fff;border-color:var(--p);font-weight:600}
+details.sec{background:var(--card);border-radius:var(--rad);margin:10px 0;box-shadow:0 1px 3px rgba(0,0,0,.08)}
+details.sec>summary{padding:14px 16px;font-weight:700;font-size:1em;cursor:pointer;list-style:none}
+details.sec>summary::-webkit-details-marker{display:none}
+details.sec>summary:after{content:'▾';float:right;color:var(--m)}details.sec[open]>summary:after{content:'▴'}
+details.sec>.in{padding:0 16px 16px}
+.fld{display:block;margin:10px 0}.fld>span{display:block;font-size:13px;color:var(--m);margin-bottom:2px}
+.fld input[type=color]{padding:2px;height:42px;width:100%}.fld input[type=range]{padding:0}
+.chk{display:flex;gap:10px;align-items:center;margin:10px 0;font-size:14px}.chk input{width:20px;height:20px;margin:0;flex:none}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.sw{display:flex;flex-wrap:wrap;gap:8px;margin:6px 0}
+.sw button{border:2px solid var(--b);border-radius:10px;padding:6px 10px;font-size:13px;cursor:pointer;color:#fff;font-weight:600}
+.savebar{position:sticky;bottom:0;background:var(--bg);padding:10px 0;z-index:6}
+.qed{border:1px solid var(--b);border-radius:var(--rad);padding:12px;margin:10px 0;background:var(--card)}
+.qed .pv{background:color-mix(in srgb,var(--t) 5%,var(--card));border-radius:8px;padding:8px;margin:6px 0;font-size:.95em}
+.oe{display:flex;gap:6px;align-items:center}.oe input[type=radio]{width:20px;height:20px;margin:0;flex:none}
+.oe input[type=text]{margin:3px 0}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+/* ============================================================
+   CONFIG  (teacher only edits this part)
+   ============================================================ */
+const CONFIG = {
+  // RECOMMENDED: Google Apps Script Web App URL (Code.gs deploy করার পর যে /exec link পাবে)
+  SCRIPT_URL: "https://script.google.com/macros/s/AKfycbx2xuErMRJf9XPij0Yt28hqLXf79oAN3MnQva2ERw4rTJLQsFrkmQwO6qpFxTCG3IRPjw/exec",
+  // (পুরোনো Form পদ্ধতি — SCRIPT_URL থাকলে দরকার নেই) Google Form "Get pre-filled link" (see setup steps). Dummy values must be: SID,NAME,EXAM,AID,MODE,SCORE,TOTAL,SECS,DETAILS
+  PREFILLED_LINK: "",
+  // Google Sheet -> File -> Share -> Publish to web -> (Form Responses sheet) -> CSV -> paste link
+  SHEET_CSV_URL: "",
+  TEACHER_PASS: "teacher123"
+};
+
+/* Exam code (UPPERCASE) -> exam.
+   minutes: timer | neg: negative mark per wrong (0 = none) | shuffle: question order random | open:false = close the exam
+   Question: q = text, o = options, a = correct option index (0 = first), t = topic, e = explanation (optional) */
+const EXAMS = {
+  "DEMO1": {
+    title: "Demo Mock Test", minutes: 5, neg: 0, shuffle: true, open: true,
+    questions: [
+      {q:"2x + 3 = 11 হলে x = ?", o:["2","3","4","5"], a:2, t:"Algebra", e:"2x = 8, x = 4"},
+      {q:"sin 30° = ?", o:["1/2","√3/2","1","0"], a:0, t:"Trigonometry", e:"sin 30° = 1/2"},
+      {q:"d/dx (x²) = ?", o:["x","2x","x²","2"], a:1, t:"Calculus", e:"Power rule"},
+      {q:"x² − 5x + 6 = 0 এর roots কী?", o:["1,6","2,3","−2,−3","−1,6"], a:1, t:"Algebra", e:"(x−2)(x−3)=0"},
+      {q:"cos 0° = ?", o:["0","1/2","1","−1"], a:2, t:"Trigonometry", e:"cos 0° = 1"},
+      {q:"∫ 2x dx = ?", o:["x²+C","2x²+C","x+C","2+C"], a:0, t:"Calculus", e:"∫2x dx = x² + C"}
+    ]
+  }
+};
+
+/* ============================================================
+   Helpers
+   ============================================================ */
+const $ = s => document.querySelector(s);
+const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])).replace(/\n/g,'<br>');
+const norm = s => String(s == null ? '' : s).trim().toUpperCase().replace(/^0+(?=\d)/, '');
+const LS = {
+  get(k, d){ try{ const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; }catch(e){ return d; } },
+  set(k, v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} },
+  del(k){ try{ localStorage.removeItem(k); }catch(e){} }
+};
+const fmt = s => { s = Math.max(0, Math.round(s)); const h = Math.floor(s/3600), m = Math.floor(s%3600/60), x = s%60; return (h ? h+':' : '') + String(m).padStart(h?2:1,'0') + ':' + String(x).padStart(2,'0'); };
+const pct = r => r.total ? Math.round(r.score / r.total * 100) : 0;
+const avg = a => a.length ? Math.round(a.reduce((x,y)=>x+y,0) / a.length) : 0;
+const heat = p => `hsl(${Math.round(Math.max(0,Math.min(1,p))*120)},65%,82%)`;
+const shuffle = a => { for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; };
+const aidTime = aid => parseInt(String(aid).slice(0,-2), 36) || 0;
+const newAid = () => Date.now().toString(36) + Math.floor(Math.random()*1296).toString(36).padStart(2,'0');
+const LET = 'ABCDEFGH';
+
+function parseCSV(t, d){
+  d = d || ',';
+  const rows=[]; let r=[], c='', q=false;
+  for(let i=0;i<t.length;i++){
+    const ch=t[i];
+    if(q){ if(ch==='"'){ if(t[i+1]==='"'){ c+='"'; i++; } else q=false; } else c+=ch; }
+    else if(ch==='"') q=true;
+    else if(ch===d){ r.push(c); c=''; }
+    else if(ch==='\n'){ r.push(c); rows.push(r); r=[]; c=''; }
+    else if(ch!=='\r') c+=ch;
+  }
+  if(c!==''||r.length){ r.push(c); rows.push(r); }
+  return rows;
+}
+
+
+/* Math (KaTeX): renders $...$ and $$...$$ ; silently skipped if CDN/offline */
+function mathify(el){
+  try{
+    if(typeof renderMathInElement !== 'function' || !el) return;
+    renderMathInElement(el, {delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}], throwOnError:false});
+  }catch(e){}
+}
+if(typeof addEventListener === 'function') addEventListener('load', () => mathify(document.getElementById('app')));
+/* ============================================================
+   Settings engine (CFG): teacher UI থেকে edit হয়, backend 'Settings' sheet-এ save হয়
+   ============================================================ */
+const PRESETS = {
+  indigo:   {primary:'#4f46e5', bg:'#f3f4f6', card:'#ffffff', text:'#111827'},
+  ocean:    {primary:'#0284c7', bg:'#eef6fb', card:'#ffffff', text:'#0f172a'},
+  forest:   {primary:'#15803d', bg:'#f0f7f1', card:'#ffffff', text:'#14231a'},
+  sunset:   {primary:'#ea580c', bg:'#fdf4ec', card:'#ffffff', text:'#2a1a10'},
+  rose:     {primary:'#e11d48', bg:'#fdf0f3', card:'#ffffff', text:'#2a1119'},
+  paper:    {primary:'#92400e', bg:'#f5efe0', card:'#fffaf0', text:'#2b2418'},
+  midnight: {primary:'#818cf8', bg:'#0f172a', card:'#1e293b', text:'#e5e7eb'},
+  black:    {primary:'#34d399', bg:'#000000', card:'#111111', text:'#f3f4f6'}
+};
+const FONTS = {
+  system: 'system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans Bengali",sans-serif',
+  serif:  'Georgia,"Times New Roman","Noto Serif Bengali",serif',
+  mono:   'ui-monospace,Menlo,Consolas,monospace',
+  round:  '"Trebuchet MS","Nunito","Noto Sans Bengali",sans-serif'
+};
+const DEF_CFG = {
+  theme:  {preset:'indigo', primary:'#4f46e5', bg:'#f3f4f6', card:'#ffffff', text:'#111827', ok:'#16a34a', bad:'#dc2626', radius:14, font:16, family:'system'},
+  brand:  {title:'MCQ Mock Exam', emoji:'📝', notice:'', noticeType:'info', intro:'', footer:''},
+  text:   {},
+  access: {guest:true, teacherId:'teacher'},
+  rules:  {review:'full', explain:true, showScore:true, passMark:0, retake:true, mistakes:true, maxAttempts:0,
+           timer:true, confirm:true, analytics:true, history:true},
+  exams:  {}   // per exam: {maxAttempts, start, end, intro, shuffle:''|'yes'|'no'}
+};
+/* UI label defaults (teacher "Texts" section-এ যেকোনোটা বদলানো যায়) */
+const TX = {
+  tabStudent:'Student', tabGuest:'Guest', tabTeacher:'Teacher', idPh:'ID', passPh:'Password', loginBtn:'Login', guestHint:'Exam code দিয়ে সরাসরি exam দাও', guestBtn:'Start exam ▶',
+  startTitle:'Start exam', codePh:'Exam code', startBtn:'Start ▶', logout:'Logout',
+  prev:'← Prev', next:'Next →', clear:'Clear', submit:'Submit', submitTitle:'Submit করবে?', submitYes:'Yes, Submit', cancel:'Cancel',
+  allAnswered:'সব answer দেওয়া হয়েছে।', unanswered:'টা question unanswered আছে।',
+  correct:'Correct', wrong:'Wrong', skipped:'Skipped', topicWise:'Topic-wise', reviewTitle:'Review', yourAnswer:'(তোমার answer)',
+  retakeMistakes:'Retake mistakes', fullAgain:'Full again', back:'← Back', analytics:'My Analytics', history:'History',
+  pass:'🎉 Passed!', fail:'আরেকটু practice করো 💪', reviewLocked:'Review এখন বন্ধ আছে।',
+  errCode:'Exam code ভুল', errClosed:'এই exam এখন বন্ধ', errLogin:'ID বা Password ভুল', errBlocked:'এই ID বন্ধ করা আছে', errGuestOff:'Guest login এখন বন্ধ', errGuestExam:'এই exam-এ guest হিসেবে দেওয়া যাবে না',
+  errLimit:'এই exam-এর attempt limit শেষ', errNotStarted:'Exam এখনো শুরু হয়নি', errEnded:'Exam-এর সময় শেষ', introStart:'শুরু করো'
+};
+const T = k => { const v = CFG.text && CFG.text[k]; return v != null && v !== '' ? v : TX[k]; };
+
+function deepMerge(a, b){
+  const o = Array.isArray(a) ? a.slice() : {...a};
+  if(b && typeof b === 'object') for(const k in b){
+    if(b[k] && typeof b[k] === 'object' && !Array.isArray(b[k]) && a && typeof a[k] === 'object' && !Array.isArray(a[k])) o[k] = deepMerge(a[k], b[k]);
+    else o[k] = b[k];
+  }
+  return o;
+}
+let DIRTY = false;
+let CFG = deepMerge(DEF_CFG, LS.get('mq_cfg', {}));
+
+function applyTheme(c){
+  c = c || CFG;
+  const t = c.theme;
+  let st = typeof document !== 'undefined' && document.getElementById && document.getElementById('mq-theme');
+  const css = `:root{--p:${t.primary};--g:${t.ok};--r:${t.bad};--bg:${t.bg};--card:${t.card};--t:${t.text};--rad:${t.radius}px;
+    --pl:color-mix(in srgb,${t.primary} 13%,${t.card});--gl:color-mix(in srgb,${t.ok} 16%,${t.card});--rl:color-mix(in srgb,${t.bad} 14%,${t.card});
+    --m:color-mix(in srgb,${t.text} 58%,${t.card});--b:color-mix(in srgb,${t.text} 14%,${t.card})}
+    body{font-size:${t.font}px;font-family:${FONTS[t.family] || FONTS.system}}`;
+  if(typeof document === 'undefined' || !document.head || !document.createElement) return;
+  if(!st){ st = document.createElement('style'); st.id = 'mq-theme'; document.head.appendChild(st); }
+  st.textContent = css;
+  try{ document.title = (c.brand.emoji ? c.brand.emoji + ' ' : '') + c.brand.title; }catch(e){}
+}
+function setCfg(remote){
+  if(DIRTY) return;   // teacher-এর unsaved edit overwrite করবে না
+  CFG = deepMerge(DEF_CFG, remote || {});
+  LS.set('mq_cfg', remote || {});
+  applyTheme();
+  Object.keys(EXAMS).forEach(c => applyOv(EXAMS[c], c));
+}
+async function loadCfg(){
+  if(!CONFIG.SCRIPT_URL) return;
+  try{
+    const r = await (await fetch(CONFIG.SCRIPT_URL + '?action=settings&t=' + Date.now())).json();
+    if(r && r.ok && r.cfg && typeof r.cfg === 'object'){ setCfg(r.cfg); return true; }
+  }catch(e){}
+  return false;
+}
+
+/* per-exam overrides: title/minutes/neg come from the sheet; rules/limits/window/intro from CFG.exams */
+const exOv = code => (CFG.exams && CFG.exams[code]) || {};
+function applyOv(e, code){
+  if(!e || typeof e !== 'object') return e;
+  const ov = exOv(code);
+  e.shuffle = true;   // shuffle সবসময় চালু (বন্ধ করার option নেই)
+  return e;
+}
+const attemptsOf = (sid, code) => allRecs().filter(r => norm(r.sid) === norm(sid) && r.exam === code && r.mode === 'full').length;
+/* returns '' if the student may start, else the error message */
+function canStart(code){
+  const ov = exOv(code), now = Date.now();
+  if(ov.start && now < new Date(ov.start).getTime()) return T('errNotStarted') + ' (' + new Date(ov.start).toLocaleString() + ')';
+  if(ov.end && now > new Date(ov.end).getTime()) return T('errEnded');
+  const mx = Number(ov.maxAttempts) || Number(CFG.rules.maxAttempts) || 0;
+  if(mx && SESS && attemptsOf(SESS.sid, code) >= mx) return T('errLimit') + ' (' + mx + ')';
+  return '';
+}
+const introOf = code => exOv(code).intro || CFG.brand.intro || '';
+function vNotice(){
+  const b = CFG.brand;
+  return b.notice ? `<div class="notice ${esc(b.noticeType)}">${esc(b.notice)}</div>` : '';
+}
+/* ============================================================
+   Network helper: timeout + আসল error-এর কারণ আলাদা করে বোঝা
+   ============================================================ */
+const INAPP = /FBAN|FBAV|FB_IAB|Messenger|Instagram|Line\/|MicroMessenger|Telegram|; wv\)/i;
+/* GET url -> parsed JSON. Throws {kind:'timeout'|'offline'|'http'|'badresp'|'blocked', detail} */
+async function jget(url, ms){
+  const ac = typeof AbortController === 'function' ? new AbortController() : null;
+  const tm = ac ? setTimeout(() => ac.abort(), ms || 20000) : null;
+  let res;
+  try{ res = await fetch(url, ac ? {signal: ac.signal} : undefined); }
+  catch(e){
+    if(tm) clearTimeout(tm);
+    if(e && e.name === 'AbortError') throw {kind:'timeout', detail:'no response in ' + Math.round((ms || 20000) / 1000) + 's'};
+    if(typeof navigator !== 'undefined' && navigator.onLine === false) throw {kind:'offline', detail:'navigator.onLine=false'};
+    throw {kind:'blocked', detail:String(e && e.message || e)};
+  }
+  if(tm) clearTimeout(tm);
+  if(!res.ok) throw {kind:'http', detail:'HTTP ' + res.status};
+  const txt = await res.text();
+  try{ return JSON.parse(txt); }
+  catch(e){ throw {kind:'badresp', detail:txt.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 80)}; }
+}
+function describeErr(e){
+  const k = e && e.kind, ua = typeof navigator !== 'undefined' ? navigator.userAgent : '';
+  const tail = '\n[' + (k || 'error') + ': ' + (e && e.detail || e && e.message || e) + ']';
+  if(k === 'offline') return 'Internet connection নেই। WiFi / mobile data চালু করে আবার try করো।' + tail;
+  if(k === 'timeout') return 'Server সাড়া দিচ্ছে না (অনেক ধীর internet বা block)। একটু পরে আবার try করো, অথবা WiFi ↔ mobile data বদলাও।' + tail;
+  if(k === 'http') return 'Server সমস্যা দিচ্ছে। একটু পরে আবার try করো।' + tail;
+  if(k === 'badresp') return 'Server ভুল response দিয়েছে (অস্থায়ী সমস্যা হতে পারে)। একটু পরে আবার try করো।' + tail;
+  return 'Server-এ পৌঁছানো যাচ্ছে না। ' + (INAPP.test(ua) ? 'তুমি Messenger/Facebook-এর ভেতরের browser-এ আছো — Chrome বা Safari-তে link খোলো। ' : 'WiFi ↔ mobile data বদলে দেখো; VPN / ad-blocker / Brave Shields বন্ধ করো।') + tail;
+}
+let NETERR = '', LASTERR = null, DIAG = '';
+function netFail(e, fn){ LASTERR = e; NETERR = fn; msg = describeErr(e); return render(true); }
+function errBox(){
+  return `<div class="err">${esc(msg)}</div>${NETERR ? `<button class="link" onclick="${NETERR}()">↻ Try again</button>` : ''}`;
+}
+async function diag(){
+  DIAG = 'Checking…'; render(true);
+  const L = [], ua = typeof navigator !== 'undefined' ? navigator.userAgent : '';
+  L.push('Online: ' + (typeof navigator !== 'undefined' ? navigator.onLine : '?'));
+  L.push('Browser: ' + ua.slice(0, 100));
+  if(INAPP.test(ua)) L.push('⚠ In-app browser — Chrome / Safari-তে খোলো');
+  let t0 = Date.now();
+  try{ await fetch(location.pathname + '?t=' + Date.now(), {cache:'no-store'}); L.push('এই site: OK (' + (Date.now() - t0) + 'ms)'); }catch(e){ L.push('এই site: FAIL'); }
+  t0 = Date.now();
+  try{ await jget(CONFIG.SCRIPT_URL + '?action=settings&t=' + Date.now(), 15000); L.push('Server (Google): OK (' + (Date.now() - t0) + 'ms)'); }
+  catch(e){ L.push('Server (Google): FAIL — ' + (e.kind || 'error') + ': ' + (e.detail || e.message || e)); }
+  DIAG = L.join('\n'); render(true);
+}
+
+/* ============================================================
+   Google Form (write) + Published Sheet (read)
+   ============================================================ */
+const FORM = (() => {
+  try{
+    const u = new URL(CONFIG.PREFILLED_LINK), map = {};
+    u.searchParams.forEach((v,k) => { if(k.indexOf('entry.')===0) map[String(v).toUpperCase()] = k; });
+    return { action: u.origin + u.pathname.replace(/\/viewform.*$/, '/formResponse'), map };
+  }catch(e){ return null; }
+})();
+
+const CAN_SYNC = () => !!(CONFIG.SCRIPT_URL || FORM);
+async function send(rec){
+  if(CONFIG.SCRIPT_URL){
+    const b = new URLSearchParams({sid:rec.sid,name:rec.name,exam:rec.exam,aid:rec.aid,mode:rec.mode,score:rec.score,total:rec.total,secs:rec.secs,details:JSON.stringify(rec.d)});
+    try{
+      await fetch(CONFIG.SCRIPT_URL, {method:'POST', mode:'no-cors', headers:{'Content-Type':'application/x-www-form-urlencoded'}, body:b});
+      return true;
+    }catch(e){ return false; }
+  }
+  if(!FORM) return false;
+  const v = {SID:rec.sid,NAME:rec.name,EXAM:rec.exam,AID:rec.aid,MODE:rec.mode,SCORE:rec.score,TOTAL:rec.total,SECS:rec.secs,DETAILS:JSON.stringify(rec.d)};
+  const b = new URLSearchParams();
+  for(const k in v){ if(!FORM.map[k]) return false; b.append(FORM.map[k], v[k]); }
+  try{
+    await fetch(FORM.action, {method:'POST', mode:'no-cors', headers:{'Content-Type':'application/x-www-form-urlencoded'}, body:b});
+    return true;
+  }catch(e){ return false; }
+}
+let flushing = false;
+async function flush(){
+  if(flushing) return -1;
+  flushing = true;
+  try{
+    const ob = LS.get('mq_out', []), rest = [];
+    for(const r of ob){ if(!(await send(r))) rest.push(r); }
+    LS.set('mq_out', rest);
+    return rest.length;
+  } finally { flushing = false; }
+}
+
+let REMOTE = [], remoteMsg = '';
+async function loadRemote(){
+  if(CONFIG.SCRIPT_URL){
+    if(!SESS) return;
+    try{
+      const u = CONFIG.SCRIPT_URL + '?' + (SESS.teacher ? 'key=' + encodeURIComponent(TKEY()) : 'sid=' + encodeURIComponent(SESS.sid)) + '&t=' + Date.now();
+      const arr = await (await fetch(u)).json();
+      REMOTE = arr.map(r => {
+        let d = []; try{ d = JSON.parse(r.details); }catch(e){}
+        return {sid:norm(r.sid),name:r.name,exam:String(r.exam||'').trim().toUpperCase(),aid:String(r.aid||'').trim(),mode:r.mode,score:parseFloat(r.score)||0,total:parseInt(r.total)||0,secs:parseInt(r.secs)||0,d:Array.isArray(d)?d:[]};
+      }).filter(x => x.aid && x.d.length);
+      remoteMsg = '';
+    }catch(e){ remoteMsg = 'Server থেকে data আনা যায়নি (offline? বা Script deploy ঠিক নেই)'; }
+    return;
+  }
+  if(!CONFIG.SHEET_CSV_URL){ remoteMsg = 'Sheet URL set করা নেই (শুধু এই device-এর data দেখাচ্ছে)'; return; }
+  try{
+    const u = CONFIG.SHEET_CSV_URL + (CONFIG.SHEET_CSV_URL.indexOf('?')>=0 ? '&' : '?') + 't=' + Date.now();
+    const res = await fetch(u);
+    const rows = parseCSV(await res.text());
+    const h = rows[0].map(x => x.trim().toUpperCase());
+    const col = (k, i) => { const j = h.indexOf(k); return j >= 0 ? j : i; };
+    const C = {sid:col('SID',1),name:col('NAME',2),exam:col('EXAM',3),aid:col('AID',4),mode:col('MODE',5),score:col('SCORE',6),total:col('TOTAL',7),secs:col('SECS',8),d:col('DETAILS',9)};
+    REMOTE = rows.slice(1).map(r => {
+      let d = []; try{ d = JSON.parse(r[C.d]); }catch(e){}
+      return {sid:norm(r[C.sid]),name:r[C.name],exam:String(r[C.exam]||'').trim().toUpperCase(),aid:String(r[C.aid]||'').trim(),mode:r[C.mode],score:parseFloat(r[C.score])||0,total:parseInt(r[C.total])||0,secs:parseInt(r[C.secs])||0,d:Array.isArray(d)?d:[]};
+    }).filter(x => x.aid && x.d.length);
+    remoteMsg = '';
+  }catch(e){ remoteMsg = 'Sheet load হয়নি (offline, বা Sheet publish করা হয়নি)'; }
+}
+function allRecs(){
+  const m = new Map();
+  [...REMOTE, ...LS.get('mq_local', [])].forEach(r => { if(!m.has(r.aid)) m.set(r.aid, r); });
+  return [...m.values()].sort((a,b) => aidTime(a.aid) - aidTime(b.aid));
+}
+
+/* ============================================================
+   Analytics
+   ============================================================ */
+const qinfo = (exam, i) => EXAMS[exam] && EXAMS[exam].questions[i];
+function topicStats(recs){
+  const m = {};
+  recs.forEach(r => r.d.forEach(([i,c,ok]) => {
+    const q = qinfo(r.exam, i), t = (q && q.t) || 'General';
+    const o = m[t] = m[t] || {t, n:0, ok:0};
+    o.n++; o.ok += ok ? 1 : 0;
+  }));
+  return Object.values(m).map(x => ({...x, p: x.ok / x.n})).sort((a,b) => a.p - b.p);
+}
+function wrongIdx(sid, exam){
+  const st = {};
+  allRecs().filter(r => norm(r.sid) === norm(sid) && r.exam === exam).forEach(r => r.d.forEach(([i,c,ok]) => { st[i] = ok; }));
+  return Object.keys(st).filter(i => !st[i]).map(Number);
+}
+
+/* ============================================================
+   State
+   ============================================================ */
+Object.assign(EXAMS, LS.get('mq_exams', {}));
+let SESS = LS.get('mq_sess', null), RUN = LS.get('mq_run', null);
+let view = 'login', BACK = 'home', LAST = null, TM = null, TF = '', TSTU = null;
+let EXL = [], UP = null, PASTE = '', upMsg = '', DELC = '';
+let TTAB = 'dash';
+let msg = '', loading = false, confirming = false, syncMsg = '', showT = false;
+
+function render(keep){
+  const a = $('#app');
+  if(!a) return;
+  let h = '';
+  if(view === 'login') h = vLogin();
+  else if(view === 'home') h = vHome();
+  else if(view === 'quiz') h = vQuiz();
+  else if(view === 'result') h = vResult(LAST);
+  else if(view === 'teacher') h = vTeacher();
+  const KEEP = ['#code', '#sid', '#pw', '#tid', '#tp', '#gcode'], kv = KEEP.map(k => $(k) ? $(k).value : '');
+  if(CFG.brand.footer && view !== 'quiz') h += `<div class="foot">${esc(CFG.brand.footer)}</div>`;
+  a.innerHTML = h;
+  mathify(a);
+  if(view === 'teacher' && EDX && !EDX.loading) EDX.qs.forEach((_, i) => edPrev(i));
+  KEEP.forEach((k, i) => { if(kv[i] && $(k)) $(k).value = kv[i]; });
+  if(view === 'quiz') tick();
+  if(!keep) window.scrollTo(0, 0);
+}
+
+/* ============================================================
+   Views
+   ============================================================ */
+const TKEY = () => (SESS && SESS.key) || CONFIG.TEACHER_PASS;
+function banner(){
+  let s = '';
+  if(!CAN_SYNC()) s += '<div class="warn">⚠ Script URL / Google Form link set করা নেই — result শুধু এই device-এ save হবে।</div>';
+  return s;
+}
+let LMODE = 'student';   // login tab: student | guest | teacher
+const gid = () => { let g = LS.get('mq_gid', ''); if(!g){ g = 'G-' + Math.random().toString(36).slice(2, 6).toUpperCase(); LS.set('mq_gid', g); } return g; };
+function setLM(m){ LMODE = m; msg = ''; NETERR = ''; render(); }
+function vLogin(){
+  const b = CFG.brand, A = CFG.access;
+  const tabs = [['student', T('tabStudent')]].concat(A.guest ? [['guest', T('tabGuest')]] : []).concat([['teacher', T('tabTeacher')]]);
+  if(!tabs.some(t => t[0] === LMODE)) LMODE = 'student';
+  const enter = f => `onkeydown="if(event.key==='Enter')${f}()"`;
+  let body;
+  if(LMODE === 'guest') body = `<div class="muted" style="margin-bottom:6px">${esc(T('guestHint'))}</div>
+      <input id="gcode" placeholder="${esc(T('codePh'))}" autocapitalize="characters" autocomplete="off" ${enter('doGuest')}>
+      ${errBox()}<button class="btn full" onclick="doGuest()">${esc(T('guestBtn'))}</button>`;
+  else body = `<input id="${LMODE === 'teacher' ? 'tid' : 'sid'}" placeholder="${esc(T('idPh'))}" autocomplete="username" autocapitalize="off">
+      <input id="${LMODE === 'teacher' ? 'tp' : 'pw'}" type="password" placeholder="${esc(T('passPh'))}" autocomplete="current-password" ${enter(LMODE === 'teacher' ? 'doTeacher' : 'doLogin')}>
+      ${errBox()}<button class="btn full" onclick="${LMODE === 'teacher' ? 'doTeacher' : 'doLogin'}()">${esc(T('loginBtn'))}</button>`;
+  return `<h1>${esc(b.emoji)} ${esc(b.title)}</h1>${banner()}${vNotice()}
+  <div class="card"><div class="tabs">${tabs.map(([k, l]) => `<button class="${LMODE === k ? 'on' : ''}" onclick="setLM('${k}')">${esc(l)}</button>`).join('')}</div>${body}</div>
+  <div style="text-align:center"><button class="link" onclick="diag()">🔧 Connection check</button></div>${DIAG ? `<div class="card"><small>${esc(DIAG)}</small></div>` : ''}`;
+}
+/* Student: ID + Password (server-side, roster) */
+async function doLogin(){
+  const sid = norm($('#sid').value), pw = $('#pw').value;
+  if(!sid || !pw){ msg = T('idPh') + ' + ' + T('passPh'); return render(true); }
+  if(!CONFIG.SCRIPT_URL){ msg = 'Server set করা নেই'; return render(true); }
+  msg = 'Checking…'; render(true);
+  let r; NETERR = '';
+  try{ r = await jget(CONFIG.SCRIPT_URL + '?action=login&sid=' + encodeURIComponent(sid) + '&pin=' + encodeURIComponent(pw) + '&t=' + Date.now()); }
+  catch(e){ return netFail(e, 'doLogin'); }
+  if(!r || Array.isArray(r) || !r.ok){ msg = r && r.reason === 'blocked' ? T('errBlocked') : T('errLogin'); return render(true); }
+  SESS = {sid, name:r.name || sid, teacher:false}; LS.set('mq_sess', SESS); msg = ''; view = 'home'; render(); refresh();
+}
+/* Guest: শুধু exam code; ওই exam-ই দিতে পারবে */
+async function doGuest(){
+  const c = $('#gcode').value.trim().toUpperCase();
+  if(!c){ msg = T('codePh'); return render(true); }
+  if(!CFG.access.guest){ msg = T('errGuestOff'); return render(true); }
+  NETERR = ''; msg = 'Loading…'; render(true);
+  const e = await getExam(c);
+  if(e === 'offline') return netFail(LASTERR, 'doGuest');
+  NETERR = '';
+  if(!e){ msg = T('errCode'); return render(true); }
+  if(e.open === false){ msg = T('errClosed'); return render(true); }
+  if(exOv(c).guest === 'no'){ msg = T('errGuestExam'); return render(true); }
+  SESS = {sid:gid(), name:'Guest', teacher:false, guest:true, code:c};
+  const why = canStart(c);
+  if(why){ SESS = null; msg = why; return render(true); }
+  LS.set('mq_sess', SESS); msg = ''; view = 'home'; render(); refresh();
+}
+/* Teacher: ID + Password */
+async function doTeacher(){
+  const id = ($('#tid').value || '').trim().toLowerCase(), pw = $('#tp').value;
+  NETERR = ''; msg = 'Checking…'; render(true);
+  let ok = false;
+  if(CONFIG.SCRIPT_URL){
+    try{
+      await loadCfg();
+      const r = await jget(CONFIG.SCRIPT_URL + '?action=tlogin&key=' + encodeURIComponent(pw) + '&t=' + Date.now());
+      ok = r && !Array.isArray(r) && typeof r === 'object' ? !!r.ok : pw === CONFIG.TEACHER_PASS;   // পুরোনো backend হলে fallback
+      NETERR = '';
+    }catch(e){ return netFail(e, 'doTeacher'); }
+  } else ok = pw === CONFIG.TEACHER_PASS;
+  if(!ok || id !== String(CFG.access.teacherId || 'teacher').trim().toLowerCase()){ msg = T('errLogin'); return render(true); }
+  SESS = {sid:'TEACHER', name:'Teacher', teacher:true, key:pw}; LS.set('mq_sess', SESS); msg = ''; view = 'teacher'; render(); refresh();
+}
+function logout(){ SESS = null; LS.del('mq_sess'); view = 'login'; LMODE = 'student'; TSTU = null; msg = ''; render(); }
+async function refresh(){
+  loading = true; render(true);
+  await loadCfg(); await loadRemote(); if(SESS && SESS.teacher) await loadExamList(); await ensureExams(); await flush();
+  loading = false;
+  if(view === 'home' || view === 'teacher') render(true);
+}
+
+function vHome(){
+  const s = SESS;
+  const top = `<div class="top"><div><b>${esc(s.name)}</b> <small>${s.guest ? 'Guest' : 'ID: ' + esc(s.sid)}</small></div><button class="link" onclick="logout()">${esc(T('logout'))}</button></div>${banner()}${vNotice()}`;
+  const intro = `${introFor ? `<div class="modal"><div class="card"><h2>${esc(introFor)}</h2><div>${esc(introOf(introFor))}</div>
+    <div class="row"><button class="btn ghost" onclick="introFor='';render(true)">${esc(T('cancel'))}</button><button class="btn" onclick="const c=introFor;introFor='';startRun(c,'full')">${esc(T('introStart'))}</button></div></div></div>` : ''}`;
+  if(s.guest){
+    const e = EXAMS[s.code];
+    return top + `<div class="card"><h2>${esc(e ? e.title : s.code)}</h2>
+      <div class="muted">${esc(s.code)}${e ? ' · ' + e.questions.length + ' Q · ' + e.minutes + ' min' : ''}</div>
+      ${errBox()}
+      <button class="btn full" onclick="startGuest()">${esc(T('startBtn'))}</button></div>${intro}`;
+  }
+  return top + `
+  <div class="card"><h2>${esc(T('startTitle'))}</h2>
+    <input id="code" placeholder="${esc(T('codePh'))}" autocapitalize="characters" autocomplete="off" onkeydown="if(event.key==='Enter')startCode()">
+    ${errBox()}
+    <button class="btn full" onclick="startCode()">${esc(T('startBtn'))}</button>
+  </div>
+  ${CFG.rules.analytics ? vBoard(s.sid, false) : ''}${intro}`;
+}
+function startGuest(){
+  const c = SESS.code, e = EXAMS[c];
+  if(!e){ msg = T('errCode'); return render(true); }
+  const why = canStart(c);
+  if(why){ msg = why; return render(true); }
+  msg = '';
+  if(introOf(c)){ introFor = c; return render(true); }
+  startRun(c, 'full');
+}
+let introFor = '';
+
+async function getExam(code){
+  if(CONFIG.SCRIPT_URL){
+    let r;
+    try{ r = await jget(CONFIG.SCRIPT_URL + '?action=exam&code=' + encodeURIComponent(code) + '&t=' + Date.now()); }
+    catch(e){ LASTERR = e; return EXAMS[code] || 'offline'; }
+    if(r && r.questions && r.questions.length){ applyOv(r, code); EXAMS[code] = r; LS.set('mq_exams', EXAMS); return r; }
+    return null;
+  }
+  return EXAMS[code] || null;
+}
+async function ensureExams(){
+  if(!CONFIG.SCRIPT_URL) return;
+  const codes = [...new Set(allRecs().map(r => r.exam).concat(SESS && SESS.guest ? [SESS.code] : []))].filter(Boolean);
+  await Promise.all(codes.map(c => getExam(c)));
+}
+async function startCode(){
+  const c = $('#code').value.trim().toUpperCase();
+  if(!c){ msg = T('codePh'); return render(true); }
+  NETERR = ''; const er = document.querySelector('.err'); if(er) er.textContent = 'Loading…';
+  const e = await getExam(c);
+  if(e === 'offline') return netFail(LASTERR, 'startCode');
+  NETERR = '';
+  if(!e){ msg = T('errCode'); return render(true); }
+  if(e.open === false){ msg = T('errClosed'); return render(true); }
+  const why = canStart(c);
+  if(why){ msg = why; return render(true); }
+  msg = '';
+  if(introOf(c)){ introFor = c; return render(true); }
+  startRun(c, 'full');
+}
+const RUNKEY = (sid, exam, mode) => norm(sid) + '_' + exam + '_' + mode;
+function startRun(exam, mode, idxs){
+  const e = EXAMS[exam];
+  applyOv(e, exam);
+  let order = idxs && idxs.length ? idxs.slice() : e.questions.map((_, i) => i);
+  /* সবসময় shuffle (settings দিয়ে বন্ধ করা যায় না): প্রতি attempt-এ question order আর option order নতুন করে এলোমেলো।
+     একই student-এর আগের attempt-এর সাথে question order হুবহু এক হলে আবার shuffle করা হয়। */
+  shuffle(order);
+  const lk = 'mq_lo_' + RUNKEY(SESS.sid, exam, mode), prev = LS.get(lk, null);
+  for(let k = 0; k < 20 && order.length > 1 && prev && prev.join() === order.join(); k++) shuffle(order);
+  LS.set(lk, order);
+  const op = {};
+  /* "None of these / All of the above / Both…" option সবসময় শেষে থাকে, বাকিগুলো shuffle হয় */
+  const PIN = /^\s*(none of (these|the above)|all of (these|the above)|both\b|উপরের সবগুলো|কোনোটিই নয়)/i;
+  order.forEach(qi => {
+    const pin = [], mv = [];
+    e.questions[qi].o.forEach((t, i) => (PIN.test(t) ? pin : mv).push(i));
+    op[qi] = shuffle(mv).concat(pin);
+  });
+  const perQ = e.minutes * 60 / e.questions.length;
+  const dur = mode === 'mistakes' ? Math.max(60, Math.ceil(order.length * perQ)) : e.minutes * 60;
+  RUN = {sid:SESS.sid, name:SESS.name, exam, mode, order, op, ans:{}, secs:{}, cur:0, start:Date.now(), dur, last:Date.now()};
+  LS.set('mq_run', RUN); confirming = false; view = 'quiz'; render(); startTimer();
+}
+function retake(exam, mode){
+  const e = EXAMS[exam];
+  if(!e) return;
+  if(mode === 'mistakes'){
+    const w = wrongIdx(SESS.sid, exam);
+    if(!w.length){ msg = 'কোনো ভুল নেই 🎉'; return render(); }
+    startRun(exam, 'mistakes', w);
+  } else {
+    const why = canStart(exam);
+    if(why){ msg = why; view = 'home'; return render(); }
+    startRun(exam, 'full');
+  }
+}
+/* ---------- Dashboard (student; teacher reuses) ---------- */
+function vBoard(sid, isT){
+  const recs = allRecs().filter(r => norm(r.sid) === norm(sid));
+  let h = '';
+  if(remoteMsg) h += `<div class="warn">${esc(remoteMsg)}</div>`;
+  h += `<div class="row" style="margin:0"><h2 style="margin:0">${isT ? esc((recs[recs.length-1]||{}).name || sid) + ' — ' : ''}${esc(T('analytics'))}</h2><button class="btn ghost sm" onclick="refresh()">${loading ? 'Syncing…' : '↻ Refresh'}</button></div>`;
+  if(!recs.length) return h + '<div class="card muted">এখনো কোনো attempt নেই। Exam code দিয়ে শুরু করো।</div>';
+  const ps = recs.map(pct), ts = topicStats(recs);
+  h += `<div class="card"><div class="stats">
+    <div class="stat"><b>${recs.length}</b><small>Attempts</small></div>
+    <div class="stat"><b>${avg(ps)}%</b><small>Average</small></div>
+    <div class="stat"><b>${Math.max(...ps)}%</b><small>Best</small></div></div>
+    <h3>Trend (last ${Math.min(12, ps.length)})</h3>
+    <div class="tr">${ps.slice(-12).map(p => `<div style="height:${Math.max(4,Math.min(100,p))}%" title="${p}%"></div>`).join('')}</div></div>`;
+  const weak = ts.filter(t => t.p < 0.8).slice(0, 5);
+  h += `<div class="card"><h2>🎯 Focus next</h2>${weak.length ? '' : '<div class="muted">সব topic ভালো আছে 👍</div>'}` +
+    ts.map(t => `<div class="trow"><span>${esc(t.t)}</span><div class="bar"><i style="width:${Math.round(t.p*100)}%;background:${t.p<0.5?'var(--r)':t.p<0.8?'#f59e0b':'var(--g)'}"></i></div><b>${Math.round(t.p*100)}%</b></div>`).join('') +
+    `<small class="muted">${ts.map(t => t.ok + '/' + t.n).length ? 'সবচেয়ে দুর্বল topic উপরে' : ''}</small></div>`;
+  if(!isT){
+    const exams = [...new Set(recs.map(r => r.exam))].filter(c => EXAMS[c]);
+    if(exams.length){
+      h += `<div class="card"><h2>🔁 Retake</h2>` + exams.map(c => {
+        const w = wrongIdx(sid, c).length;
+        return `<div class="hist"><div><b>${esc(EXAMS[c].title)}</b> <small>${esc(c)}</small></div><div>
+          <button class="btn sm ghost" ${w ? '' : 'disabled'} data-c="${esc(c)}" onclick="retake(this.dataset.c,'mistakes')">Mistakes (${w})</button>
+          <button class="btn sm" data-c="${esc(c)}" onclick="retake(this.dataset.c,'full')">Full</button></div></div>`;
+      }).join('') + '</div>';
+    }
+  }
+  if(CFG.rules.history || isT) h += `<div class="card"><h2>${esc(T('history'))}</h2>` + recs.slice().reverse().map(r =>
+    `<div class="hist"><div><b>${esc(r.exam)}</b>${r.mode==='mistakes'?'<span class="tag">mistakes</span>':''}<br><small>${new Date(aidTime(r.aid)).toLocaleString()} · ${fmt(r.secs)}</small></div>
+     <div style="text-align:right"><b>${r.score}/${r.total}</b> <small>(${pct(r)}%)</small><br><button class="link" data-a="${esc(r.aid)}" onclick="openRec(this.dataset.a)">Review</button></div></div>`).join('') + '</div>';
+  return h;
+}
+function openRec(aid){
+  const r = allRecs().find(x => x.aid === aid);
+  if(!r) return;
+  BACK = SESS && SESS.teacher ? 'teacher' : 'home'; LAST = r; view = 'result'; render();
+}
+
+/* ---------- Quiz ---------- */
+function vQuiz(){
+  const e = EXAMS[RUN.exam], p = RUN.cur, last = RUN.order.length - 1, qi = RUN.order[p], q = e.questions[qi], a = RUN.ans[p];
+  const un = RUN.order.length - Object.keys(RUN.ans).length;
+  const perm = (RUN.op && RUN.op[qi]) || q.o.map((_, i) => i);
+  return `<div class="top"><div><b>${esc(e.title)}</b>${RUN.mode==='mistakes'?'<span class="tag">mistakes</span>':''}</div>${CFG.rules.timer ? '<div id="tm" class="tm"></div>' : ''}</div>
+  <div class="card"><div class="muted">Question ${p+1} / ${last+1}</div><div class="q">${esc(q.q)}</div>
+    ${perm.map((oi, n) => `<button class="opt ${a===oi?'sel':''}" onclick="pick(${oi})"><span class="L">${LET[n]}</span><span>${esc(q.o[oi])}</span></button>`).join('')}
+    <div class="row"><button class="btn ghost" onclick="go(${p-1})" ${p===0?'disabled':''}>${esc(T('prev'))}</button>
+      ${a!==undefined ? `<button class="link" onclick="pick(-1)">${esc(T('clear'))}</button>` : '<span></span>'}
+      <button class="btn" onclick="go(${p+1})" ${p===last?'disabled':''}>${esc(T('next'))}</button></div></div>
+  <div class="card"><div class="pal">${RUN.order.map((_,i) => `<button class="pn ${RUN.ans[i]!==undefined?'done':''} ${i===p?'cur':''}" onclick="go(${i})">${i+1}</button>`).join('')}</div>
+    <button class="btn full" onclick="${CFG.rules.confirm ? 'confirming=true;render(true)' : 'finish(false)'}">${esc(T('submit'))}</button></div>
+  ${confirming ? `<div class="modal"><div class="card"><h2>${esc(T('submitTitle'))}</h2><p>${un ? un + esc(T('unanswered')) : esc(T('allAnswered'))}</p>
+    <div class="row"><button class="btn ghost" onclick="confirming=false;render(true)">${esc(T('cancel'))}</button><button class="btn" onclick="finish(false)">${esc(T('submitYes'))}</button></div></div></div>` : ''}`;
+}
+function pick(i){
+  if(!RUN) return;
+  if(i < 0) delete RUN.ans[RUN.cur]; else RUN.ans[RUN.cur] = i;
+  LS.set('mq_run', RUN); render(true);
+}
+function addTime(){
+  const now = Date.now();
+  RUN.secs[RUN.cur] = (RUN.secs[RUN.cur] || 0) + (now - RUN.last) / 1000;
+  RUN.last = now;
+}
+function go(n){
+  if(!RUN || n < 0 || n >= RUN.order.length) return;
+  addTime(); RUN.cur = n; LS.set('mq_run', RUN); render(true);
+}
+function startTimer(){ clearInterval(TM); TM = setInterval(tick, 1000); tick(); }
+function tick(){
+  if(!RUN) return;
+  const rem = Math.max(0, RUN.dur - Math.floor((Date.now() - RUN.start) / 1000));
+  const el = $('#tm');
+  if(el){ el.textContent = '⏱ ' + fmt(rem); el.classList.toggle('low', rem < 60); }
+  if(rem <= 0) finish(true);
+}
+function finish(auto){
+  if(!RUN) return;
+  clearInterval(TM); addTime();
+  const e = EXAMS[RUN.exam], neg = e.neg || 0;
+  let ok = 0, wr = 0;
+  const d = RUN.order.map((qi, p) => {
+    const q = e.questions[qi], c = RUN.ans[p] === undefined ? -1 : RUN.ans[p], g = c === q.a ? 1 : 0;
+    if(c >= 0){ if(g) ok++; else wr++; }
+    return [qi, c, g, Math.round(RUN.secs[p] || 0)];
+  });
+  const rec = {aid:newAid(), sid:RUN.sid, name:RUN.name, exam:RUN.exam, mode:RUN.mode,
+    score:+(ok - wr * neg).toFixed(2), total:RUN.order.length,
+    secs:Math.min(RUN.dur, Math.round((Date.now() - RUN.start) / 1000)), d};
+  const loc = LS.get('mq_local', []); loc.push(rec); LS.set('mq_local', loc);
+  const ob = LS.get('mq_out', []); ob.push(rec); LS.set('mq_out', ob);
+  LS.del('mq_run'); RUN = null; confirming = false;
+  LAST = rec; BACK = 'home'; view = 'result'; syncMsg = CAN_SYNC() ? 'Saving…' : '';
+  render();
+  if(CAN_SYNC()) flush().then(n => { syncMsg = n === 0 ? 'Saved ✓' : n > 0 ? 'Network নেই — পরে auto save হবে' : syncMsg; const el = $('#sync'); if(el) el.textContent = syncMsg; });
+}
+
+/* ---------- Result / review ---------- */
+function vResult(r){
+  const e = EXAMS[r.exam], R = CFG.rules;
+  const okN = r.d.filter(x => x[2]).length, wrN = r.d.filter(x => !x[2] && x[1] >= 0).length, skN = r.d.filter(x => x[1] < 0).length;
+  const ts = topicStats([r]);
+  const mine = SESS && !SESS.teacher && norm(SESS.sid) === norm(r.sid);
+  const isT = SESS && SESS.teacher;
+  const w = mine ? wrongIdx(r.sid, r.exam).length : 0;
+  const rv = isT ? 'full' : R.review;             // teacher সবসময় সব দেখে
+  const showScore = isT || R.showScore;
+  const p = pct(r), msgPass = R.passMark ? (p >= R.passMark ? T('pass') : T('fail')) : '';
+  let h = `<div class="top"><button class="link" onclick="view=BACK;render();refresh()">${esc(T('back'))}</button><small id="sync">${esc(syncMsg)}</small></div>
+  <div class="card"><div class="muted" style="text-align:center">${esc(e ? e.title : r.exam)}${r.mode==='mistakes'?' · mistakes':''}</div>
+    ${showScore ? `<p class="big">${r.score}/${r.total}</p><div style="text-align:center" class="muted">${p}% · ${fmt(r.secs)}</div>` : `<p class="big" style="font-size:26px">✓</p><div style="text-align:center" class="muted">Submitted · ${fmt(r.secs)}</div>`}
+    ${msgPass && showScore ? `<div style="text-align:center;font-weight:700;margin-top:8px">${esc(msgPass)}</div>` : ''}
+    ${showScore ? `<div class="stats" style="margin-top:12px"><div class="stat"><b style="color:var(--g)">${okN}</b><small>${esc(T('correct'))}</small></div>
+      <div class="stat"><b style="color:var(--r)">${wrN}</b><small>${esc(T('wrong'))}</small></div><div class="stat"><b>${skN}</b><small>${esc(T('skipped'))}</small></div></div>` : ''}
+    ${mine && e && (R.mistakes || R.retake) ? `<div class="row">${R.mistakes ? `<button class="btn ghost" ${w?'':'disabled'} onclick="retake('${esc(r.exam)}','mistakes')">${esc(T('retakeMistakes'))} (${w})</button>` : '<span></span>'}${R.retake ? `<button class="btn" onclick="retake('${esc(r.exam)}','full')">${esc(T('fullAgain'))}</button>` : ''}</div>` : ''}</div>`;
+  if(showScore) h += `<div class="card"><h2>${esc(T('topicWise'))}</h2>${ts.map(t => `<div class="trow"><span>${esc(t.t)} <small>${t.ok}/${t.n}</small></span><div class="bar"><i style="width:${Math.round(t.p*100)}%;background:${t.p<0.5?'var(--r)':t.p<0.8?'#f59e0b':'var(--g)'}"></i></div><b>${Math.round(t.p*100)}%</b></div>`).join('')}</div>`;
+  if(rv === 'none') return h + `<div class="card muted">${esc(T('reviewLocked'))}</div>`;
+  h += `<div class="card"><h2>${esc(T('reviewTitle'))}</h2>`;
+  r.d.forEach(([qi, c, g, s], n) => {
+    const q = qinfo(r.exam, qi);
+    if(!q) return;
+    h += `<div style="margin-bottom:18px"><div class="muted">Q${n+1} · ${esc(q.t || '')} · ${s}s ${rv==='marks' ? (c < 0 ? '· —' : g ? '· ✅' : '· ❌') : ''}</div><div class="q" style="font-size:.95em">${esc(q.q)}</div>` +
+      q.o.map((o, i) => `<div class="opt ${rv==='full' && i===q.a ? 'ok' : i===c ? (rv==='full' ? 'bad' : (g ? 'ok' : 'bad')) : ''}" style="margin:4px 0;padding:8px"><span class="L">${LET[i]}</span><span>${esc(o)}${i===c?' <small>' + esc(T('yourAnswer')) + '</small>':''}</span></div>`).join('') +
+      (c < 0 ? `<small class="err">${esc(T('skipped'))}</small>` : '') + (rv === 'full' && R.explain && q.e ? `<div class="exp">💡 ${esc(q.e)}</div>` : '') + '</div>';
+  });
+  return h + '</div>';
+}
+/* ---------- Teacher ---------- */
+function openStu(sid){ TSTU = sid; render(); }
+function vTeacher(){
+  if(EDX) return vExamEditor();
+  if(TSTU) return `<div class="top"><button class="link" onclick="TSTU=null;render()">← All students</button></div>` + vBoard(TSTU, true);
+  let recs = allRecs();
+  if(TF) recs = recs.filter(r => r.exam === TF);
+  const exams = [...new Set(allRecs().map(r => r.exam))];
+  const by = {};
+  recs.forEach(r => { (by[norm(r.sid)] = by[norm(r.sid)] || []).push(r); });
+  const rows = Object.entries(by).map(([sid, rs]) => {
+    const ps = rs.map(pct), ts = topicStats(rs);
+    return {sid, name:rs[rs.length-1].name, n:rs.length, avg:avg(ps), best:Math.max(...ps), last:ps[ps.length-1], weak:ts[0] ? ts[0].t : '-', ts};
+  }).sort((a,b) => a.avg - b.avg);
+  const topics = topicStats(recs);
+  const qs = {};
+  recs.forEach(r => r.d.forEach(([i,c,ok]) => {
+    const k = r.exam + '|' + i, o = qs[k] = qs[k] || {exam:r.exam, i, n:0, ok:0, pick:{}};
+    o.n++; o.ok += ok ? 1 : 0;
+    if(c >= 0 && !ok) o.pick[c] = (o.pick[c] || 0) + 1;
+  }));
+  const hard = Object.values(qs).filter(o => qinfo(o.exam, o.i)).sort((a,b) => a.ok/a.n - b.ok/b.n).slice(0, 10);
+  const hd = `<div class="top"><b>👩‍🏫 Teacher</b><button class="link" onclick="logout()">Logout</button></div>${vTabs()}`;
+  if(TTAB === 'set') return hd + vSettings();
+  if(TTAB === 'stu') return hd + vStudents();
+  if(TTAB === 'exams') return hd + banner() + vExams();
+  return `${hd}
+  ${banner()}${remoteMsg ? `<div class="warn">${esc(remoteMsg)}</div>` : ''}
+  <div class="card"><div class="row" style="margin:0"><select id="tf" style="width:auto;flex:1" onchange="TF=this.value;render(true)">
+      <option value="">All exams</option>${exams.map(c => `<option ${c===TF?'selected':''} value="${esc(c)}">${esc(c)}</option>`).join('')}</select>
+      <button class="btn ghost sm" onclick="refresh()">${loading ? 'Syncing…' : '↻ Refresh'}</button><button class="btn ghost sm" onclick="exportCSV()">⬇ CSV</button></div>
+    <small>${recs.length} attempts · ${rows.length} students</small></div>
+  ${!recs.length ? '<div class="card muted">এখনো কোনো data নেই।</div>' : `
+  <div class="card"><h2>Students (weakest first)</h2><div class="scroll"><table>
+    <tr><th>ID</th><th>Name</th><th>Att.</th><th>Avg</th><th>Best</th><th>Last</th><th>Weak topic</th></tr>
+    ${rows.map(r => `<tr class="click" data-s="${esc(r.sid)}" onclick="openStu(this.dataset.s)"><td>${esc(r.sid)}</td><td>${esc(r.name)}</td><td>${r.n}</td><td class="h" style="background:${heat(r.avg/100)}">${r.avg}%</td><td>${r.best}%</td><td>${r.last}%</td><td>${esc(r.weak)}</td></tr>`).join('')}
+  </table></div><small>Row-এ tap করলে ওই student-এর details</small></div>
+  <div class="card"><h2>Class topic accuracy</h2>${topics.map(t => `<div class="trow"><span>${esc(t.t)} <small>${t.ok}/${t.n}</small></span><div class="bar"><i style="width:${Math.round(t.p*100)}%;background:${t.p<0.5?'var(--r)':t.p<0.8?'#f59e0b':'var(--g)'}"></i></div><b>${Math.round(t.p*100)}%</b></div>`).join('')}</div>
+  <div class="card"><h2>Student × Topic heatmap</h2><div class="scroll"><table>
+    <tr><th>Student</th>${topics.map(t => `<th>${esc(t.t)}</th>`).join('')}</tr>
+    ${rows.map(r => { const m = {}; r.ts.forEach(t => m[t.t] = t); return `<tr><td>${esc(r.name)}</td>${topics.map(t => m[t.t] ? `<td class="h" style="background:${heat(m[t.t].p)}">${Math.round(m[t.t].p*100)}</td>` : '<td class="h">–</td>').join('')}</tr>`; }).join('')}
+  </table></div></div>
+  <div class="card"><h2>সবচেয়ে বেশি ভুল হওয়া Questions</h2>${hard.map(o => {
+    const q = qinfo(o.exam, o.i), top = Object.entries(o.pick).sort((a,b) => b[1]-a[1])[0];
+    return `<div class="hist" style="display:block"><div class="muted">${esc(o.exam)} · ${esc(q.t || '')} · ${Math.round(o.ok/o.n*100)}% correct (${o.ok}/${o.n})</div>
+      <div>${esc(q.q)}</div><small>সঠিক: ${LET[q.a]}${top ? ' · সবাই বেশি দিয়েছে ভুল: ' + LET[top[0]] : ''}</small></div>`;
+  }).join('')}</div>`}`;
+}
+
+/* ---------- Teacher: exam upload / manage ---------- */
+const escT = s => String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;');
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+async function tPost(o){
+  const b = new URLSearchParams({...o, key: TKEY()});
+  try{ await fetch(CONFIG.SCRIPT_URL, {method:'POST', mode:'no-cors', headers:{'Content-Type':'application/x-www-form-urlencoded'}, body:b}); return true; }catch(e){ return false; }
+}
+async function loadExamList(){
+  if(!CONFIG.SCRIPT_URL) return;
+  try{ EXL = await (await fetch(CONFIG.SCRIPT_URL + '?action=exams&key=' + encodeURIComponent(TKEY()) + '&t=' + Date.now())).json(); if(!Array.isArray(EXL)) EXL = []; }catch(e){}
+}
+function parseQ(text){
+  text = String(text || '').replace(/^\uFEFF/, '');
+  const errs = [];
+  if(text.indexOf('\uFFFD') >= 0) errs.push('Bengali লেখা ভেঙে গেছে — CSV "UTF-8" format-এ save করো।');
+  const first = text.split('\n')[0] || '';
+  const delim = first.split('\t').length > first.split(',').length ? '\t' : ',';
+  const rows = parseCSV(text, delim);
+  if(!rows.length || rows.length < 2) return {errors:['ফাঁকা বা শুধু header আছে'], exams:{}};
+  const H = rows[0].map(x => String(x).trim().toUpperCase()), ix = k => H.indexOf(k);
+  ['Q','A','B','ANS'].forEach(k => { if(ix(k) < 0) errs.push('Header-এ "' + k + '" column নেই'); });
+  if(errs.length) return {errors:errs, exams:{}};
+  const exams = {}; let code = '';
+  rows.slice(1).forEach((r, n) => {
+    const g = k => { const j = ix(k); return j >= 0 && r[j] != null ? String(r[j]).trim() : ''; };
+    const rn = n + 2;
+    if(!g('Q') && !g('A') && !g('B')) return;
+    const c = (g('CODE') || code).toUpperCase();
+    if(!c){ errs.push('Row ' + rn + ': CODE নেই'); return; }
+    code = c;
+    if(!g('Q')){ errs.push('Row ' + rn + ': Question লেখা নেই'); return; }
+    const opts = ['A','B','C','D','E'].map(g); let last = opts.length;
+    while(last > 0 && !opts[last-1]) last--;
+    const o = opts.slice(0, last);
+    if(o.length < 2 || o.some(x => !x)){ errs.push('Row ' + rn + ': Option ঠিক নেই (অন্তত ২টা, মাঝে ফাঁকা নয়)'); return; }
+    const a = 'ABCDE'.indexOf(g('ANS').toUpperCase());
+    if(g('ANS').length !== 1 || a < 0 || a >= o.length){ errs.push('Row ' + rn + ': ANS ভুল ("' + g('ANS') + '")'); return; }
+    const ex = exams[c] = exams[c] || {code:c, rows:[]};
+    if(!ex.rows.length){ ex.title = g('TITLE') || c; ex.minutes = g('MINUTES') || '10'; ex.neg = g('NEG') || '0'; ex.open = g('OPEN').toUpperCase() === 'NO' ? 'NO' : 'YES'; }
+    ex.rows.push({q:g('Q'), o, a, t:g('TOPIC') || 'General', e:g('EXPLANATION')});
+  });
+  if(!Object.keys(exams).length && !errs.length) errs.push('কোনো valid question পাওয়া যায়নি');
+  return {errors:errs, exams};
+}
+const rowsOf = ex => ex.rows.map((r, i) => [ex.code, i ? '' : ex.title, i ? '' : ex.minutes, i ? '' : ex.neg, i ? '' : ex.open, r.q, r.o[0]||'', r.o[1]||'', r.o[2]||'', r.o[3]||'', r.o[4]||'', 'ABCDE'[r.a], r.t, r.e]);
+function onFile(f){ if(!f) return; const rd = new FileReader(); rd.onload = () => { PASTE = String(rd.result); doPreview(); }; rd.readAsText(f, 'UTF-8'); }
+function doPreview(){ UP = parseQ(PASTE); upMsg = ''; render(true); }
+async function verifyExam(ex){
+  for(let i = 0; i < 6; i++){
+    await sleep(1500);
+    try{
+      const r = await (await fetch(CONFIG.SCRIPT_URL + '?action=exam&code=' + encodeURIComponent(ex.code) + '&t=' + Date.now())).json();
+      if(r && r.questions && r.questions.length === ex.rows.length && r.questions.every((q, i) => q.q === ex.rows[i].q && q.a === ex.rows[i].a && q.o.join('|') === ex.rows[i].o.join('|') && String(q.e || '') === String(ex.rows[i].e || ''))) return true;
+    }catch(e){}
+  }
+  return false;
+}
+async function publishUp(){
+  if(!UP || UP.errors.length || !CONFIG.SCRIPT_URL) return;
+  upMsg = 'Upload হচ্ছে… একটু অপেক্ষা করো'; render(true);
+  const codes = [];
+  for(const ex of Object.values(UP.exams)){
+    await tPost({action:'upload', code:ex.code, rows:JSON.stringify(rowsOf(ex))});
+    if(!(await verifyExam(ex))){ upMsg = '⚠ ' + ex.code + ' confirm হয়নি। Password ' + 'Code.gs-এর সাথে মিলছে কিনা আর Script নতুন version-এ deploy করা কিনা দেখো।'; return render(true); }
+    codes.push(ex.code);
+  }
+  upMsg = '✅ Ready! Students এখন এই code দিয়ে exam দিতে পারবে: ' + codes.join(', ');
+  UP = null; PASTE = '';
+  await loadExamList(); render(true);
+}
+async function setOpen(code, open){
+  upMsg = ''; await tPost({action:'setopen', code, open: open ? 'YES' : 'NO'});
+  for(let i = 0; i < 6; i++){ await sleep(1200); await loadExamList(); const x = EXL.find(e => e.code === code); if(x && x.open === open) break; }
+  render(true);
+}
+async function delExam(code){
+  if(DELC !== code){ DELC = code; return render(true); }
+  DELC = ''; await tPost({action:'delete', code});
+  for(let i = 0; i < 6; i++){ await sleep(1200); await loadExamList(); if(!EXL.find(e => e.code === code)) break; }
+  render(true);
+}
+function vExams(){
+  if(!CONFIG.SCRIPT_URL) return '';
+  let h = '<div class="card"><h2>📚 Exams</h2><button class="btn sm full" style="margin:0 0 8px" onclick="openEditor()">+ New exam (UI থেকে বানাও)</button>';
+  h += EXL.length ? EXL.map(x => `<div class="hist"><div><b>${esc(x.code)}</b> <small>${esc(x.title)} · ${x.count}Q · ${x.minutes}min${x.neg ? ' · −' + x.neg : ''}</small>${x.open ? '' : '<span class="tag" style="background:#fee2e2;color:#dc2626">closed</span>'}</div>
+    <div style="white-space:nowrap"><button class="btn sm" data-c="${esc(x.code)}" onclick="openEditor(this.dataset.c)">✏ Edit</button> <button class="btn sm ghost" data-c="${esc(x.code)}" onclick="setOpen(this.dataset.c, ${!x.open})">${x.open ? 'Close' : 'Open'}</button>
+    <button class="btn sm ${DELC === x.code ? 'red' : 'ghost'}" data-c="${esc(x.code)}" onclick="delExam(this.dataset.c)">${DELC === x.code ? 'Sure?' : 'Delete'}</button></div></div>`).join('')
+    : '<div class="muted">এখনো কোনো exam নেই</div>';
+  h += `<h3>⬆ নতুন exam upload (CSV)</h3>
+    <input type="file" accept=".csv,.tsv,.txt,text/csv,text/plain" onchange="onFile(this.files[0])">
+    <small class="muted">অথবা CSV text এখানে paste করো:</small>
+    <textarea id="paste" rows="4" placeholder="CODE,TITLE,MINUTES,NEG,OPEN,Q,A,B,C,D,E,ANS,TOPIC,EXPLANATION" oninput="PASTE=this.value">${escT(PASTE)}</textarea>
+    <button class="btn ghost full" onclick="doPreview()">Preview</button>`;
+  if(upMsg) h += `<div class="warn">${esc(upMsg)}</div>`;
+  if(UP){
+    if(UP.errors.length) h += `<div class="warn" style="background:#fee2e2"><b>ভুল পাওয়া গেছে — ঠিক করে আবার upload করো:</b><br>${UP.errors.slice(0, 12).map(esc).join('<br>')}${UP.errors.length > 12 ? '<br>…' : ''}</div>`;
+    else {
+      h += Object.values(UP.exams).map(ex => {
+        const tc = {}; ex.rows.forEach(r => tc[r.t] = (tc[r.t] || 0) + 1);
+        const exists = EXL.find(e => e.code === ex.code);
+        return `<div class="card" style="background:#f9fafb;margin:8px 0"><b>${esc(ex.code)}</b> — ${esc(ex.title)}${exists ? '<span class="tag" style="background:#fef9c3;color:#a16207">আগেরটা replace হবে</span>' : '<span class="tag">নতুন</span>'}<br>
+          <small>${ex.rows.length} questions · ${esc(ex.minutes)} min · negative ${esc(ex.neg)} · ${ex.open === 'NO' ? 'closed' : 'open'}</small><br>
+          <small>Topics: ${Object.entries(tc).map(([k, v]) => esc(k) + ' (' + v + ')').join(', ')}</small><br><small class="muted">Q1: ${esc(ex.rows[0].q.slice(0, 80))}</small></div>`;
+      }).join('') + '<button class="btn full" onclick="publishUp()">✅ Publish — exam ready করো</button>';
+    }
+  }
+  return h + '</div>';
+}
+
+/* ============================================================
+   Teacher control panel: tabs, Settings, Students (roster), Save
+   ============================================================ */
+let CD = null, ROSTER = [], ROSTER_OK = false, SO = {theme:true}, saveMsg = '', EDX = null;
+const eA = s => String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');
+const clone = o => JSON.parse(JSON.stringify(o));
+const gp = p => p.split('.').reduce((x, k) => x == null ? x : x[k], CD);
+function sp(path, v){
+  const k = path.split('.'); let o = CD;
+  for(let i = 0; i < k.length - 1; i++) o = o[k[i]] = o[k[i]] || {};
+  o[k[k.length - 1]] = v; DIRTY = true; saveMsg = '';
+  CFG = deepMerge(DEF_CFG, CD); applyTheme();
+  const m = document.getElementById('dirty'); if(m) m.textContent = '● unsaved changes';
+}
+/* field builders (data-p keeps odd characters safe) */
+const fT = (p, l, ph) => `<label class="fld"><span>${l}</span><input data-p="${eA(p)}" value="${eA(gp(p))}" placeholder="${eA(ph || '')}" oninput="sp(this.dataset.p,this.value)"></label>`;
+const fA = (p, l, ph, rows) => `<label class="fld"><span>${l}</span><textarea data-p="${eA(p)}" rows="${rows || 3}" placeholder="${eA(ph || '')}" oninput="sp(this.dataset.p,this.value)">${escT(gp(p))}</textarea></label>`;
+const fN = (p, l, min, max) => `<label class="fld"><span>${l}</span><input type="number" min="${min == null ? 0 : min}" ${max != null ? 'max="' + max + '"' : ''} data-p="${eA(p)}" value="${eA(gp(p))}" oninput="sp(this.dataset.p,this.value===''?0:Number(this.value))"></label>`;
+const fC = (p, l) => `<label class="fld"><span>${l}</span><input type="color" data-p="${eA(p)}" value="${eA(gp(p))}" oninput="sp(this.dataset.p,this.value)"></label>`;
+const fR = (p, l, min, max) => `<label class="fld"><span>${l}: <b>${eA(gp(p))}</b></span><input type="range" min="${min}" max="${max}" data-p="${eA(p)}" value="${eA(gp(p))}" oninput="this.previousElementSibling.lastElementChild.textContent=this.value;sp(this.dataset.p,Number(this.value))"></label>`;
+const fS = (p, l, opts) => `<label class="fld"><span>${l}</span><select data-p="${eA(p)}" onchange="sp(this.dataset.p,this.value)">${opts.map(([v, t]) => `<option value="${eA(v)}" ${String(gp(p)) === String(v) ? 'selected' : ''}>${eA(t)}</option>`).join('')}</select></label>`;
+const fK = (p, l) => `<label class="chk"><input type="checkbox" data-p="${eA(p)}" ${gp(p) ? 'checked' : ''} onchange="sp(this.dataset.p,this.checked)"><span>${l}</span></label>`;
+const sec = (id, title, body) => `<details class="sec" ${SO[id] ? 'open' : ''} ontoggle="SO['${id}']=this.open"><summary>${title}</summary><div class="in">${body}</div></details>`;
+
+function vTabs(){
+  const t = [['dash','📊 Dashboard'],['exams','📚 Exams'],['stu','👥 Students'],['set','⚙ Settings']];
+  return `<div class="tabs">${t.map(([k, l]) => `<button class="${TTAB === k ? 'on' : ''}" onclick="gotoTab('${k}')">${l}</button>`).join('')}</div>`;
+}
+async function gotoTab(k){
+  TTAB = k; EDX = null; TSTU = null;
+  if(!DIRTY || !CD) CD = clone(CFG);
+  render();
+  if(k === 'stu' && !ROSTER_OK) await loadRoster();
+}
+async function loadRoster(){
+  if(!CONFIG.SCRIPT_URL) return;
+  try{
+    const r = await (await fetch(CONFIG.SCRIPT_URL + '?action=roster&key=' + encodeURIComponent(TKEY()) + '&t=' + Date.now())).json();
+    if(Array.isArray(r)){ ROSTER = r; ROSTER_OK = true; }
+  }catch(e){}
+  render(true);
+}
+function vSaveBar(){
+  return `<div class="savebar"><button class="btn full" id="savebtn" onclick="saveAll()">💾 Save all changes</button>
+    <div style="text-align:center;font-size:13px;margin-top:4px;color:${saveMsg.charAt(0) === '✅' ? 'var(--g)' : 'var(--r)'}" id="dirty">${DIRTY ? '● unsaved changes' : ''}${esc(saveMsg)}</div></div>`;
+}
+async function saveAll(){
+  if(!CD) return;
+  if(!CONFIG.SCRIPT_URL){ saveMsg = 'Script URL নেই'; return render(true); }
+  saveMsg = 'Saving…'; render(true);
+  const cfgStr = JSON.stringify(CD);
+  await tPost({action:'savecfg', cfg:cfgStr});
+  let rosterStr = null;
+  if(ROSTER_OK){ rosterStr = JSON.stringify(ROSTER.filter(r => String(r.id).trim())); await tPost({action:'saveroster', roster:rosterStr}); }
+  let okC = false, okR = rosterStr === null;
+  for(let i = 0; i < 7 && !(okC && okR); i++){
+    await sleep(1300);
+    try{
+      if(!okC){ const r = await (await fetch(CONFIG.SCRIPT_URL + '?action=settings&t=' + Date.now())).json(); okC = !!(r && r.ok && JSON.stringify(r.cfg) === cfgStr); }
+      if(!okR){ const r = await (await fetch(CONFIG.SCRIPT_URL + '?action=roster&key=' + encodeURIComponent(TKEY()) + '&t=' + Date.now())).json(); okR = Array.isArray(r) && JSON.stringify(r) === rosterStr; }
+    }catch(e){}
+  }
+  if(okC && okR){ DIRTY = false; LS.set('mq_cfg', clone(CD)); saveMsg = '✅ Saved — student-রা এখন নতুন settings দেখবে'; }
+  else saveMsg = '⚠ Save confirm হয়নি। Code.gs-এর নতুন version deploy করা আছে কিনা, আর password ঠিক কিনা দেখো।';
+  render(true);
+}
+
+/* ---------------- Settings tab ---------------- */
+function applyPreset(n){
+  CD.theme = {...CD.theme, ...PRESETS[n], preset:n}; DIRTY = true; saveMsg = '';
+  CFG = deepMerge(DEF_CFG, CD); applyTheme(); render(true);
+}
+function resetSec(k){
+  if(k === 'theme') CD.theme = clone(DEF_CFG.theme);
+  if(k === 'text') CD.text = {};
+  if(k === 'rules') CD.rules = clone(DEF_CFG.rules);
+  if(k === 'brand') CD.brand = clone(DEF_CFG.brand);
+  DIRTY = true; CFG = deepMerge(DEF_CFG, CD); applyTheme(); render(true);
+}
+function vSettings(){
+  if(!CD) CD = clone(CFG);
+  const sw = Object.entries(PRESETS).map(([n, p]) => `<button style="background:${p.primary};${p.bg === '#000000' || p.bg === '#0f172a' ? 'outline:2px solid #888' : ''}" onclick="applyPreset('${n}')">${n}</button>`).join('');
+  const theme = `<div class="sw">${sw}</div>
+    <div class="g2">${fC('theme.primary', 'Main color')}${fC('theme.bg', 'Page background')}${fC('theme.card', 'Card background')}${fC('theme.text', 'Text color')}${fC('theme.ok', 'Correct color')}${fC('theme.bad', 'Wrong color')}</div>
+    ${fR('theme.radius', 'Corner roundness', 0, 28)}${fR('theme.font', 'Font size', 13, 20)}
+    ${fS('theme.family', 'Font style', [['system','Default (clean)'],['serif','Serif (book)'],['mono','Monospace'],['round','Rounded']])}
+    <button class="btn ghost sm" onclick="resetSec('theme')">↺ Reset theme</button>`;
+  const brand = `${fT('brand.title', 'App title')}${fT('brand.emoji', 'Logo emoji')}
+    ${fA('brand.notice', '📢 Notice / announcement (login + home page-এ দেখাবে)', 'যেমন: কাল CT, সবাই প্রস্তুত থাকো', 3)}
+    ${fS('brand.noticeType', 'Notice style', [['info','Info (blue)'],['warn','Warning (yellow)'],['good','Good (green)'],['bad','Alert (red)']])}
+    ${fA('brand.intro', '📋 Exam instructions (exam শুরুর আগে popup হিসেবে দেখাবে; ফাঁকা = দেখাবে না)', 'যেমন: ১ ঘণ্টা সময়। Negative marking আছে।', 4)}
+    ${fT('brand.footer', 'Footer text')}
+    <button class="btn ghost sm" onclick="resetSec('brand')">↺ Reset</button>`;
+  const texts = `<small class="muted">ফাঁকা রাখলে default text থাকবে। Placeholder-এ default দেখানো আছে।</small>` +
+    Object.keys(TX).map(k => fT('text.' + k, k, TX[k])).join('') + `<button class="btn ghost sm" onclick="resetSec('text')">↺ Reset all texts</button>`;
+  const rules = `${fS('rules.review', '📝 Exam শেষে student কী দেখবে (review)', [['full','Full — সঠিক উত্তর + explanation'],['marks','শুধু ✅/❌ (সঠিক উত্তর দেখাবে না)'],['none','কিছুই না (review বন্ধ)']])}
+    ${fK('rules.showScore', 'Score / percentage দেখাবে')}${fK('rules.explain', 'Explanation (solution) দেখাবে')}${fN('rules.passMark', 'Pass mark % (0 = বন্ধ)', 0, 100)}
+    ${fK('rules.retake', 'Full exam আবার দেওয়া যাবে')}${fK('rules.mistakes', '"Retake mistakes" button')}${fN('rules.maxAttempts', 'প্রতি exam-এ max attempt (0 = unlimited)', 0)}
+    <small class="muted">🔀 Question আর option order প্রতি attempt-এ সবসময় এলোমেলো হয় (বন্ধ করা যায় না)।</small>${fK('rules.timer', 'Timer দেখাবে')}${fK('rules.confirm', 'Submit-এর আগে confirm জিজ্ঞেস করবে')}
+    ${fK('rules.analytics', 'Student নিজের Analytics দেখবে')}${fK('rules.history', 'Student নিজের History দেখবে')}
+    <button class="btn ghost sm" onclick="resetSec('rules')">↺ Reset rules</button>`;
+  const sec2 = `${fT('access.teacherId', 'Teacher ID (login-এ এটা লাগবে)', 'teacher')}<small class="muted">Teacher password বদলাও (কমপক্ষে ৪ অক্ষর)। বদলালে নতুন password দিয়ে আবার login করতে হবে।</small>
+    <input id="np1" type="password" placeholder="New password"><input id="np2" type="password" placeholder="Confirm new password">
+    <button class="btn ghost full" onclick="changePass()">🔐 Change password</button>`;
+  return `<h2 style="margin:6px 0">⚙ App Settings</h2><small class="muted">যা বদলাবে তা সাথে সাথে preview হবে। শেষে নিচের Save চাপলে সব student দেখবে।</small>
+    ${sec('theme', '🎨 Theme & look', theme)}${sec('brand', '🏷 Branding, notice & instructions', brand)}${sec('rules', '📋 Exam rules & features', rules)}${sec('texts', '✏️ All button / label texts', texts)}${sec('pw', '🔐 Security', sec2)}${vSaveBar()}`;
+}
+async function changePass(){
+  const a = $('#np1').value, b = $('#np2').value;
+  if(a.length < 4){ saveMsg = 'Password কমপক্ষে ৪ অক্ষর'; return render(true); }
+  if(a !== b){ saveMsg = 'দুটো password মিলছে না'; return render(true); }
+  await tPost({action:'setpass', newpass:a});
+  for(let i = 0; i < 6; i++){
+    await sleep(1300);
+    try{ const r = await (await fetch(CONFIG.SCRIPT_URL + '?action=tlogin&key=' + encodeURIComponent(a) + '&t=' + Date.now())).json(); if(r && r.ok){ SESS.key = a; LS.set('mq_sess', SESS); saveMsg = '✅ Password বদলেছে'; return render(true); } }catch(e){}
+  }
+  saveMsg = '⚠ Password বদলানো confirm হয়নি';
+  render(true);
+}
+
+/* ---------------- Students tab ---------------- */
+function rset(i, k, v){ ROSTER[i][k] = v; DIRTY = true; saveMsg = ''; const m = document.getElementById('dirty'); if(m) m.textContent = '● unsaved changes'; }
+function radd(){ ROSTER.push({id:'', name:'', pin:'', blocked:false}); DIRTY = true; render(true); }
+function rdel(i){ ROSTER.splice(i, 1); DIRTY = true; render(true); }
+function rbulk(){
+  const t = ($('#bulk') || {}).value || '';
+  t.split('\n').forEach(l => {
+    const p = l.split(/[,\t;]/).map(x => x.trim());
+    if(!p[0]) return;
+    const ex = ROSTER.find(r => norm(r.id) === norm(p[0]));
+    if(ex){ ex.pin = p[1] || ex.pin; ex.name = p[2] || ex.name; } else ROSTER.push({id:p[0], pin:p[1] || '', name:p[2] || '', blocked:false});
+  });
+  DIRTY = true; render(true);
+}
+function rgen(){
+  ROSTER.forEach(r => { if(!String(r.pin || '').trim()) r.pin = String(Math.floor(1000 + Math.random() * 9000)); });
+  DIRTY = true; saveMsg = ''; render(true);
+}
+function rfromAttempts(){
+  const seen = {};
+  allRecs().forEach(r => { seen[norm(r.sid)] = r.name; });
+  Object.entries(seen).forEach(([id, name]) => { if(!ROSTER.find(r => norm(r.id) === id)) ROSTER.push({id, name, pin:'', blocked:false}); });
+  DIRTY = true; render(true);
+}
+function vStudents(){
+  if(!CD) CD = clone(CFG);
+  const cnt = {}; allRecs().forEach(r => { cnt[norm(r.sid)] = (cnt[norm(r.sid)] || 0) + 1; });
+  const rows = ROSTER.map((r, i) => `<div class="card" style="margin:8px 0;padding:10px"><div class="g2">
+      <input placeholder="ID" value="${eA(r.id)}" oninput="rset(${i},'id',this.value)"><input placeholder="Password" value="${eA(r.pin)}" oninput="rset(${i},'pin',this.value)" style="${String(r.pin || '').trim() ? '' : 'border-color:var(--r)'}">
+      <input placeholder="Name (optional)" value="${eA(r.name)}" oninput="rset(${i},'name',this.value)">
+      <div class="row" style="margin:0"><label class="chk" style="margin:0"><input type="checkbox" ${r.blocked ? 'checked' : ''} onchange="rset(${i},'blocked',this.checked)"><span>Block</span></label>
+      <small>${cnt[norm(r.id)] || 0} attempts</small><button class="btn sm ghost" onclick="rdel(${i})">✕</button></div></div></div>`).join('');
+  return `<h2 style="margin:6px 0">👥 Students & Access</h2>
+    <div class="card">${fK('access.guest', '👤 Guest login চালু (শুধু exam code দিয়ে ওই exam দিতে পারবে)')}
+    <small class="muted">Student শুধু <b>ID + Password</b> দিয়ে ঢোকে। নিচের তালিকায় যাদের ID আর Password আছে শুধু তারাই ঢুকতে পারবে। Password খালি থাকলে ওই ID ঢুকতে পারবে না।</small></div>
+    ${!CONFIG.SCRIPT_URL ? '<div class="warn">Script URL নেই</div>' : !ROSTER_OK ? '<div class="card muted">Loading roster…</div>' : `
+    <div class="card"><b>${ROSTER.length} students in roster</b>
+      <div class="row"><button class="btn sm ghost" onclick="radd()">+ Add student</button><button class="btn sm ghost" onclick="rfromAttempts()">⇣ Import from past attempts</button></div>
+      <div class="row" style="margin-top:6px"><button class="btn sm ghost" onclick="rgen()">🎲 Password নেই এমন সবাইকে random password দাও</button></div>
+      <h3>Bulk add (প্রতি লাইনে: ID, Password, Name — Name না দিলেও চলবে)</h3>
+      <textarea id="bulk" rows="4" placeholder="101, 1234, Rahim&#10;102, 5678"></textarea>
+      <button class="btn ghost full" onclick="rbulk()">Add / update from list</button></div>${rows}`}
+    ${vSaveBar()}`;
+}
+
+/* ---------------- Export ---------------- */
+function exportCSV(){
+  const q = s => '"' + String(s == null ? '' : s).replace(/"/g, '""') + '"';
+  const lines = ['Date,SID,Name,Exam,Mode,Score,Total,Percent,Seconds'].concat(allRecs().map(r =>
+    [new Date(aidTime(r.aid)).toLocaleString(), r.sid, r.name, r.exam, r.mode, r.score, r.total, pct(r), r.secs].map(q).join(',')));
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob(['﻿' + lines.join('\n')], {type:'text/csv;charset=utf-8'}));
+  a.download = 'results.csv'; document.body.appendChild(a); a.click(); a.remove();
+}
+/* ============================================================
+   Exam editor: UI থেকে question edit / add / delete / reorder (CSV লাগে না)
+   ============================================================ */
+async function openEditor(code){
+  if(!CD) CD = clone(CFG);
+  if(!code){
+    const c = (prompt('নতুন exam-এর code (যেমন CT2):') || '').trim().toUpperCase();
+    if(!c) return;
+    EDX = {code:c, isNew:true, title:c, minutes:10, neg:0, open:true, qs:[blankQ()], msg:''};
+    return render();
+  }
+  EDX = {code, loading:true, qs:[], msg:''}; render();
+  try{
+    const r = await (await fetch(CONFIG.SCRIPT_URL + '?action=exam&code=' + encodeURIComponent(code) + '&t=' + Date.now())).json();
+    if(!r || !r.questions) throw 0;
+    EDX = {code, title:r.title, minutes:r.minutes, neg:r.neg, open:r.open !== false, msg:'', qs:r.questions.map(q => ({q:q.q, o:q.o.slice(), a:q.a, t:q.t, e:q.e}))};
+  }catch(e){ EDX = null; upMsg = 'Exam load হয়নি'; }
+  render();
+}
+const blankQ = () => ({q:'', o:['', '', '', ''], a:0, t:'General', e:''});
+function eset(i, k, v){ EDX.qs[i][k] = v; edPrev(i); markDirtyEd(); }
+function eopt(i, n, v){ EDX.qs[i].o[n] = v; edPrev(i); markDirtyEd(); }
+function markDirtyEd(){ EDX.dirty = true; const m = document.getElementById('edmsg'); if(m) m.textContent = '● unsaved'; }
+function edPrev(i){
+  const q = EDX.qs[i], el = document.getElementById('pv' + i);
+  if(!el) return;
+  el.innerHTML = `<div style="font-weight:600">${esc(q.q)}</div>` + q.o.map((o, n) => o ? `<div>${LET[n]}. ${esc(o)}${n === q.a ? ' ✅' : ''}</div>` : '').join('') + (q.e ? `<div class="exp" style="margin-top:6px">💡 ${esc(q.e)}</div>` : '');
+  mathify(el);
+}
+function edAdd(){ EDX.qs.push(blankQ()); markDirtyEd(); render(true); }
+function edDel(i){ if(EDX.qs.length > 1 && confirm('Q' + (i + 1) + ' delete করবে?')){ EDX.qs.splice(i, 1); markDirtyEd(); render(true); } }
+function edDup(i){ EDX.qs.splice(i + 1, 0, clone(EDX.qs[i])); markDirtyEd(); render(true); }
+function edMove(i, d){ const j = i + d; if(j < 0 || j >= EDX.qs.length) return; [EDX.qs[i], EDX.qs[j]] = [EDX.qs[j], EDX.qs[i]]; markDirtyEd(); render(true); }
+function edOpt(i, add){
+  const q = EDX.qs[i];
+  if(add && q.o.length < 5) q.o.push('');
+  if(!add && q.o.length > 2){ q.o.pop(); if(q.a >= q.o.length) q.a = 0; }
+  markDirtyEd(); render(true);
+}
+function edHead(k, v){ EDX[k] = v; markDirtyEd(); }
+function vExamEditor(){
+  const x = EDX;
+  if(x.loading) return '<div class="card muted">Loading…</div>';
+  const ovp = 'exams.' + x.code;
+  if(!CD.exams) CD.exams = {};
+  const head = `<div class="top"><button class="link" onclick="EDX=null;render()">← Exams</button><b>${esc(x.code)}</b></div>
+    <div class="card"><h2>Exam info</h2>
+      <label class="fld"><span>Title</span><input value="${eA(x.title)}" oninput="edHead('title',this.value)"></label>
+      <div class="g2"><label class="fld"><span>Minutes</span><input type="number" min="1" value="${eA(x.minutes)}" oninput="edHead('minutes',this.value)"></label>
+      <label class="fld"><span>Negative mark / wrong</span><input type="number" step="0.05" min="0" value="${eA(x.neg)}" oninput="edHead('neg',this.value)"></label></div>
+      <label class="chk"><input type="checkbox" ${x.open ? 'checked' : ''} onchange="edHead('open',this.checked)"><span>Exam open (student-রা দিতে পারবে)</span></label></div>
+    <div class="card"><h2>Exam rules (শুধু এই exam-এর জন্য)</h2>
+      <div class="g2">${fN(ovp + '.maxAttempts', 'Max attempts (0 = global rule)', 0)}${fS(ovp + '.guest', 'Guest access', [['','Global rule follow'],['yes','Guest-রা দিতে পারবে'],['no','শুধু registered student']])}
+      <label class="fld"><span>Start time</span><input type="datetime-local" data-p="${eA(ovp + '.start')}" value="${eA(gp(ovp + '.start'))}" oninput="sp(this.dataset.p,this.value)"></label>
+      <label class="fld"><span>End time</span><input type="datetime-local" data-p="${eA(ovp + '.end')}" value="${eA(gp(ovp + '.end'))}" oninput="sp(this.dataset.p,this.value)"></label></div>
+      ${fA(ovp + '.intro', 'Instructions (শুধু এই exam শুরুর আগে দেখাবে)', '', 3)}
+      <small class="muted">এই অংশের পরিবর্তন নিচের "Save" চাপলে save হবে।</small></div>`;
+  const qs = x.qs.map((q, i) => `<div class="qed"><div class="row" style="margin:0 0 6px"><b>Q${i + 1}</b>
+      <span><button class="btn sm ghost" onclick="edMove(${i},-1)">↑</button> <button class="btn sm ghost" onclick="edMove(${i},1)">↓</button> <button class="btn sm ghost" onclick="edDup(${i})">⎘</button> <button class="btn sm ghost" onclick="edDel(${i})">🗑</button></span></div>
+      <textarea rows="2" placeholder="Question (math: $x^2$ বা $\\dfrac{1}{2}$)" oninput="eset(${i},'q',this.value)">${escT(q.q)}</textarea>
+      ${q.o.map((o, n) => `<div class="oe"><input type="radio" name="a${i}" ${q.a === n ? 'checked' : ''} onchange="eset(${i},'a',${n})" title="সঠিক উত্তর"><b>${LET[n]}</b><input type="text" value="${eA(o)}" placeholder="Option ${LET[n]}" oninput="eopt(${i},${n},this.value)"></div>`).join('')}
+      <div class="row" style="margin:2px 0"><span><button class="btn sm ghost" onclick="edOpt(${i},true)">+ option</button> <button class="btn sm ghost" onclick="edOpt(${i},false)">− option</button></span><small class="muted">● = সঠিক উত্তর</small></div>
+      <div class="g2"><input placeholder="Topic" value="${eA(q.t)}" oninput="eset(${i},'t',this.value)"></div>
+      <textarea rows="3" placeholder="Explanation / solution (ঐচ্ছিক)" oninput="eset(${i},'e',this.value)">${escT(q.e)}</textarea>
+      <div class="pv" id="pv${i}"></div></div>`).join('');
+  return head + qs + `<button class="btn ghost full" onclick="edAdd()">+ Add question</button>
+    ${x.msg ? `<div class="warn">${esc(x.msg)}</div>` : ''}
+    <div class="savebar"><button class="btn full" onclick="saveExam()">💾 Save exam ${DIRTY ? '+ settings' : ''}</button><div class="err" style="text-align:center" id="edmsg">${x.dirty ? '● unsaved' : ''}</div></div>`;
+}
+async function saveExam(){
+  const x = EDX, errs = [];
+  const rows = x.qs.map((q, i) => {
+    let o = q.o.map(s => String(s).trim()); while(o.length && !o[o.length - 1]) o.pop();
+    if(!String(q.q).trim()) errs.push('Q' + (i + 1) + ': question লেখা নেই');
+    else if(o.length < 2 || o.some(s => !s)) errs.push('Q' + (i + 1) + ': অন্তত ২টা option লাগবে (মাঝে ফাঁকা নয়)');
+    else if(q.a >= o.length) errs.push('Q' + (i + 1) + ': সঠিক উত্তর খালি option-এ');
+    return {q:String(q.q).trim(), o, a:q.a, t:String(q.t).trim() || 'General', e:String(q.e || '').trim()};
+  });
+  if(errs.length){ x.msg = errs.slice(0, 8).join(' · '); return render(true); }
+  x.msg = 'Saving…'; render(true);
+  const ex = {code:x.code, title:x.title || x.code, minutes:String(x.minutes || 10), neg:String(x.neg || 0), open:x.open ? 'YES' : 'NO', rows};
+  await tPost({action:'upload', code:ex.code, rows:JSON.stringify(rowsOf(ex))});
+  const ok = await verifyExam(ex);
+  if(ok){ x.dirty = false; x.msg = '✅ Exam saved'; delete EXAMS[ex.code]; LS.set('mq_exams', EXAMS); await loadExamList(); if(DIRTY) await saveAll(); }
+  else x.msg = '⚠ Save confirm হয়নি (Code.gs / password দেখো)';
+  render(true);
+}
+/* ============================================================
+   Boot
+   ============================================================ */
+function boot(){
+  applyTheme();
+  if(SESS){
+    view = SESS.teacher ? 'teacher' : 'home';
+    if(RUN && !SESS.teacher && RUN.sid === SESS.sid && EXAMS[RUN.exam]){ RUN.last = Date.now(); view = 'quiz'; }
+    else if(RUN){ RUN = null; LS.del('mq_run'); }
+  } else { RUN = null; }
+  render();
+  if(view === 'quiz') startTimer();
+  if(!SESS) loadCfg().then(ok => { const f = document.querySelector('#sid'), t = document.querySelector('#tp'); if(ok && view === 'login' && !(f && f.value) && !(t && t.value)) render(true); });
+  else if(view !== 'quiz') refresh(); else flush();
+}
+if(typeof document !== 'undefined' && document.getElementById('app') && !window.__TEST__) boot();
+</script>
+</body>
+</html>
