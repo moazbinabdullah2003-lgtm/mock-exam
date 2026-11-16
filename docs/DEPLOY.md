@@ -49,6 +49,6 @@ The old browser-editor patch method is obsolete. If the token expires, user crea
 ## D. Common operations (no code deploy needed)
 
 - Change theme/texts/rules/branding/notice/password, manage students, create or edit exams → teacher panel in the web app (see PROJECT_CONTEXT §8). Instant for all students after **Save all changes**.
-- Put the 50 Higher-Math questions (or any markdown in the same format) into exams: `python3 tools/md2csv.py <md> samples/out.csv` (levels 🟢🟡🔴 → exams `MATH-B/I/A`; edit the topic map/minutes inside the script), then in the app: Exams → upload CSV → Preview → Publish. CSV format: `samples/questions_template.csv`.
+- Put the 50 Higher-Math questions (or any markdown in the same format) into exams: `python3 tools/md2csv.py <md> samples/out.csv` (levels 🟢🟡🔴 → exams `MATH-B/I/A`; edit the topic map/minutes inside the script), then in the app: Exams → upload CSV → Preview → Publish. CSV format: `samples/questions_template.csv`. Easiest: Exams tab → "🤖 AI দিয়ে question set বানাও" → copy prompt → AI → paste the AI's Markdown+LaTeX (or CSV) answer into the upload box → Preview → Publish.
 - Reset a forgotten teacher password: Apps Script editor → Project Settings → Script properties → delete `TPASS` (falls back to `TEACHER_PASS` in Code.gs, default `teacher123`).
 - Look at / edit raw data: the spreadsheet (tabs Attempts, Questions, Settings). Don't edit `Settings` by hand unless you know the JSON.

@@ -57,6 +57,29 @@ TT.eq(B.get({ action: 'exam', code: 'CT1' }).questions.length, 3, 'exam stored i
 await setOpen('CT1', false); TT.eq(B.get({ action: 'exam', code: 'CT1' }).open, false, 'exam closed in backend');
 await setOpen('CT1', true);  TT.eq(B.get({ action: 'exam', code: 'CT1' }).open, true, 'exam reopened in backend');
 
+// 3b. AI prompt + Markdown/LaTeX import
+{ const m = parseQ(MD_SAMPLE), e = m.exams['PHY-CT1'];
+  TT.ok(!m.errors.length && e && e.rows.length === 2, 'MD sample parsed: ' + m.errors.join('|'));
+  TT.ok(e.title === 'Physics Class Test 1' && e.minutes === '20' && e.neg === '0.25' && e.open === 'YES', 'MD exam header read');
+  TT.ok(e.rows[0].a === 1 && e.rows[1].a === 2 && e.rows[0].o.length === 4 && e.rows[0].t === 'Kinematics', 'MD answers/options/topic');
+  TT.ok(e.rows[0].q.includes('$a = 2\\,\\text{m/s}^2$') && e.rows[1].e.includes('\\left[x^2\\right]'), 'LaTeX kept as-is'); }
+{ const c = parseQ(CSV_SAMPLE); TT.ok(!c.errors.length && c.exams['PHY-CT1'].rows.length === 2 && c.exams['PHY-CT1'].rows[1].a === 2, 'CSV sample parsed: ' + c.errors.join('|')); }
+{ const t = "Here you go:\n```markdown\n# EXAM: x-1\nTITLE: T\n\n## Q1\nTOPIC: Alg\nQ: line one\nline two $x^2$\nA) 1\nB) 2\nC) 3\nANS: (c)\nSOL: step 1\n\nstep 2\n## Q2\nQ: no topic\nA) yes\nB) no\nANS: A\n```\n⚠ CHECK: Q1 answer\n";
+  const m = parseQ(t), e = m.exams['X-1'];
+  TT.ok(!m.errors.length && e.rows.length === 2, 'fenced MD with chatter + CHECK list parsed: ' + m.errors.join('|'));
+  TT.ok(e.rows[0].q === 'line one\nline two $x^2$' && e.rows[0].a === 2 && e.rows[0].e === 'step 1\n\nstep 2' && e.rows[1].t === 'General', 'multi-line Q/SOL, (c) answer, default topic'); }
+TT.ok(parseQ('# EXAM: A\n## Q1\nQ: q\nA) 1\nB) 2\nANS: D').errors[0].includes('ANS'), 'MD: ANS out of range rejected');
+TT.ok(parseQ('# EXAM: A\n## Q1\nQ: q\nA) 1\nC) 3\nANS: A').errors[0].includes('Option'), 'MD: gap in options rejected');
+TT.ok(parseQ('# EXAM: bad code\n## Q1\nQ: q\nA) 1\nB) 2\nANS: A').errors[0].includes('code'), 'MD: bad exam code rejected');
+TT.ok(parseQ('## Q1\nQ: q\nA) 1\nB) 2\nANS: A').errors[0].includes('EXAM'), 'MD: missing EXAM line rejected');
+{ const pm = aiPrompt('md'), pc = aiPrompt('csv');
+  TT.ok(pm.includes('# EXAM: PHY-CT1') && pm.includes('LaTeX') && pm.includes('<<< paste raw questions here >>>') && !pm.includes('CODE,TITLE'), 'MD prompt has rules + MD sample');
+  TT.ok(pc.includes('CODE,TITLE,MINUTES,NEG,OPEN,Q,A,B,C,D,E,ANS,TOPIC,EXPLANATION') && pc.includes('```csv'), 'CSV prompt has header + CSV sample'); }
+PASTE = MD_SAMPLE; doPreview(); await publishUp();
+TT.ok(upMsg.indexOf('Ready') >= 0, 'MD exam published: ' + upMsg);
+{ const x = B.get({ action: 'exam', code: 'PHY-CT1' }); TT.ok(x.questions && x.questions.length === 2 && x.questions[0].q.includes('\\text{m/s}') && x.questions[1].a === 2, 'MD exam stored in backend with LaTeX'); }
+await delExam('PHY-CT1'); await delExam('PHY-CT1'); TT.eq(B.get({ action: 'exam', code: 'PHY-CT1' }).error, 'notfound', 'MD test exam removed');
+
 // 4. Student login via roster
 B.post({ action: 'saveroster', key: 'teacher123', roster: JSON.stringify([{ id: '007', pin: 'pw1', name: 'Rahim' }, { id: '008', pin: 'pw2', name: 'Blk', blocked: true }]) });
 logout();

@@ -11,6 +11,7 @@ async function loadExamList(){
 }
 function parseQ(text){
   text = String(text || '').replace(/^\uFEFF/, '');
+  if(typeof isMD === 'function' && isMD(text)) return parseMD(text);   // Markdown + LaTeX format (11a)
   const errs = [];
   if(text.indexOf('\uFFFD') >= 0) errs.push('Bengali লেখা ভেঙে গেছে — CSV "UTF-8" format-এ save করো।');
   const first = text.split('\n')[0] || '';
@@ -87,19 +88,19 @@ function vExams(){
     <div style="white-space:nowrap"><button class="btn sm ghost" data-c="${esc(x.code)}" onclick="openExA(this.dataset.c)">📊</button> <button class="btn sm" data-c="${esc(x.code)}" onclick="openEditor(this.dataset.c)">✏ Edit</button> <button class="btn sm ghost" data-c="${esc(x.code)}" onclick="setOpen(this.dataset.c, ${!x.open})">${x.open ? 'Close' : 'Open'}</button>
     <button class="btn sm ${DELC === x.code ? 'red' : 'ghost'}" data-c="${esc(x.code)}" onclick="delExam(this.dataset.c)">${DELC === x.code ? 'Sure?' : 'Delete'}</button></div></div>`).join('')
     : '<div class="muted">এখনো কোনো exam নেই</div>';
-  h += `<h3>⬆ নতুন exam upload (CSV)</h3>
-    <input type="file" accept=".csv,.tsv,.txt,text/csv,text/plain" onchange="onFile(this.files[0])">
-    <small class="muted">অথবা CSV text এখানে paste করো:</small>
-    <textarea id="paste" rows="4" placeholder="CODE,TITLE,MINUTES,NEG,OPEN,Q,A,B,C,D,E,ANS,TOPIC,EXPLANATION" oninput="PASTE=this.value">${escT(PASTE)}</textarea>
+  h += `<h3>⬆ নতুন exam upload (CSV বা MD + LaTeX)</h3>${vAiPromptBox()}
+    <input type="file" accept=".csv,.tsv,.txt,.md,text/csv,text/plain,text/markdown" onchange="onFile(this.files[0])">
+    <small class="muted">অথবা AI-এর দেওয়া CSV / MD text এখানে paste করো:</small>
+    <textarea id="paste" rows="6" placeholder="# EXAM: CODE …  অথবা  CODE,TITLE,MINUTES,NEG,OPEN,Q,A,B,C,D,E,ANS,TOPIC,EXPLANATION" oninput="PASTE=this.value">${escT(PASTE)}</textarea>
     <button class="btn ghost full" onclick="doPreview()">Preview</button>`;
   if(upMsg) h += `<div class="warn">${esc(upMsg)}</div>`;
   if(UP){
-    if(UP.errors.length) h += `<div class="warn" style="background:#fee2e2"><b>ভুল পাওয়া গেছে — ঠিক করে আবার upload করো:</b><br>${UP.errors.slice(0, 12).map(esc).join('<br>')}${UP.errors.length > 12 ? '<br>…' : ''}</div>`;
+    if(UP.errors.length) h += `<div class="warn" style="background:var(--rl);color:var(--t)"><b>ভুল পাওয়া গেছে — ঠিক করে আবার upload করো:</b><br>${UP.errors.slice(0, 12).map(esc).join('<br>')}${UP.errors.length > 12 ? '<br>…' : ''}</div>`;
     else {
       h += Object.values(UP.exams).map(ex => {
         const tc = {}; ex.rows.forEach(r => tc[r.t] = (tc[r.t] || 0) + 1);
         const exists = EXL.find(e => e.code === ex.code);
-        return `<div class="card" style="background:#f9fafb;margin:8px 0"><b>${esc(ex.code)}</b> — ${esc(ex.title)}${exists ? '<span class="tag" style="background:#fef9c3;color:#a16207">আগেরটা replace হবে</span>' : '<span class="tag">নতুন</span>'}<br>
+        return `<div class="card" style="margin:8px 0"><b>${esc(ex.code)}</b> — ${esc(ex.title)}${exists ? '<span class="tag" style="background:#fef9c3;color:#a16207">আগেরটা replace হবে</span>' : '<span class="tag">নতুন</span>'}<br>
           <small>${ex.rows.length} questions · ${esc(ex.minutes)} min · negative ${esc(ex.neg)} · ${ex.open === 'NO' ? 'closed' : 'open'}</small><br>
           <small>Topics: ${Object.entries(tc).map(([k, v]) => esc(k) + ' (' + v + ')').join(', ')}</small><br><small class="muted">Q1: ${esc(ex.rows[0].q.slice(0, 80))}</small></div>`;
       }).join('') + '<button class="btn full" onclick="publishUp()">✅ Publish — exam ready করো</button>';
