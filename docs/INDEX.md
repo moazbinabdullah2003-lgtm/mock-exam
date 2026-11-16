@@ -21,6 +21,7 @@ Build: `python3 build.py` concatenates `src/js/*.js` (**filename order**) into `
 | `08a-vault.js` | **🔖 Saved-question vault + ✕ exam exit**: vault in LS `mq_vault_<sid>` {ts, folders, items[{id:'EXAM#qi', f, ex, qi, at, title, q:snapshot}]}, synced to backend (`action=vault` GET / `savevault` POST, auth ID+password from `SESS.pin` or teacher key for test student; newer `ts` wins: vPull/vPush). saveQ/doSaveQ/vSavePopup (folder chips + new folder), vSaveBtn (quiz + result review), vVault page (`view='vault'`: folder filter, rename/delete folder, move, remove, copy for AI, EN/বাংলা), answers shown only after the student submitted that exam (vSeen). Exit: EXITING popup → finish (submit) or cancelRun (discard, not counted) | saveQ, vVault, vPull, vPush, cancelRun, vExitPopup |
 | `09-result.js` | vResult(rec): score, topic-wise, per-question review honouring rules.review/showScore/passMark/explain | vResult:2 |
 | `09a-copy-ai.js` | **📋 Copy for AI**: `copyText` (clipboard + fallback), `aiQ` (one question as Markdown+LaTeX with my/correct answer + solution), `aiHead`, `copyRes(n)` (result page; obeys rules.review/explain for students), `copyExam(code,n)` (teacher exam page), `aiHint` card | copyText, aiQ, aiHead, copyRes, copyExam, aiHint |
+| `09b-report.js` | **🚩 Question report + void**: REP_WHY (preset reasons), VOIDS/setVoids/vPeriods/voidActive/voidAt, `adj(r)` (void questions removed, score recomputed; used by allRawH), student RPT popup (`repBtn`, `openRep`, `vRepPopup`, `sendRep`), MYREP + `vMyRep` (home notice + fold), teacher REPS/`loadReps`/`repNew`/`vReports`/`qAct(code,qi,op)`/`openFix`, editor helpers `qSig`/`autoFix`/`vEdVoid`, Gmail setting `vNotifySet`/`saveNotify` | adj, repBtn, vReports, qAct, autoFix |
 | `10-teacher-dashboard.js` | vTeacher: tab router (Dashboard content lives here: students table, topic accuracy, heatmap, hardest questions, CSV button); openStu | openStu:2, vTeacher:3 |
 | `10a-exam-analytics.js` | **Per-exam analytics** (`EXA` state, `openExA`, `vExamAnalytics`): tiles, student-wise ranking (best/1st/last/time, Review, → profile), folds: score distribution, topic-wise, question-wise (✔✘⏭, common wrong option, avg time, Hardest/Easy tags), student×question grid. Opened by tapping an exam in Exams tab | EXA, openExA, vExamAnalytics |
 | `10b-exits.js` | **🚪 Exit report (teacher)**: exitInfo(rec) (answered/correct/seen/time, flags: submitted same exam later, repeated exits, saw ≥50% questions, answered ≥50%), vExitTable, exitBySt, vExitDash(exam) (dashboard + exam analytics section), vExitProfile(sid) (student profile), exitCount | exitInfo, vExitDash, vExitProfile |
@@ -39,6 +40,7 @@ Other source: `src/css/app.css` (theme variables `--p --bg --card --t --m --b --
 | Colors / layout / mobile look (defaults) | `src/css/app.css` (+ markup strings in the view module). Teacher-editable look: `PRESETS`/`DEF_CFG.theme`/`applyTheme` in `02a-cfg.js` |
 | English + বাংলা questions | data: backend QHEAD `*_BN` columns (`Code.gs` getExam_), upload rows `rowsOf` (11), parse `bnErr` + `[BN]` block (11a), view `LQ`/language popup (04a), quiz `vQuiz` (08), review `vResult` (09), editor `.bnx` section (14) |
 | Exit records / cheating flags | record: `cancelRun` (`08a`) → mode `exit`/`exit-mistakes` in Attempts via the normal outbox; `isExit`/`allRaw`/`allExits` + `allRecs` excludes exits (`03`); report `10b-exits.js` |
+| Question report / void / fix | `09b-report.js`; buttons in `08` (quiz), `09` (review), `08a` (vault); tab in `13` vTabs + `10` vTeacher; `startRun` skips voids (`06`); editor banner/auto-fix (`14`); backend `report_`/`reports_`/`qvoid_`/`voids_`/`notifyMail_` (sheet `Reports`, Settings keys `voids`, `notify`) |
 | Date range on analytics / hide-delete logs | `07c-range-logs.js`; each analytics view calls `rng()` + `vRange()` (`07`, `07a`, `10`, `10a`, `10b`); backend `logs_` + HIDDEN column (`Code.gs`) |
 | Saved questions / folders / exam exit | `08a-vault.js`; backend `getVault_`/`saveVault_` (sheet `Vault`: SID, TS, DATA1..20 chunks of 45k chars) |
 | AI prompt text / MD exam format | `11a-ai-prompt.js` (keep MD_SAMPLE/CSV_SAMPLE parseable — tests check both) |
@@ -69,7 +71,7 @@ Other source: `src/css/app.css` (theme variables `--p --bg --card --t --m --b --
 | Teacher password / teacher ID | UI: Settings → Security (`changePass` in `13`; stored as Script property `TPASS`; ID = `access.teacherId`). Default const `TEACHER_PASS` in `Code.gs` (+ legacy fallback in `01-config.js`) |
 
 After any edit: `python3 build.py`, run tests, deploy with `./deploy.sh` / `./deploy-backend.sh` (see `CLAUDE.md`).
-Backend functions (Code.gs): `pass_ ss_ sheet_ qsheet_ norm_ doPost doGet getExam_ json_ admin_ isHid_ logs_ listExams_ kvSheet_ kvGet_ kvSet_ login_`.
+Backend functions (Code.gs): `pass_ ss_ sheet_ qsheet_ norm_ doPost doGet getExam_ json_ admin_ isHid_ logs_ listExams_ kvSheet_ kvGet_ kvSet_ login_ repSheet_ reports_ voids_ report_ qvoid_ renameReports_ notifyInfo_ notifyMail_`.
 
 Regenerate the symbol list: `python3 tools/symbols.py`.
 
@@ -82,7 +84,7 @@ Regenerate the symbol list: `python3 tools/symbols.py`.
 | `tools/health.py` | read-only live health check (page hash, backend, teacher key, test student, backup age) |
 | `tools/restore.py` | restore a backup (dry run by default, `--yes` to write) |
 | `tests/gas_harness.js` | runs the real `Code.gs` under node with in-memory Sheet fakes |
-| `tests/backend.test.js` | 89 backend logic tests |
+| `tests/backend.test.js` | 126 backend logic tests |
 | `tests/run_tests.js` + `tests/scenarios.js` | frontend flow tests against the real backend (add scenarios at the bottom; assertions are `TT.ok/TT.eq`) |
 | `.github/workflows/pages.yml` | CI: tests → build → publish to Pages |
 | `.clasp.json` | Apps Script project link (rootDir `backend`) |

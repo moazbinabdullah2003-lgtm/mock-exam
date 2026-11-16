@@ -122,7 +122,7 @@ function vVault(){
   return h + list.map(it => {
     const q = LQ(it.q, lg), seen = vSeen(it);
     return `<div class="card vq"><div class="row" style="margin:0 0 6px"><small class="muted">${esc(it.title)} · ${esc(q.t || '')} · 📁 ${esc(it.f)}</small>
-        <span style="white-space:nowrap"><button class="btn sm ghost" onclick="vCopy('${eA(it.id)}',this)" title="AI-এর জন্য copy">📋</button> <button class="btn sm ghost" onclick="vRemove('${eA(it.id)}')" title="সরাও">🗑</button></span></div>
+        <span style="white-space:nowrap">${repBtn(it.ex, it.qi)} <button class="btn sm ghost" onclick="vCopy('${eA(it.id)}',this)" title="AI-এর জন্য copy">📋</button> <button class="btn sm ghost" onclick="vRemove('${eA(it.id)}')" title="সরাও">🗑</button></span></div>
       <div class="q" style="font-size:1em">${esc(q.q)}</div>
       ${q.o.map((o, i) => `<div class="opt ${seen && i === q.a ? 'ok' : ''}" style="margin:4px 0;padding:8px;cursor:default"><span class="L">${LET[i]}</span><span>${esc(o)}</span></div>`).join('')}
       ${seen ? (q.e ? `<div class="exp">💡 ${esc(q.e)}</div>` : '') : '<small class="muted">🔒 এই exam submit করার পরে সঠিক উত্তর আর solution এখানে দেখা যাবে</small>'}

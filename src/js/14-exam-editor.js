@@ -14,6 +14,7 @@ async function openEditor(code){
     const r = await (await fetch(CONFIG.SCRIPT_URL + '?action=exam&code=' + encodeURIComponent(code) + '&t=' + Date.now())).json();
     if(!r || !r.questions) throw 0;
     EDX = {code, title:r.title, minutes:r.minutes, neg:r.neg, open:r.open !== false, msg:'', qs:r.questions.map(q => ({q:q.q, o:q.o.slice(), a:q.a, t:q.t, e:q.e, qb:q.qb || '', ob:(q.ob || []).slice(), eb:q.eb || ''}))};
+    EDX.orig = EDX.qs.map(qSig);   // 🚩 বাতিল question বদলালে save-এর পরে auto চালু
   }catch(e){ EDX = null; upMsg = 'Exam load হয়নি'; }
   render();
 }
@@ -61,7 +62,7 @@ function vExamEditor(){
       <label class="fld"><span>End time</span><input type="datetime-local" data-p="${eA(ovp + '.end')}" value="${eA(gp(ovp + '.end'))}" oninput="sp(this.dataset.p,this.value)"></label></div>
       ${fA(ovp + '.intro', 'Instructions (শুধু এই exam শুরুর আগে দেখাবে)', '', 3)}
       <small class="muted">এই অংশের পরিবর্তন নিচের "Save" চাপলে save হবে।</small></div>`;
-  const qs = x.qs.map((q, i) => `<div class="qed"><div class="row" style="margin:0 0 6px"><b>Q${i + 1}</b>
+  const qs = x.qs.map((q, i) => `<div class="qed" id="qed${i}">${vEdVoid(x.code, i)}<div class="row" style="margin:0 0 6px"><b>Q${i + 1}</b>
       <span><button class="btn sm ghost" onclick="edMove(${i},-1)">↑</button> <button class="btn sm ghost" onclick="edMove(${i},1)">↓</button> <button class="btn sm ghost" onclick="edDup(${i})">⎘</button> <button class="btn sm ghost" onclick="edDel(${i})">🗑</button></span></div>
       <textarea rows="2" placeholder="Question (math: $x^2$ বা $\\dfrac{1}{2}$)" oninput="eset(${i},'q',this.value)">${escT(q.q)}</textarea>
       ${q.o.map((o, n) => `<div class="oe"><input type="radio" name="a${i}" ${q.a === n ? 'checked' : ''} onchange="eset(${i},'a',${n})" title="সঠিক উত্তর"><b>${LET[n]}</b><input type="text" value="${eA(o)}" placeholder="Option ${LET[n]}" oninput="eopt(${i},${n},this.value)"></div>`).join('')}
@@ -109,13 +110,13 @@ async function saveExam(){
     // এই exam-এর আলাদা rules নতুন code-এ সরাও
     if(CD && CD.exams && CD.exams[old]){ CD.exams[nc] = CD.exams[old]; delete CD.exams[old]; DIRTY = true; CFG = deepMerge(DEF_CFG, CD); }
     x.code = nc; x.newCode = nc;
-    if(!x.isNew){ await loadRemote(); }
+    if(!x.isNew){ await loadRemote(); await loadCfg(); }
   }
   x.msg = 'Saving…'; render(true);
   const ex = {code:x.code, title:x.title || x.code, minutes:String(x.minutes || 10), neg:String(x.neg || 0), open:x.open ? 'YES' : 'NO', rows};
   await tPost({action:'upload', code:ex.code, rows:JSON.stringify(rowsOf(ex))});
   const ok = await verifyExam(ex);
-  if(ok){ x.dirty = false; x.msg = '✅ Exam saved'; delete EXAMS[ex.code]; LS.set('mq_exams', EXAMS); await loadExamList(); if(DIRTY) await saveAll(); }
+  if(ok){ const fx = await autoFix(x); x.orig = x.qs.map(qSig); x.dirty = false; x.msg = '✅ Exam saved' + (fx.length ? ' · 🔧 ' + fx.map(i => 'Q' + (i + 1)).join(', ') + ' ঠিক হয়েছে — আবার exam-এ আসবে' : ''); delete EXAMS[ex.code]; LS.set('mq_exams', EXAMS); await loadExamList(); if(DIRTY) await saveAll(); }
   else x.msg = '⚠ Save confirm হয়নি (Code.gs / password দেখো)';
   render(true);
 }

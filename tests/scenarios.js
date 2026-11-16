@@ -320,3 +320,59 @@ await delExam('CT1'); TT.eq(B.get({ action: 'exam', code: 'CT1' }).error, 'notfo
   { const b = vBoard('7', false); TT.ok(b.includes('📅 সময়সীমা') && !b.includes('openLogs') && !b.includes('Edit logs'), 'student sees range bar but no edit button'); }
   openLogs({ s: '7' }); TT.eq(LOGED, null, 'student cannot open log editor');
   setDRp('all'); SESS = T0; LS.set('mq_local', []); }
+
+// ---- 🚩 question report → approve (void) → score recalculated → fix → comes back ----
+{ const K = 'teacher123', rows = [['RP1', 'Report test', '10', '0.25', 'YES', 'q one', '1', '2', '', '', '', 'A', 'T1', 'e1'], ['RP1', '', '', '', '', 'q two', '1', '2', '', '', '', 'B', 'T1', ''], ['RP1', '', '', '', '', 'q three', '1', '2', '', '', '', 'A', 'T2', '']];
+  B.post({ action: 'upload', key: K, code: 'RP1', rows: JSON.stringify(rows) });
+  const aid0 = (Date.now() - 86400000).toString(36) + '00';
+  B.post({ sid: '7', name: 'Rahim', exam: 'RP1', aid: aid0, mode: 'full', score: '0.75', total: '3', secs: '15', details: JSON.stringify([[0, 0, 1, 5], [1, 0, 0, 5], [2, -1, 0, 5]]) });
+  const T0 = SESS, STU = { sid: '7', name: 'Rahim', teacher: false }, TCH = { sid: 'teacher', name: 'Teacher', teacher: true, key: K };
+  const stopRun = () => { clearInterval(TM); LS.del('mq_run'); RUN = null; view = 'home'; };
+  SESS = STU; view = 'home'; await getExam('RP1'); await loadRemote();
+  TT.ok(repBtn('RP1', 1).includes('openRep'), 'student sees 🚩 report button');
+  openRep('RP1', 1);
+  TT.ok(vRepPopup().includes('Answer key ভুল') && vRepPopup().includes('Typing') && vRepPopup().includes('সঠিক option নেই') && vRepPopup().includes('q two'), 'popup: preset reasons + question');
+  await sendRep(); TT.ok(/কারণ/.test(RPT.msg) && !RPT.done, 'reason is required');
+  RPT.why = 'key'; RPT.note = 'B should be A'; await sendRep();
+  TT.ok(RPT.done, 'report sent');
+  TT.eq(B.get({ action: 'reports', key: K }).reports.filter(r => r.exam === 'RP1').map(r => [r.qi, r.why, r.note, r.sid]), [[1, 'key', 'B should be A', '7']], 'report stored on server');
+  TT.ok(repBtn('RP1', 1).includes('🚩 ✓'), 'button marks already reported');
+  RPT = null;
+  startRun('RP1', 'full'); TT.ok(vQuiz().includes('openRep'), 'report button inside the running exam'); stopRun();
+  SESS = { sid: 'G-1', name: 'G (Guest)', guest: true }; CFG.rules.reportGuest = false; TT.eq(repBtn('RP1', 1), '', 'guest report can be switched off'); CFG.rules.reportGuest = true;
+  TT.ok(repBtn('RP1', 1).includes('openRep'), 'guest can report when allowed');
+  SESS = TCH; view = 'teacher'; TTAB = 'dash';
+  TT.eq(repBtn('RP1', 1), '', 'teacher has no report button');
+  await loadReps();
+  TT.eq(repNew(), 1, 'teacher: 1 new report');
+  TT.ok(vTabs().includes('class="badge">1') && vTeacher().includes('নতুন question report'), '🔔 badge on tab + dashboard notice');
+  TTAB = 'rep'; { const v = vReports(); TT.ok(v.includes('RP1 · Q2') && v.includes('B should be A') && v.includes("'approve'") && v.includes("'reject'"), 'reports tab: question, note, approve/reject'); }
+  { const b = allRecs().find(r => r.aid === aid0); TT.eq([b.score, b.total], [0.75, 3], 'score before approve'); }
+  await qAct('RP1', 1, 'approve');
+  TT.ok(/^✅ Question বাতিল/.test(RQMSG['RP1|1']) && voidActive('RP1', 1), 'approve -> question void: ' + RQMSG['RP1|1']);
+  const after = () => allRecs().find(r => r.aid === aid0);
+  TT.eq([after().score, after().total, after().vd.map(x => x[0])], [1, 2, [1]], 'score recomputed without the void question (negative mark returned)');
+  TT.ok(vResult(after()).includes('বাতিল হয়েছে') && vResult(after()).includes('আগে ছিল 0.75/3') && vResult(after()).includes('🚫 বাতিল question'), 'result shows void notice + old score');
+  TT.eq(pct(after()), 50, 'percent from new total');
+  TT.ok(vReports().includes('openFix') && vReports().includes("'fix'") && vReports().includes("'undo'"), 'approved: edit / fixed / undo buttons');
+  SESS = STU; view = 'home';
+  startRun('RP1', 'full'); TT.ok(!RUN.order.includes(1) && RUN.order.length === 2, 'void question not served in new exam'); stopRun();
+  await loadMyRep(); TT.ok(vMyRep().includes('তোমার report-এর উত্তর') && vMyRep().includes('Approved'), 'student notified: report approved');
+  TT.ok(vHome().includes('আমার reports'), 'student home lists my reports');
+  CFG.rules.reportNotify = false; TT.eq(vMyRep(), '', 'student notification can be switched off'); CFG.rules.reportNotify = true;
+  // teacher fixes it in the editor
+  SESS = TCH; view = 'teacher';
+  await openFix('RP1', 1);
+  TT.ok(vExamEditor().includes('এই question বাতিল আছে') && vExamEditor().includes('id="qed1"'), 'editor marks the void question');
+  EDX.qs[1].a = 0; EDX.qs[1].q = 'q two (fixed)'; await saveExam();
+  TT.ok(/ঠিক হয়েছে/.test(EDX.msg) && !voidActive('RP1', 1), 'saving the edited question auto-fixes it: ' + EDX.msg);
+  EDX = null;
+  TT.eq([after().score, after().total], [1, 2], 'old attempt keeps the question excluded after fix');
+  SESS = STU; await getExam('RP1'); startRun('RP1', 'full'); TT.eq(RUN.order.length, 3, 'fixed question comes back in the exam'); stopRun();
+  // undo + reject
+  SESS = TCH; B.post({ action: 'report', sid: '8', name: 'K', exam: 'RP1', qi: '0', why: 'typo' }); B.post({ action: 'report', sid: '8', name: 'K', exam: 'RP1', qi: '2', why: 'sol' });
+  await loadReps(); await qAct('RP1', 0, 'approve'); TT.eq(after().total, 1, 'second void');
+  await qAct('RP1', 0, 'undo'); TT.ok(!voidActive('RP1', 0) && after().total === 2 && after().score === 1, 'undo restores the score');
+  await qAct('RP1', 2, 'reject'); TT.ok(!voidActive('RP1', 2) && !REPS.reports.some(r => r.st === 'new' && r.exam === 'RP1' && r.qi === 2) && REPS.reports.some(r => r.st === 'new' && r.qi === 0 && r.exam === 'RP1') && /reject/.test(RQMSG['RP1|2']), 'reject keeps question, clears new');
+  TTAB = 'set'; TT.ok(vSettings().includes('Report notification') && vSettings().includes('saveNotify') && vSettings().includes('rules.reportGuest'), 'settings: report rules + Gmail option');
+  TTAB = 'dash'; SESS = T0; }

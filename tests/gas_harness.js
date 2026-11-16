@@ -34,12 +34,13 @@ function createBackend() {
     getSheetByName: n => sheets.find(x => x.getName() === n) || null,
     insertSheet(n) { const sh = makeSheet(n); sheets.push(sh); return sh; },
   };
-  const props = {};
+  const props = {}, mails = [], mailCfg = { allowed: true };
   const ctx = {
     SpreadsheetApp: { create: () => ss, openById: () => ss },
     PropertiesService: { getScriptProperties: () => ({ getProperty: k => (k in props ? props[k] : null), setProperty: (k, v) => { props[k] = v; }, deleteProperty: k => { delete props[k]; } }) },
     LockService: { getScriptLock: () => ({ waitLock() {}, releaseLock() {} }) },
     ContentService: { MimeType: { JSON: 'json' }, createTextOutput: t => ({ text: t, setMimeType() { return this; } }) },
+    MailApp: { sendEmail(to, sub, body) { if (!mailCfg.allowed) throw new Error('You do not have permission to call MailApp.sendEmail'); mails.push({ to, sub, body }); } },
     console,
   };
   vm.createContext(ctx);
@@ -51,7 +52,7 @@ function createBackend() {
   return {
     get: p => { const t = out(A.doGet({ parameter: p })); try { return JSON.parse(t); } catch (e) { return t; } },
     post: p => out(A.doPost({ parameter: p })),
-    sheets, props,
+    sheets, props, mails, mailCfg,
   };
 }
 module.exports = { createBackend };

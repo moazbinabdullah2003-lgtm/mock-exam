@@ -180,6 +180,15 @@ body.box-sym.in-quiz:not(.motif-quiz) :is(.card,.tile,.choice,details.sec)::befo
 .lgs input[type=checkbox],.lgall input{width:18px;height:18px;margin:0;accent-color:var(--p);vertical-align:middle}
 .lgall{display:flex;gap:8px;align-items:center;font-size:14px;margin:8px 0 0;cursor:pointer}
 .lgb:disabled{opacity:.45;cursor:not-allowed}
+
+/* ---------- 🚩 Question report ---------- */
+.rpb{padding:6px 9px!important}
+.repw{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}.repw .chip{font-size:13px;padding:6px 10px}
+.repq{font-size:14px;background:var(--pl);border-radius:10px;padding:8px 10px;margin:6px 0 10px;max-height:120px;overflow:auto}
+.badge{display:inline-block;min-width:18px;padding:1px 6px;border-radius:999px;background:var(--r);color:#fff;font-size:11px;line-height:16px;margin-left:3px;text-align:center}
+.vdq{margin-bottom:16px;opacity:.75;border-left:3px solid var(--r);padding-left:8px}
+.repc .exp{margin-top:6px}
+@media (max-width:520px){.tabs{flex-wrap:wrap;overflow:visible}.tabs button{flex:1 1 auto;padding:9px 8px;font-size:13px}}
 </style>
 </head>
 <body>
@@ -310,7 +319,7 @@ const DEF_CFG = {
   text:   {},
   access: {guest:true, teacherId:'teacher'},
   rules:  {review:'full', explain:true, showScore:true, passMark:0, retake:true, mistakes:true, maxAttempts:0,
-           timer:true, confirm:true, analytics:true, history:true},
+           timer:true, confirm:true, analytics:true, history:true, report:true, reportGuest:true, reportNotify:true},
   exams:  {}   // per exam: {maxAttempts, start, end, intro, shuffle:''|'yes'|'no'}
 };
 /* UI label defaults (teacher "Texts" section-এ যেকোনোটা বদলানো যায়) */
@@ -374,6 +383,7 @@ async function loadCfg(){
   if(!CONFIG.SCRIPT_URL) return;
   try{
     const r = await (await fetch(CONFIG.SCRIPT_URL + '?action=settings&t=' + Date.now())).json();
+    if(r && r.ok && r.voids) setVoids(r.voids);   // 🚩 বাতিল question list (09b)
     if(r && r.ok && r.cfg && typeof r.cfg === 'object'){ setCfg(r.cfg); return true; }
   }catch(e){}
   return false;
@@ -625,7 +635,7 @@ function pruneLocal(){
 function allRawH(){
   const m = new Map();
   [...REMOTE, ...LS.get('mq_local', [])].forEach(r => { if(!m.has(r.aid)) m.set(r.aid, r); });
-  return [...m.values()].sort((a,b) => aidTime(a.aid) - aidTime(b.aid));
+  return [...m.values()].map(adj).sort((a,b) => aidTime(a.aid) - aidTime(b.aid));   // adj = বাতিল question বাদ (09b)
 }
 const allRaw = () => allRawH().filter(r => !r.hid);   // লুকানো log কোথাও গোনা হয় না (score, limit, analytics)
 const allRecs = () => allRaw().filter(r => !isExit(r));   // সব হিসাব (score, attempt limit, analytics) শুধু আসল attempt দিয়ে
@@ -713,7 +723,8 @@ function render(keep){
   const KEEP = ['#code', '#sid', '#pw', '#tid', '#tp', '#gcode', '#gname'], kv = KEEP.map(k => $(k) ? $(k).value : '');
   if(CFG.brand.footer && view !== 'quiz') h += `<div class="foot">${esc(CFG.brand.footer)}</div>`;
   if(LANGASK && view !== 'quiz') h += vLangAsk();
-  if(LOGED && view === 'teacher') h += vLogEd();     // ✏ log editor (teacher)
+  if(LOGED && view === 'teacher') h += vLogEd();
+  if(RPT) h += vRepPopup();                          // 🚩 report popup     // ✏ log editor (teacher)
   if(VSAVE) h += vSavePopup();                        // 🔖 save popup (quiz / result / vault)
   if(EXITING && view === 'quiz') h += vExitPopup();   // ✕ exam exit   // ভাষা বাছাই popup (bilingual exam)
   try{ document.body.classList.toggle('in-quiz', view === 'quiz'); }catch(e){}
@@ -833,7 +844,7 @@ function backToTeacher(){
 function logout(){ SESS = null; LS.del('mq_sess'); view = 'login'; LMODE = ''; TSTU = null; msg = ''; render(); }
 async function refresh(){
   loading = true; render(true);
-  await loadCfg(); await loadRemote(); if(SESS && SESS.teacher) await loadExamList(); await ensureExams(); await flush();
+  await loadCfg(); await loadRemote(); if(SESS && SESS.teacher){ await loadExamList(); await loadReps(); } else await loadMyRep(); await ensureExams(); await flush();
   loading = false;
   if(view === 'home' || view === 'teacher') render(true);
   if(SESS && !SESS.teacher) vPull();
@@ -850,7 +861,7 @@ function vHome(){
     return top + hello + `<div class="card center"><div class="muted">${esc(s.code)}</div><h2 style="font-size:24px;margin:6px 0">${esc(e ? e.title : s.code)}</h2>
       ${e ? `<div class="muted">${e.questions.length} questions · ${e.minutes} min</div>` : ''}
       ${errBox()}
-      <button class="btn full lg" onclick="startGuest()">${esc(T('startBtn'))}</button></div>${vHomeBtn()}${intro}`;
+      <button class="btn full lg" onclick="startGuest()">${esc(T('startBtn'))}</button></div>${vHomeBtn()}${vMyRep()}${intro}`;
   }
   return top + hello + `
   <div class="card"><h2>${esc(T('startTitle'))}</h2>
@@ -859,6 +870,7 @@ function vHome(){
     <button class="btn full lg" onclick="startCode()">${esc(T('startBtn'))}</button>
   </div>
   ${vHomeBtn()}
+  ${vMyRep()}
   ${CFG.rules.analytics ? vBoard(s.sid, false) : ''}${intro}`;
 }
 function startGuest(){
@@ -907,7 +919,8 @@ function startRun(exam, mode, idxs, lang){
   const e = EXAMS[exam];
   applyOv(e, exam);
   if(isBi(e) && !lang){ LANGASK = {exam, mode, idxs}; return render(true); }   // আগে ভাষা বেছে নাও
-  let order = idxs && idxs.length ? idxs.slice() : e.questions.map((_, i) => i);
+  let order = (idxs && idxs.length ? idxs.slice() : e.questions.map((_, i) => i)).filter(qi => !voidActive(exam, qi));   // 🚩 বাতিল question ঠিক না হওয়া পর্যন্ত আসে না
+  if(!order.length){ msg = 'এই exam-এ এখন কোনো চালু question নেই।'; view = 'home'; return render(); }
   /* সবসময় shuffle (settings দিয়ে বন্ধ করা যায় না): প্রতি attempt-এ question order আর option order নতুন করে এলোমেলো।
      একই student-এর আগের attempt-এর সাথে question order হুবহু এক হলে আবার shuffle করা হয়। */
   shuffle(order);
@@ -1259,7 +1272,7 @@ function vQuiz(){
   const un = RUN.order.length - Object.keys(RUN.ans).length;
   const perm = (RUN.op && RUN.op[qi]) || q.o.map((_, i) => i);
   return `<div class="top"><div><b>${esc(e.title)}</b>${RUN.mode==='mistakes'?'<span class="tag">mistakes</span>':''}</div><div style="display:flex;gap:10px;align-items:center"><button class="link" onclick="EXITING=true;render(true)" title="Exam থেকে বের হও">✕ Exit</button>${CFG.rules.timer ? '<div id="tm" class="tm"></div>' : ''}</div></div>
-  <div class="card"><div class="row" style="margin:0"><span class="muted">Question ${p+1} / ${last+1}</span>${vSaveBtn(RUN.exam, qi)}</div><div class="q">${esc(q.q)}</div>
+  <div class="card"><div class="row" style="margin:0"><span class="muted">Question ${p+1} / ${last+1}</span><span style="white-space:nowrap">${repBtn(RUN.exam, qi)} ${vSaveBtn(RUN.exam, qi)}</span></div><div class="q">${esc(q.q)}</div>
     ${perm.map((oi, n) => `<button class="opt ${a===oi?'sel':''}" onclick="pick(${oi})"><span class="L">${n+1}</span><span>${esc(q.o[oi])}</span></button>`).join('')}
     <div class="kbhint">⌨ ${perm.length > 1 ? '1–' + perm.length : '1'} = option · Enter = save &amp; next · ← → = prev / next</div>
     <div class="row"><button class="btn ghost" onclick="go(${p-1})" ${p===0?'disabled':''}>${esc(T('prev'))}</button>
@@ -1278,7 +1291,7 @@ function pick(i){
 /* Keyboard: 1..N = option (দেখানো position), Enter = save & next (শেষ question-এ submit confirm), ← → = prev/next */
 function onQuizKey(e){
   if(view !== 'quiz' || !RUN || e.ctrlKey || e.metaKey || e.altKey) return;
-  if(EXITING || VSAVE){ if(e.key === 'Escape'){ EXITING = false; VSAVE = null; render(true); } return; }
+  if(EXITING || VSAVE || RPT){ if(e.key === 'Escape'){ EXITING = false; VSAVE = null; RPT = null; render(true); } return; }
   const t = e.target; if(t && /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName)) return;
   const k = e.key;
   if(confirming){
@@ -1326,7 +1339,7 @@ function finish(auto){
   const loc = LS.get('mq_local', []); loc.push(rec); LS.set('mq_local', loc);
   const ob = LS.get('mq_out', []); ob.push(rec); LS.set('mq_out', ob);
   LS.del('mq_run'); RUN = null; confirming = false;
-  LAST = rec; RVLANG = ''; BACK = 'home'; view = 'result'; syncMsg = CAN_SYNC() ? 'Saving…' : '';
+  LAST = adj(rec); RVLANG = ''; BACK = 'home'; view = 'result'; syncMsg = CAN_SYNC() ? 'Saving…' : '';
   render();
   if(CAN_SYNC()) flush().then(n => { syncMsg = n === 0 ? 'Saved ✓' : n > 0 ? 'Network নেই — পরে auto save হবে' : syncMsg; const el = $('#sync'); if(el) el.textContent = syncMsg; });
 }
@@ -1455,7 +1468,7 @@ function vVault(){
   return h + list.map(it => {
     const q = LQ(it.q, lg), seen = vSeen(it);
     return `<div class="card vq"><div class="row" style="margin:0 0 6px"><small class="muted">${esc(it.title)} · ${esc(q.t || '')} · 📁 ${esc(it.f)}</small>
-        <span style="white-space:nowrap"><button class="btn sm ghost" onclick="vCopy('${eA(it.id)}',this)" title="AI-এর জন্য copy">📋</button> <button class="btn sm ghost" onclick="vRemove('${eA(it.id)}')" title="সরাও">🗑</button></span></div>
+        <span style="white-space:nowrap">${repBtn(it.ex, it.qi)} <button class="btn sm ghost" onclick="vCopy('${eA(it.id)}',this)" title="AI-এর জন্য copy">📋</button> <button class="btn sm ghost" onclick="vRemove('${eA(it.id)}')" title="সরাও">🗑</button></span></div>
       <div class="q" style="font-size:1em">${esc(q.q)}</div>
       ${q.o.map((o, i) => `<div class="opt ${seen && i === q.a ? 'ok' : ''}" style="margin:4px 0;padding:8px;cursor:default"><span class="L">${LET[i]}</span><span>${esc(o)}</span></div>`).join('')}
       ${seen ? (q.e ? `<div class="exp">💡 ${esc(q.e)}</div>` : '') : '<small class="muted">🔒 এই exam submit করার পরে সঠিক উত্তর আর solution এখানে দেখা যাবে</small>'}
@@ -1505,6 +1518,7 @@ function vResult(r){
   let h = `<div class="top"><button class="link" onclick="view=BACK;render();refresh()">${esc(T('back'))}</button><small id="sync">${esc(syncMsg)}</small></div>
   <div class="card"><div class="muted" style="text-align:center">${esc(e ? e.title : r.exam)}${r.mode==='mistakes'?' · mistakes':''}</div>
     ${showScore ? `<p class="big">${r.score}/${r.total}</p><div style="text-align:center" class="muted">${p}% · ${fmt(r.secs)}</div>` : `<p class="big" style="font-size:26px">✓</p><div style="text-align:center" class="muted">Submitted · ${fmt(r.secs)}</div>`}
+    ${(r.vd || []).length ? `<div class="notice info">🚫 ${r.vd.length}টা question বাতিল হয়েছে (ভুল ছিল, report approved) — score থেকে বাদ দেওয়া হয়েছে।${showScore && r.raw ? ' আগে ছিল ' + r.raw.score + '/' + r.raw.total + '।' : ''}</div>` : ''}
     ${msgPass && showScore ? `<div style="text-align:center;font-weight:700;margin-top:8px">${esc(msgPass)}</div>` : ''}
     ${showScore ? `<div class="tiles">${tile(okN, T('correct'), 'var(--g)')}${tile(wrN, T('wrong'), 'var(--r)')}${tile(skN, T('skipped'), 'var(--m)')}</div>` : ''}
     ${mine && e && (R.mistakes || R.retake) ? `<div class="row">${R.mistakes ? `<button class="btn ghost" ${w?'':'disabled'} onclick="retake('${esc(r.exam)}','mistakes')">${esc(T('retakeMistakes'))} (${w})</button>` : '<span></span>'}${R.retake ? `<button class="btn" onclick="retake('${esc(r.exam)}','full')">${esc(T('fullAgain'))}</button>` : ''}</div>` : ''}</div>`;
@@ -1518,10 +1532,11 @@ function vResult(r){
   r.d.forEach(([qi, c, g, s], n) => {
     const q = LQ(qinfo(r.exam, qi), lg);
     if(!q) return;
-    rvh += `<div style="margin-bottom:18px"><div class="row" style="margin:0"><span class="muted">Q${n+1} · ${esc(q.t || '')} · ${s}s ${rv==='marks' ? (c < 0 ? '· —' : g ? '· ✅' : '· ❌') : ''}</span><span style="white-space:nowrap">${mine ? vSaveBtn(r.exam, qi) + ' ' : ''}<button class="btn sm ghost" onclick="copyRes(${n},this)" title="এই question AI-এর জন্য copy">📋 Copy</button></span></div><div class="q" style="font-size:.95em">${esc(q.q)}</div>` +
+    rvh += `<div style="margin-bottom:18px"><div class="row" style="margin:0"><span class="muted">Q${n+1} · ${esc(q.t || '')} · ${s}s ${rv==='marks' ? (c < 0 ? '· —' : g ? '· ✅' : '· ❌') : ''}</span><span style="white-space:nowrap">${mine ? repBtn(r.exam, qi) + ' ' + vSaveBtn(r.exam, qi) + ' ' : ''}<button class="btn sm ghost" onclick="copyRes(${n},this)" title="এই question AI-এর জন্য copy">📋 Copy</button></span></div><div class="q" style="font-size:.95em">${esc(q.q)}</div>` +
       q.o.map((o, i) => `<div class="opt ${rv==='full' && i===q.a ? 'ok' : i===c ? (rv==='full' ? 'bad' : (g ? 'ok' : 'bad')) : ''}" style="margin:4px 0;padding:8px"><span class="L">${LET[i]}</span><span>${esc(o)}${i===c?' <small>' + esc(T('yourAnswer')) + '</small>':''}</span></div>`).join('') +
       (c < 0 ? `<small class="err">${esc(T('skipped'))}</small>` : '') + (rv === 'full' && R.explain && q.e ? `<div class="exp">💡 ${esc(q.e)}</div>` : '') + '</div>';
   });
+  (r.vd || []).forEach(([qi]) => { const q = LQ(qinfo(r.exam, qi), lg); if(q) rvh += `<div class="vdq"><span class="tag" style="background:#fee2e2;color:#b91c1c;margin:0">🚫 বাতিল question</span> <small class="muted">report approved — score-এ গোনা হয়নি</small><div class="q" style="font-size:.9em">${esc(q.q)}</div></div>`; });
   return h + sec('r_review', '📝 ' + esc(T('reviewTitle')), rvh, wrN + skN ? '❌ ' + (wrN + skN) : '✅');
 }
 /* ---------- 📋 Copy for AI: exam / one question as clean Markdown + LaTeX ($…$), with answers + our solution ----------
@@ -1574,6 +1589,199 @@ function copyExam(code, n, btn){
 }
 const aiHint = full => `<div class="card" style="border-left:4px solid var(--p)"><b>🤖 AI দিয়ে বুঝে নাও</b>
   <div class="muted" style="margin:4px 0 8px">📋 Copy চাপলে question, option, ${full}LaTeX ($…$) সহ সুন্দর করে copy হবে। তারপর ChatGPT / Claude / Gemini-তে paste করলেই AI বুঝিয়ে দেবে। পুরো exam একসাথে, অথবা নিচে প্রতিটা question-এর পাশের 📋 দিয়ে একটা একটা করে।</div>`;
+/* ============================================================
+   🚩 Question report + বাতিল (void) question
+   Student: যেকোনো সময় (exam চলাকালীন, result review, vault) 🚩 → preset কারণ + note → POST action=report.
+   Teacher: 🚩 Reports tab (🔔 badge) → ✅ Approve = question বাতিল (ঐ সময়ের আগের সব attempt থেকে বাদ, score নতুন করে হিসাব;
+            ঠিক না হওয়া পর্যন্ত নতুন exam-এ আসে না) · ✖ Reject · ✏ Edit করে ঠিক করলে (বা "ঠিক হয়েছে") আবার আগের মতো আসে।
+   VOIDS = {EXAM:{qi:[{at, fx}]}} (public, from ?action=settings). adj(r) = record with voided questions removed (used by allRawH).
+   ============================================================ */
+const REP_WHY = [['typo', '✏️ Typing / বানান ভুল'], ['noopt', '❌ সঠিক option নেই'], ['key', '🔑 Answer key ভুল'], ['multi', '☑️ একাধিক option সঠিক'],
+  ['sol', '📝 Solution ভুল / নেই'], ['unclear', '❓ Question অস্পষ্ট / অসম্পূর্ণ'], ['math', '🖼 Math / চিহ্ন ঠিকমতো দেখাচ্ছে না'], ['other', '💬 অন্য কিছু']];
+const whyL = k => (REP_WHY.find(x => x[0] === k) || [k, k])[1];
+
+/* ---------- void periods + score adjustment ---------- */
+let VOIDS = LS.get('mq_voids', {}) || {}, VOIDV = 1;
+function setVoids(v){ VOIDS = v && typeof v === 'object' ? v : {}; LS.set('mq_voids', VOIDS); VOIDV++; }
+const vPeriods = (ex, qi) => (VOIDS[ex] && VOIDS[ex][qi]) || [];
+const voidActive = (ex, qi) => { const l = vPeriods(ex, qi); return !!(l.length && !l[l.length - 1].fx); };
+/* attempt-এর সময় t-তে question টা ভুল অবস্থায় ছিল কিনা (প্রতিটা period: আগের fix থেকে এই fix পর্যন্ত) */
+function voidAt(ex, qi, t){
+  let from = 0;
+  for(const p of vPeriods(ex, qi)){ if(t >= from && (!p.fx || t < p.fx)) return true; from = p.fx || Infinity; }
+  return false;
+}
+const ADJ = typeof WeakMap === 'function' ? new WeakMap() : null;
+/* বাতিল question বাদ দিয়ে record: d থেকে সরে vd-তে যায়, score/total নতুন (negative mark-ও ফেরত), raw = আগের score */
+function adj(r){
+  if(!r || !VOIDS[r.exam] || !Array.isArray(r.d)) return r;
+  const c = ADJ && ADJ.get(r); if(c && c.v === VOIDV) return c.r;
+  const t = aidTime(r.aid), keep = [], vd = [];
+  r.d.forEach(x => (voidAt(r.exam, x[0], t) ? vd : keep).push(x));
+  let out = r;
+  if(vd.length){
+    const ok = r.d.filter(x => x[2]).length, wr = r.d.filter(x => x[1] >= 0 && !x[2]).length;
+    const neg = wr ? Math.max(0, (ok - r.score) / wr) : ((EXAMS[r.exam] && EXAMS[r.exam].neg) || 0);
+    let sc = r.score; vd.forEach(x => { if(x[2]) sc -= 1; else if(x[1] >= 0) sc += neg; });
+    out = {...r, d:keep, vd, score:+sc.toFixed(2), total:Math.max(0, r.total - vd.length), raw:{score:r.score, total:r.total}};
+  }
+  if(ADJ) ADJ.set(r, {v:VOIDV, r:out});
+  return out;
+}
+
+/* ---------- student: report popup ---------- */
+let RPT = null;   // {ex, qi, why, note, msg, busy, done}
+const canReport = () => !!SESS && !SESS.teacher && CFG.rules.report !== false && (!SESS.guest || CFG.rules.reportGuest !== false);
+const repDone = (ex, qi) => LS.get('mq_rep', []).includes(ex + '|' + qi) || MYREP.some(r => r.exam === ex && r.qi === qi && r.st === 'new');
+const repBtn = (ex, qi) => canReport() ? `<button class="btn sm ghost rpb" data-e="${esc(ex)}" onclick="event.stopPropagation();openRep(this.dataset.e,${qi})" title="Question-এ ভুল? Report করো">🚩${repDone(ex, qi) ? ' ✓' : ''}</button>` : '';
+function openRep(ex, qi){ if(!canReport()) return; RPT = {ex, qi:+qi, why:'', note:'', msg:'', busy:false, done:false}; render(true); }
+function vRepPopup(){
+  const q = qinfo(RPT.ex, RPT.qi), na = RPT.drawn ? ' style="animation:none"' : ''; RPT.drawn = true;
+  const body = RPT.done ? `<div class="notice good">${esc(RPT.msg)}</div><button class="btn full" onclick="RPT=null;render(true)">ঠিক আছে</button>` :
+    `<small class="muted">কী সমস্যা? একটা বাছাই করো</small>
+    <div class="chips repw">${REP_WHY.map(([k, l]) => `<button class="chip ${RPT.why === k ? 'on' : ''}" onclick="RPT.why='${k}';RPT.msg='';render(true)">${l}</button>`).join('')}</div>
+    <textarea rows="3" maxlength="500" placeholder="বিস্তারিত লিখো (ঐচ্ছিক) — যেমন কোন option ঠিক হওয়া উচিত" oninput="RPT.note=this.value">${escT(RPT.note)}</textarea>
+    ${RPT.msg ? `<div class="err">${esc(RPT.msg)}</div>` : ''}
+    <div class="row"><button class="btn ghost" onclick="RPT=null;render(true)">${esc(T('cancel'))}</button><button class="btn" ${RPT.busy ? 'disabled' : ''} onclick="sendRep()">${RPT.busy ? 'পাঠানো হচ্ছে…' : '🚩 Report পাঠাও'}</button></div>`;
+  return `<div class="modal"${na} onclick="if(event.target===this){RPT=null;render(true)}"><div class="card"${na}><h2 style="margin-top:0">🚩 Question report</h2>
+    ${q ? `<div class="repq">${esc(String(LQ(q, (RUN && RUN.lang) || RVLANG || prefLang()).q || '').slice(0, 220))}</div>` : ''}${body}</div></div>`;
+}
+async function sendRep(){
+  if(!RPT || RPT.busy) return;
+  if(!RPT.why){ RPT.msg = 'একটা কারণ বাছাই করো'; return render(true); }
+  if(RPT.why === 'other' && !RPT.note.trim()){ RPT.msg = 'কী সমস্যা সেটা লিখে দাও'; return render(true); }
+  RPT.busy = true; RPT.msg = ''; render(true);
+  const q = qinfo(RPT.ex, RPT.qi);
+  const b = new URLSearchParams({action:'report', sid:SESS.sid, name:SESS.name, exam:RPT.ex, qi:String(RPT.qi), why:RPT.why, note:RPT.note.trim(), q:q ? String(q.q).slice(0, 300) : ''});
+  let ok = true;
+  try{ await fetch(CONFIG.SCRIPT_URL, {method:'POST', mode:'no-cors', headers:{'Content-Type':'application/x-www-form-urlencoded'}, body:b}); }catch(e){ ok = false; }
+  if(!RPT) return;
+  RPT.busy = false;
+  if(ok){
+    const L = LS.get('mq_rep', []); if(!L.includes(RPT.ex + '|' + RPT.qi)) L.push(RPT.ex + '|' + RPT.qi); LS.set('mq_rep', L.slice(-300));
+    RPT.done = true; RPT.msg = '✅ Report পাঠানো হয়েছে। Teacher দেখে ঠিক করবেন — ধন্যবাদ!';
+  } else RPT.msg = '⚠ পাঠানো যায়নি — internet দেখে আবার চেষ্টা করো।';
+  render(true);
+}
+
+/* ---------- student: my reports (status + notice) ---------- */
+let MYREP = [];
+async function loadMyRep(){
+  if(!CONFIG.SCRIPT_URL || !SESS || SESS.teacher) return;
+  try{ const r = await jget(CONFIG.SCRIPT_URL + '?action=myreports&sid=' + encodeURIComponent(SESS.sid) + '&t=' + Date.now()); if(Array.isArray(r)) MYREP = r; }catch(e){}
+}
+const ST_TAG = {new:['⏳ দেখা হয়নি', '#e5e7eb', '#374151'], approved:['✅ Approved — question বাতিল', '#dcfce7', '#15803d'], fixed:['🔧 ঠিক করা হয়েছে', '#dbeafe', '#1d4ed8'], rejected:['✖ মেনে নেওয়া হয়নি', '#fee2e2', '#b91c1c']};
+const stTag = st => { const t = ST_TAG[st] || ST_TAG.new; return `<span class="tag" style="background:${t[1]};color:${t[2]}">${t[0]}</span>`; };
+function vMyRep(){
+  if(!SESS || SESS.teacher || CFG.rules.reportNotify === false || !MYREP.length) return '';
+  const sk = 'mq_repseen_' + norm(SESS.sid), seen = LS.get(sk, 0), fresh = MYREP.filter(r => r.dts > seen && r.st !== 'new');
+  const qt = r => { const q = qinfo(r.exam, r.qi); return q ? esc(String(q.q).slice(0, 90)) : 'Q' + (r.qi + 1); };
+  let h = '';
+  if(fresh.length) h += `<div class="notice ${fresh.some(r => r.st !== 'rejected') ? 'good' : 'warn'}"><b>🚩 তোমার report-এর উত্তর এসেছে</b>${fresh.map(r => `<div style="margin:5px 0"><b>${esc(r.exam)}</b> · ${qt(r)}<br>${stTag(r.st)}${r.st === 'approved' ? ' <small>score নতুন করে হিসাব হয়েছে</small>' : ''}</div>`).join('')}
+    <button class="btn sm ghost" onclick="LS.set('${sk}',${Math.max(...fresh.map(r => r.dts))});render(true)">ঠিক আছে</button></div>`;
+  h += sec('b_rep', '🚩 আমার reports', MYREP.slice().reverse().map(r => `<div class="hist" style="display:block"><div class="muted">${esc(r.exam)} · ${esc(whyL(r.why))} · ${esc(exitWhen(r.at))}</div><div>${qt(r)}</div>${stTag(r.st)}</div>`).join(''), MYREP.length + '');
+  return h;
+}
+
+/* ---------- teacher: 🚩 Reports tab ---------- */
+let REPS = {reports:[], notify:{}}, REPF = 'todo', RQMSG = {}, RQBUSY = '';
+async function loadReps(){
+  if(!CONFIG.SCRIPT_URL || !SESS || !SESS.teacher) return false;
+  try{
+    const r = await jget(CONFIG.SCRIPT_URL + '?action=reports&key=' + encodeURIComponent(TKEY()) + '&t=' + Date.now());
+    if(!r || !r.ok) return false;
+    REPS = {reports:r.reports || [], notify:r.notify || {}}; setVoids(r.voids);
+    const need = [...new Set(REPS.reports.map(x => x.exam))].filter(c => !EXAMS[c]);
+    await Promise.all(need.map(c => getExam(c)));
+    return true;
+  }catch(e){ return false; }
+}
+const repNew = () => REPS.reports.filter(r => r.st === 'new').length;
+function repGroups(){
+  const m = {};
+  REPS.reports.forEach(r => { const k = r.exam + '|' + r.qi; (m[k] = m[k] || {k, exam:r.exam, qi:r.qi, list:[]}).list.push(r); });
+  Object.keys(VOIDS).forEach(ex => Object.keys(VOIDS[ex]).forEach(qi => { const k = ex + '|' + qi; if(!m[k] && voidActive(ex, +qi)) m[k] = {k, exam:ex, qi:+qi, list:[]}; }));
+  return Object.values(m).map(g => ({...g, nNew:g.list.filter(r => r.st === 'new').length, act:voidActive(g.exam, g.qi), last:Math.max(0, ...g.list.map(r => r.at))}))
+    .sort((a, b) => (b.nNew > 0) - (a.nNew > 0) || b.act - a.act || b.last - a.last);
+}
+/* এই question আছে এমন attempt কয়টা (বাতিল হলে যেগুলোর score বদলাবে/বদলেছে) */
+const qAttempts = (ex, qi) => allRawH().filter(r => r.exam === ex && !isExit(r) && (r.d.some(x => x[0] === qi) || (r.vd || []).some(x => x[0] === qi))).length;
+function vReports(){
+  const G = repGroups(), todo = G.filter(g => g.nNew || g.act), show = REPF === 'todo' ? todo : G;
+  let h = `<div class="row" style="margin:6px 0"><h2 style="margin:0">🚩 Question reports</h2><button class="btn ghost sm" onclick="refresh()">${loading ? 'Syncing…' : '↻ Refresh'}</button></div>
+    <div class="chips" style="display:flex;gap:6px;margin:6px 0 10px"><button class="chip ${REPF === 'todo' ? 'on' : ''}" onclick="REPF='todo';render(true)">কাজ বাকি <small>${todo.length}</small></button><button class="chip ${REPF === 'all' ? 'on' : ''}" onclick="REPF='all';render(true)">সব <small>${G.length}</small></button></div>
+    <small class="muted">✅ Approve = question বাতিল: আগের সব attempt থেকে বাদ দিয়ে score নতুন করে হিসাব হবে, আর ঠিক না করা পর্যন্ত exam-এ আসবে না। ✏ Edit করে Save দিলে (বা "ঠিক হয়েছে" চাপলে) আবার আগের মতো আসবে।</small>`;
+  if(!show.length) return h + `<div class="card muted center">${G.length ? 'সব report দেখা হয়ে গেছে 👍' : 'এখনো কোনো report আসেনি।'}</div>`;
+  return h + show.map(g => {
+    const q = qinfo(g.exam, g.qi), per = vPeriods(g.exam, g.qi), fx = per.length && !g.act ? per[per.length - 1].fx : 0;
+    const cnt = {}; g.list.forEach(r => { cnt[r.why] = (cnt[r.why] || 0) + 1; });
+    const st = g.act ? '<span class="tag" style="background:#fee2e2;color:#b91c1c">🚫 বাতিল — ঠিক করা বাকি</span>' : g.nNew ? `<span class="tag" style="background:#fef3c7;color:#b45309">🔔 ${g.nNew} নতুন</span>` : fx ? '<span class="tag" style="background:#dbeafe;color:#1d4ed8">🔧 ঠিক করা হয়েছে</span>' : '<span class="tag">✖ Rejected</span>';
+    const busy = RQBUSY === g.k ? 'disabled' : '', dd = `data-e="${esc(g.exam)}" data-q="${g.qi}"`, B = (op, l, cls) => `<button class="btn sm ${cls || ''}" ${busy} ${dd} onclick="qAct(this.dataset.e,+this.dataset.q,'${op}')">${l}</button>`;
+    const btns = [];
+    if(g.nNew) btns.push(B('approve', g.act ? '✅ Approve (যোগ করো)' : '✅ Approve — question বাতিল'), B('reject', '✖ Reject', 'ghost'));
+    if(g.act) btns.push(`<button class="btn sm" ${busy} ${dd} onclick="openFix(this.dataset.e,+this.dataset.q)">✏ Edit করে ঠিক করো</button>`, B('fix', '🔧 ঠিক হয়েছে — আবার চালু', 'ghost'), B('undo', '↩ Approve ফিরিয়ে নাও', 'ghost'));
+    const na = qAttempts(g.exam, g.qi);
+    return `<div class="card repc"><div class="row" style="margin:0"><b>${esc(g.exam)} · Q${g.qi + 1}</b>${st}</div>
+      ${q ? `<div class="q" style="font-size:.95em;margin:8px 0">${esc(q.q)}</div>${q.o.map((o, i) => `<div class="opt ${i === q.a ? 'ok' : ''}" style="margin:3px 0;padding:6px 8px"><span class="L">${LET[i]}</span><span>${esc(o)}${i === q.a ? ' <small>✔ answer key</small>' : ''}</span></div>`).join('')}${q.e ? `<div class="exp">💡 ${esc(q.e)}</div>` : ''}` : '<div class="muted">Question পাওয়া যায়নি (exam মুছে ফেলা হয়েছে?)</div>'}
+      <div class="chips" style="display:flex;flex-wrap:wrap;gap:5px;margin:8px 0">${Object.entries(cnt).map(([k, n]) => `<span class="chip" style="cursor:default">${esc(whyL(k))}${n > 1 ? ' <small>×' + n + '</small>' : ''}</span>`).join('')}</div>
+      ${g.list.slice().reverse().map(r => `<div class="hist" style="display:block;padding:6px 0"><b>${esc(r.name || r.sid)}</b> <small>${esc(r.sid)} · ${esc(exitWhen(r.at))}</small> ${stTag(r.st)}<br><small>${esc(whyL(r.why))}</small>${r.note ? `<div style="font-size:14px">“${esc(r.note)}”</div>` : ''}</div>`).join('')}
+      <small class="muted">${na} টা attempt-এ এই question আছে${g.act ? ' — সবগুলো থেকে বাদ দিয়ে score হিসাব হচ্ছে' : ''}${fx ? ' · ঠিক করা হয়েছে ' + esc(dDay(fx)) : ''}</small>
+      ${btns.length ? `<div class="row" style="margin:10px 0 0;justify-content:flex-start;gap:6px;flex-wrap:wrap">${btns.join('')}</div>` : ''}
+      ${RQMSG[g.k] ? `<div class="notice ${/^✅|^🔧|^↩|^✖/.test(RQMSG[g.k]) ? 'good' : /^⚠/.test(RQMSG[g.k]) ? 'warn' : 'info'}" style="margin-top:8px">${esc(RQMSG[g.k])}</div>` : ''}</div>`;
+  }).join('');
+}
+async function qAct(code, qi, op){
+  const k = code + '|' + qi;
+  if(RQBUSY) return;
+  RQBUSY = k; RQMSG[k] = '⏳ Server-এ পাঠানো হচ্ছে…'; render(true);
+  await tPost({action:'qvoid', code, qi:String(qi), op});
+  const noNew = () => !REPS.reports.some(r => r.exam === code && r.qi === qi && r.st === 'new');
+  const done = {approve:() => voidActive(code, qi) && noNew(), reject:noNew, fix:() => !voidActive(code, qi), undo:() => !voidActive(code, qi)}[op];
+  let ok = false;
+  for(let i = 0; i < 6 && !ok; i++){ ok = (await loadReps()) && done(); if(!ok) await sleep(1300); }
+  RQBUSY = '';
+  RQMSG[k] = !ok ? '⚠ Server থেকে নিশ্চিত হওয়া যায়নি — একটু পরে ↻ Refresh করো।' : {
+    approve:'✅ Question বাতিল — ' + qAttempts(code, qi) + ' টা attempt-এর score নতুন করে হিসাব হয়েছে। এখন ✏ Edit করে ঠিক করো।',
+    reject:'✖ Report reject করা হয়েছে (question আগের মতোই থাকবে)।',
+    fix:'🔧 আবার চালু — নতুন exam-এ question টা আগের মতো আসবে। পুরোনো attempt-এ বাদই থাকবে।',
+    undo:'↩ Approve ফিরিয়ে নেওয়া হয়েছে — score আগের মতো।'}[op];
+  render(true);
+}
+async function openFix(code, qi){
+  await openEditor(code);
+  if(!EDX) return;
+  EDX.focus = qi; render();
+  setTimeout(() => { const el = $('#qed' + qi); if(el && el.scrollIntoView) el.scrollIntoView({block:'center'}); }, 60);
+}
+/* editor: বাতিল question বদলানো হলে save-এর পরে auto "ঠিক হয়েছে" */
+const qSig = q => JSON.stringify([String(q.q).trim(), (q.o || []).map(s => String(s).trim()).filter(Boolean), q.a, String(q.e || '').trim(), String(q.qb || '').trim(), (q.ob || []).map(s => String(s).trim()), String(q.eb || '').trim()]);
+async function autoFix(x){
+  const fixed = x.qs.map((q, i) => i).filter(i => voidActive(x.code, i) && x.orig && x.orig[i] !== undefined && qSig(x.qs[i]) !== x.orig[i]);
+  for(const i of fixed) await tPost({action:'qvoid', code:x.code, qi:String(i), op:'fix'});
+  if(fixed.length){ for(let k = 0; k < 6; k++){ await loadCfg(); if(fixed.every(i => !voidActive(x.code, i))) break; await sleep(1300); } }
+  return fixed;
+}
+const vEdVoid = (code, i) => voidActive(code, i) ? `<div class="notice bad" style="margin:4px 0 8px">🚫 এই question বাতিল আছে (report approved)। ঠিক করে নিচে <b>Save</b> দিলে আবার exam-এ আগের মতো আসবে।</div>` : '';
+
+/* ---------- teacher settings: Gmail notification (private, not in public cfg) ---------- */
+function vNotifySet(){
+  const n = REPS.notify || {};
+  return `<label class="chk"><input type="checkbox" id="nfon" ${n.on ? 'checked' : ''}><span>📧 নতুন report এলে Gmail-এও পাঠাও</span></label>
+    <input id="nfto" type="email" placeholder="তোমার Gmail address" value="${esc(n.to || '')}">
+    <button class="btn ghost sm" onclick="saveNotify()">💾 Save email setting</button>
+    <div><small class="muted">App-এর ভেতরে 🔔 notification সবসময় থাকে। Gmail প্রথমবার চালু করতে একবার Google permission দিতে হবে — Claude-কে বলো <b>"gmail chalu koro"</b>।</small></div>
+    ${n.on && n.err ? `<div class="notice warn">⚠ Gmail পাঠানো যাচ্ছে না: ${esc(n.err)}</div>` : ''}${NFMSG ? `<div class="notice info">${esc(NFMSG)}</div>` : ''}`;
+}
+let NFMSG = '';
+async function saveNotify(){
+  const on = !!($('#nfon') && $('#nfon').checked), to = ($('#nfto') && $('#nfto').value || '').trim();
+  if(on && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(to)){ NFMSG = 'সঠিক email address দাও'; return render(true); }
+  NFMSG = 'Saving…'; render(true);
+  await tPost({action:'setnotify', on:on ? 'YES' : 'NO', to});
+  let ok = false;
+  for(let i = 0; i < 6 && !ok; i++){ await loadReps(); ok = !!REPS.notify.on === on && (REPS.notify.to || '') === to; if(!ok) await sleep(1300); }
+  NFMSG = ok ? '✅ Saved' : '⚠ Save confirm হয়নি'; render(true);
+}
 /* ---------- Teacher ---------- */
 function openStu(sid){ TSTU = sid; render(); }
 function vTeacher(){
@@ -1599,12 +1807,13 @@ function vTeacher(){
   }));
   const hard = Object.values(qs).filter(o => qinfo(o.exam, o.i)).sort((a,b) => a.ok/a.n - b.ok/b.n).slice(0, 10);
   const hd = `<div class="top"><b>${esc(CFG.brand.emoji)} Teacher</b><span style="white-space:nowrap"><button class="btn sm ghost" onclick="asTestStudent()">🎓 Test student</button> <button class="link" onclick="logout()">Logout</button></span></div>${TSTMSG ? `<div class="warn">${esc(TSTMSG)}</div>` : ''}${vTabs()}`;
+  if(TTAB === 'rep') return hd + vReports();
   if(TTAB === 'set') return hd + vSettings();
   if(TTAB === 'stu') return hd + vStudents();
   if(TTAB === 'exams') return hd + banner() + vExams();
   const cAvg = avg(rows.map(r => r.avg)), need = rows.filter(r => r.avg < 60).slice(0, 3);
   return `${hd}
-  ${banner()}${remoteMsg ? `<div class="warn">${esc(remoteMsg)}</div>` : ''}
+  ${banner()}${remoteMsg ? `<div class="warn">${esc(remoteMsg)}</div>` : ''}${repNew() ? `<div class="notice warn" style="cursor:pointer" onclick="gotoTab('rep')">🔔 <b>${repNew()}</b>টা নতুন question report এসেছে — দেখো ›</div>` : ''}
   <div class="row" style="margin:6px 0"><select id="tf" style="width:auto;flex:1;margin:0" onchange="TF=this.value;render(true)">
       <option value="">All exams</option>${exams.map(c => `<option ${c===TF?'selected':''} value="${esc(c)}">${esc(c)}</option>`).join('')}</select>
       <button class="btn ghost sm" onclick="refresh()">${loading ? 'Syncing…' : '↻ Refresh'}</button><button class="btn ghost sm" onclick="exportCSV()">⬇ CSV</button></div>
@@ -2162,7 +2371,7 @@ const fK = (p, l) => `<label class="chk"><input type="checkbox" data-p="${eA(p)}
 const sec = (id, title, body, sub) => `<details class="sec" ${SO[id] ? 'open' : ''} ontoggle="SO['${id}']=this.open"><summary><span>${title}</span>${sub ? `<span class="sub">${sub}</span>` : ''}</summary><div class="in">${body}</div></details>`;
 
 function vTabs(){
-  const t = [['dash','📊 Dashboard'],['exams','📚 Exams'],['stu','👥 Students'],['set','⚙ Settings']];
+  const nr = repNew(), t = [['dash','📊 Dashboard'],['rep','🚩 Reports' + (nr ? ` <span class="badge">${nr}</span>` : '')],['exams','📚 Exams'],['stu','👥 Students'],['set','⚙ Settings']];
   return `<div class="tabs">${t.map(([k, l]) => `<button class="${TTAB === k ? 'on' : ''}" onclick="gotoTab('${k}')">${l}</button>`).join('')}</div>`;
 }
 async function gotoTab(k){
@@ -2170,6 +2379,7 @@ async function gotoTab(k){
   if(!DIRTY || !CD) CD = clone(CFG);
   render();
   if(k === 'stu' && !ROSTER_OK) await loadRoster();
+  if(k === 'rep' || k === 'set'){ if(await loadReps()) render(true); }
 }
 async function loadRoster(){
   if(!CONFIG.SCRIPT_URL) return;
@@ -2262,12 +2472,13 @@ function vSettings(){
     ${fK('rules.retake', 'Full exam আবার দেওয়া যাবে')}${fK('rules.mistakes', '"Retake mistakes" button')}${fN('rules.maxAttempts', 'প্রতি exam-এ max attempt (0 = unlimited)', 0)}
     <small class="muted">🔀 Question আর option order প্রতি attempt-এ সবসময় এলোমেলো হয় (বন্ধ করা যায় না)।</small>${fK('rules.timer', 'Timer দেখাবে')}${fK('rules.confirm', 'Submit-এর আগে confirm জিজ্ঞেস করবে')}
     ${fK('rules.analytics', 'Student নিজের Analytics দেখবে')}${fK('rules.history', 'Student নিজের History দেখবে')}
+    ${fK('rules.report', '🚩 Student question report করতে পারবে')}${fK('rules.reportGuest', '🚩 Guest-ও report করতে পারবে')}${fK('rules.reportNotify', '🚩 Report approve/reject হলে student-কে জানাবে')}
     <button class="btn ghost sm" onclick="resetSec('rules')">↺ Reset rules</button>`;
   const sec2 = `${fT('access.teacherId', 'Teacher ID (login-এ এটা লাগবে)', 'teacher')}<small class="muted">Teacher password বদলাও (কমপক্ষে ৪ অক্ষর)। বদলালে নতুন password দিয়ে আবার login করতে হবে।</small>
     <input id="np1" type="password" placeholder="New password"><input id="np2" type="password" placeholder="Confirm new password">
     <button class="btn ghost full" onclick="changePass()">🔐 Change password</button>`;
   return `<h2 style="margin:6px 0">⚙ App Settings</h2><small class="muted">যা বদলাবে তা সাথে সাথে preview হবে। শেষে নিচের Save চাপলে সব student দেখবে।</small>
-    ${sec('theme', '🎨 Theme & look', theme)}${sec('brand', '🏷 Branding, notice & instructions', brand)}${sec('rules', '📋 Exam rules & features', rules)}${sec('texts', '✏️ All button / label texts', texts)}${sec('pw', '🔐 Security', sec2)}${vSaveBar()}`;
+    ${sec('theme', '🎨 Theme & look', theme)}${sec('brand', '🏷 Branding, notice & instructions', brand)}${sec('rules', '📋 Exam rules & features', rules)}${sec('texts', '✏️ All button / label texts', texts)}${sec('notify', '🔔 Report notification (Gmail)', vNotifySet())}${sec('pw', '🔐 Security', sec2)}${vSaveBar()}`;
 }
 async function changePass(){
   const a = $('#np1').value, b = $('#np2').value;
@@ -2352,6 +2563,7 @@ async function openEditor(code){
     const r = await (await fetch(CONFIG.SCRIPT_URL + '?action=exam&code=' + encodeURIComponent(code) + '&t=' + Date.now())).json();
     if(!r || !r.questions) throw 0;
     EDX = {code, title:r.title, minutes:r.minutes, neg:r.neg, open:r.open !== false, msg:'', qs:r.questions.map(q => ({q:q.q, o:q.o.slice(), a:q.a, t:q.t, e:q.e, qb:q.qb || '', ob:(q.ob || []).slice(), eb:q.eb || ''}))};
+    EDX.orig = EDX.qs.map(qSig);   // 🚩 বাতিল question বদলালে save-এর পরে auto চালু
   }catch(e){ EDX = null; upMsg = 'Exam load হয়নি'; }
   render();
 }
@@ -2399,7 +2611,7 @@ function vExamEditor(){
       <label class="fld"><span>End time</span><input type="datetime-local" data-p="${eA(ovp + '.end')}" value="${eA(gp(ovp + '.end'))}" oninput="sp(this.dataset.p,this.value)"></label></div>
       ${fA(ovp + '.intro', 'Instructions (শুধু এই exam শুরুর আগে দেখাবে)', '', 3)}
       <small class="muted">এই অংশের পরিবর্তন নিচের "Save" চাপলে save হবে।</small></div>`;
-  const qs = x.qs.map((q, i) => `<div class="qed"><div class="row" style="margin:0 0 6px"><b>Q${i + 1}</b>
+  const qs = x.qs.map((q, i) => `<div class="qed" id="qed${i}">${vEdVoid(x.code, i)}<div class="row" style="margin:0 0 6px"><b>Q${i + 1}</b>
       <span><button class="btn sm ghost" onclick="edMove(${i},-1)">↑</button> <button class="btn sm ghost" onclick="edMove(${i},1)">↓</button> <button class="btn sm ghost" onclick="edDup(${i})">⎘</button> <button class="btn sm ghost" onclick="edDel(${i})">🗑</button></span></div>
       <textarea rows="2" placeholder="Question (math: $x^2$ বা $\\dfrac{1}{2}$)" oninput="eset(${i},'q',this.value)">${escT(q.q)}</textarea>
       ${q.o.map((o, n) => `<div class="oe"><input type="radio" name="a${i}" ${q.a === n ? 'checked' : ''} onchange="eset(${i},'a',${n})" title="সঠিক উত্তর"><b>${LET[n]}</b><input type="text" value="${eA(o)}" placeholder="Option ${LET[n]}" oninput="eopt(${i},${n},this.value)"></div>`).join('')}
@@ -2447,13 +2659,13 @@ async function saveExam(){
     // এই exam-এর আলাদা rules নতুন code-এ সরাও
     if(CD && CD.exams && CD.exams[old]){ CD.exams[nc] = CD.exams[old]; delete CD.exams[old]; DIRTY = true; CFG = deepMerge(DEF_CFG, CD); }
     x.code = nc; x.newCode = nc;
-    if(!x.isNew){ await loadRemote(); }
+    if(!x.isNew){ await loadRemote(); await loadCfg(); }
   }
   x.msg = 'Saving…'; render(true);
   const ex = {code:x.code, title:x.title || x.code, minutes:String(x.minutes || 10), neg:String(x.neg || 0), open:x.open ? 'YES' : 'NO', rows};
   await tPost({action:'upload', code:ex.code, rows:JSON.stringify(rowsOf(ex))});
   const ok = await verifyExam(ex);
-  if(ok){ x.dirty = false; x.msg = '✅ Exam saved'; delete EXAMS[ex.code]; LS.set('mq_exams', EXAMS); await loadExamList(); if(DIRTY) await saveAll(); }
+  if(ok){ const fx = await autoFix(x); x.orig = x.qs.map(qSig); x.dirty = false; x.msg = '✅ Exam saved' + (fx.length ? ' · 🔧 ' + fx.map(i => 'Q' + (i + 1)).join(', ') + ' ঠিক হয়েছে — আবার exam-এ আসবে' : ''); delete EXAMS[ex.code]; LS.set('mq_exams', EXAMS); await loadExamList(); if(DIRTY) await saveAll(); }
   else x.msg = '⚠ Save confirm হয়নি (Code.gs / password দেখো)';
   render(true);
 }

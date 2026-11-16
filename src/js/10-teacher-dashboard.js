@@ -23,12 +23,13 @@ function vTeacher(){
   }));
   const hard = Object.values(qs).filter(o => qinfo(o.exam, o.i)).sort((a,b) => a.ok/a.n - b.ok/b.n).slice(0, 10);
   const hd = `<div class="top"><b>${esc(CFG.brand.emoji)} Teacher</b><span style="white-space:nowrap"><button class="btn sm ghost" onclick="asTestStudent()">🎓 Test student</button> <button class="link" onclick="logout()">Logout</button></span></div>${TSTMSG ? `<div class="warn">${esc(TSTMSG)}</div>` : ''}${vTabs()}`;
+  if(TTAB === 'rep') return hd + vReports();
   if(TTAB === 'set') return hd + vSettings();
   if(TTAB === 'stu') return hd + vStudents();
   if(TTAB === 'exams') return hd + banner() + vExams();
   const cAvg = avg(rows.map(r => r.avg)), need = rows.filter(r => r.avg < 60).slice(0, 3);
   return `${hd}
-  ${banner()}${remoteMsg ? `<div class="warn">${esc(remoteMsg)}</div>` : ''}
+  ${banner()}${remoteMsg ? `<div class="warn">${esc(remoteMsg)}</div>` : ''}${repNew() ? `<div class="notice warn" style="cursor:pointer" onclick="gotoTab('rep')">🔔 <b>${repNew()}</b>টা নতুন question report এসেছে — দেখো ›</div>` : ''}
   <div class="row" style="margin:6px 0"><select id="tf" style="width:auto;flex:1;margin:0" onchange="TF=this.value;render(true)">
       <option value="">All exams</option>${exams.map(c => `<option ${c===TF?'selected':''} value="${esc(c)}">${esc(c)}</option>`).join('')}</select>
       <button class="btn ghost sm" onclick="refresh()">${loading ? 'Syncing…' : '↻ Refresh'}</button><button class="btn ghost sm" onclick="exportCSV()">⬇ CSV</button></div>

@@ -137,7 +137,7 @@ function pruneLocal(){
 function allRawH(){
   const m = new Map();
   [...REMOTE, ...LS.get('mq_local', [])].forEach(r => { if(!m.has(r.aid)) m.set(r.aid, r); });
-  return [...m.values()].sort((a,b) => aidTime(a.aid) - aidTime(b.aid));
+  return [...m.values()].map(adj).sort((a,b) => aidTime(a.aid) - aidTime(b.aid));   // adj = বাতিল question বাদ (09b)
 }
 const allRaw = () => allRawH().filter(r => !r.hid);   // লুকানো log কোথাও গোনা হয় না (score, limit, analytics)
 const allRecs = () => allRaw().filter(r => !isExit(r));   // সব হিসাব (score, attempt limit, analytics) শুধু আসল attempt দিয়ে

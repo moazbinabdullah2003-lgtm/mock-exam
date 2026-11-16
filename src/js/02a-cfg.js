@@ -49,7 +49,7 @@ const DEF_CFG = {
   text:   {},
   access: {guest:true, teacherId:'teacher'},
   rules:  {review:'full', explain:true, showScore:true, passMark:0, retake:true, mistakes:true, maxAttempts:0,
-           timer:true, confirm:true, analytics:true, history:true},
+           timer:true, confirm:true, analytics:true, history:true, report:true, reportGuest:true, reportNotify:true},
   exams:  {}   // per exam: {maxAttempts, start, end, intro, shuffle:''|'yes'|'no'}
 };
 /* UI label defaults (teacher "Texts" section-এ যেকোনোটা বদলানো যায়) */
@@ -113,6 +113,7 @@ async function loadCfg(){
   if(!CONFIG.SCRIPT_URL) return;
   try{
     const r = await (await fetch(CONFIG.SCRIPT_URL + '?action=settings&t=' + Date.now())).json();
+    if(r && r.ok && r.voids) setVoids(r.voids);   // 🚩 বাতিল question list (09b)
     if(r && r.ok && r.cfg && typeof r.cfg === 'object'){ setCfg(r.cfg); return true; }
   }catch(e){}
   return false;

@@ -50,6 +50,7 @@ const norm_ = s => String(s == null ? '' : s).trim().toUpperCase().replace(/^0+(
 function doPost(e) {
   const p = (e && e.parameter) || {};
   if (p.action === 'savevault') return ContentService.createTextOutput(saveVault_(p));
+  if (p.action === 'report') return ContentService.createTextOutput(report_(p));
   if (p.action) return admin_(p);
   const lock = LockService.getScriptLock();
   lock.waitLock(20000);
@@ -76,7 +77,9 @@ function doGet(e) {
   const p = (e && e.parameter) || {};
   if (p.action === 'exams') return json_(p.key === pass_() ? listExams_() : []);
   if (p.action === 'exam') return json_(getExam_(String(p.code || '').trim().toUpperCase()));
-  if (p.action === 'settings') return json_({ ok: true, cfg: JSON.parse(kvGet_('cfg') || '{}') });
+  if (p.action === 'settings') return json_({ ok: true, cfg: JSON.parse(kvGet_('cfg') || '{}'), voids: voids_() });
+  if (p.action === 'reports') return json_(p.key === pass_() ? { ok: true, reports: reports_(), voids: voids_(), notify: notifyInfo_() } : { ok: false });
+  if (p.action === 'myreports') return json_(p.sid ? reports_().filter(r => norm_(r.sid) === norm_(p.sid)).map(r => ({ id: r.id, exam: r.exam, qi: r.qi, why: r.why, st: r.st, at: r.at, dts: r.dts })) : []);
   if (p.action === 'tlogin') return json_({ ok: p.key === pass_() });
   if (p.action === 'roster') return json_(p.key === pass_() ? JSON.parse(kvGet_('roster') || '[]') : []);
   if (p.action === 'login') return json_(login_(p));
@@ -147,6 +150,13 @@ function admin_(p) {
     if (p.action === 'savecfg') { kvSet_('cfg', String(p.cfg || '{}')); return text('ok'); }
     if (p.action === 'saveroster') { kvSet_('roster', String(p.roster || '[]')); return text('ok'); }
     if (p.action === 'logs') return text(logs_(p));
+    if (p.action === 'qvoid') return text(qvoid_(p));
+    if (p.action === 'setnotify') {
+      const to = String(p.to || '').trim();
+      if (to && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(to)) return text('bademail');
+      kvSet_('notify', JSON.stringify({ on: p.on === 'YES', to: to }));
+      return text('ok');
+    }
     if (p.action === 'setpass') {
       const np = String(p.newpass || '');
       if (np.length < 4) return text('short');
@@ -172,6 +182,7 @@ function admin_(p) {
       if (body.some(r => String(r[0]).trim().toUpperCase() === nc)) return text('exists');
       if (!body.some(r => String(r[0]).trim().toUpperCase() === code)) return text('notfound');
       out = body.map(r => { if (String(r[0]).trim().toUpperCase() === code) r[0] = nc; return r; });
+      renameReports_(code, nc);
       const ash = sheet_(), alast = ash.getLastRow();
       if (alast > 1) {
         const rg = ash.getRange(2, 4, alast - 1, 1);
@@ -322,3 +333,94 @@ function saveVault_(p) {
   }
 }
 
+
+
+// ---------- 🚩 Question reports (sheet 'Reports') + বাতিল (void) question list (Settings key 'voids') ----------
+// voids = { EXAM: { qi: [ {at: approve ms, fx: fixed ms (0 = এখনো ঠিক হয়নি)} ... ] } }
+// একটা attempt-এ question i বাদ যাবে যদি attempt-এর সময় কোনো period-এর ভেতরে পড়ে: আগের period-এর fx ≤ t < এই period-এর fx (fx 0 = এখনো চলছে)
+const RHEAD = ['ID', 'TS', 'SID', 'NAME', 'EXAM', 'QI', 'WHY', 'NOTE', 'Q', 'ST', 'DTS'];   // ST: new | approved | rejected | fixed
+function repSheet_() {
+  const ss = ss_();
+  let sh = ss.getSheetByName('Reports');
+  if (!sh) {
+    sh = ss.insertSheet('Reports');
+    sh.getRange('A:K').setNumberFormat('@');
+    sh.appendRow(RHEAD);
+  }
+  return sh;
+}
+function reports_() {
+  const v = repSheet_().getDataRange().getValues().slice(1);
+  return v.filter(r => String(r[0]).trim()).map(r => ({ id: String(r[0]), at: Number(r[1]) || 0, sid: String(r[2]), name: String(r[3]), exam: String(r[4]).trim().toUpperCase(),
+    qi: Number(r[5]) || 0, why: String(r[6]), note: String(r[7]), q: String(r[8]), st: String(r[9] || 'new'), dts: Number(r[10]) || 0 }));
+}
+function voids_() { try { return JSON.parse(kvGet_('voids') || '{}') || {}; } catch (e) { return {}; } }
+function report_(p) {
+  const exam = String(p.exam || '').trim().toUpperCase(), qi = parseInt(p.qi, 10), sid = String(p.sid || '').trim();
+  if (!exam || !(qi >= 0) || !sid) return 'bad';
+  const why = String(p.why || 'other').slice(0, 40), note = String(p.note || '').slice(0, 500);
+  const lock = LockService.getScriptLock();
+  lock.waitLock(20000);
+  try {
+    const sh = repSheet_();
+    const open = reports_().filter(r => r.st === 'new' && norm_(r.sid) === norm_(sid) && r.exam === exam && r.qi === qi);
+    if (open.length > 0) return 'dup';                                    // একই student একই question-এ খোলা report আছে
+    if (reports_().filter(r => r.st === 'new' && norm_(r.sid) === norm_(sid)).length >= 30) return 'toomany';
+    const now = Date.now();
+    const id = now.toString(36) + Math.floor(Math.random() * 1296).toString(36).padStart(2, '0');
+    sh.appendRow([id, String(now), sid, String(p.name || '').slice(0, 80), exam, String(qi), why, note, String(p.q || '').slice(0, 300), 'new', '']);
+    notifyMail_({ exam: exam, qi: qi, why: why, note: note, name: String(p.name || sid), q: String(p.q || '') });
+    return 'ok';
+  } finally {
+    lock.releaseLock();
+  }
+}
+// op: approve (question বাতিল, নতুন report → approved) | reject (নতুন report → rejected) | fix (ঠিক করা হয়েছে, আবার চালু) | undo (approve ফিরিয়ে নাও)
+function qvoid_(p) {
+  const exam = String(p.code || '').trim().toUpperCase(), qi = parseInt(p.qi, 10), op = String(p.op || '');
+  if (!exam || !(qi >= 0)) return 'bad';
+  if (['approve', 'reject', 'fix', 'undo'].indexOf(op) < 0) return 'bad op';
+  const V = voids_(), list = ((V[exam] = V[exam] || {})[qi] = V[exam][qi] || []), act = list.length && !list[list.length - 1].fx ? list[list.length - 1] : null;
+  const now = Date.now();
+  let from = '', to = '';
+  if (op === 'approve') { if (!act) list.push({ at: now, fx: 0 }); from = 'new'; to = 'approved'; }
+  if (op === 'reject') { from = 'new'; to = 'rejected'; }
+  if (op === 'fix') { if (!act) return 'notvoid'; act.fx = now; from = 'approved'; to = 'fixed'; }
+  if (op === 'undo') { if (!act) return 'notvoid'; list.pop(); from = 'approved'; to = 'new'; }
+  if (!list.length) delete V[exam][qi];
+  if (!Object.keys(V[exam]).length) delete V[exam];
+  kvSet_('voids', JSON.stringify(V));
+  const sh = repSheet_(), v = sh.getDataRange().getValues();
+  let n = 0;
+  for (let i = 1; i < v.length; i++) {
+    if (String(v[i][4]).trim().toUpperCase() === exam && Number(v[i][5]) === qi && String(v[i][9] || 'new') === from) {
+      sh.getRange(i + 1, 10, 1, 2).setValues([[to, String(now)]]); n++;
+    }
+  }
+  return 'ok:' + n;
+}
+function renameReports_(code, nc) {
+  const sh = repSheet_(), last = sh.getLastRow();
+  if (last > 1) {
+    const rg = sh.getRange(2, 5, last - 1, 1);
+    rg.setValues(rg.getValues().map(r => [String(r[0]).trim().toUpperCase() === code ? nc : r[0]]));
+  }
+  const V = voids_();
+  if (V[code]) { V[nc] = V[code]; delete V[code]; kvSet_('voids', JSON.stringify(V)); }
+}
+// 📧 Gmail notification (Settings → Question report). Gmail permission না থাকলে চুপচাপ ব্যর্থ হয়, কারণ 'mailerr'-এ থাকে।
+function notifyInfo_() {
+  let n = {}; try { n = JSON.parse(kvGet_('notify') || '{}') || {}; } catch (e) {}
+  return { on: !!n.on, to: n.to || '', err: kvGet_('mailerr') };
+}
+function notifyMail_(r) {
+  const n = notifyInfo_();
+  if (!n.on || !n.to) return;
+  try {
+    MailApp.sendEmail(n.to, '🚩 Question report: ' + r.exam + ' Q' + (r.qi + 1),
+      r.name + ' report করেছে।\nExam: ' + r.exam + '\nQuestion ' + (r.qi + 1) + ': ' + r.q + '\nকারণ: ' + r.why + (r.note ? '\nNote: ' + r.note : '') + '\n\nApp-এর Teacher → 🚩 Reports-এ দেখো।');
+    if (n.err) kvSet_('mailerr', '');
+  } catch (e) {
+    kvSet_('mailerr', String(e && e.message || e).slice(0, 200));
+  }
+}

@@ -12,6 +12,7 @@ function vResult(r){
   let h = `<div class="top"><button class="link" onclick="view=BACK;render();refresh()">${esc(T('back'))}</button><small id="sync">${esc(syncMsg)}</small></div>
   <div class="card"><div class="muted" style="text-align:center">${esc(e ? e.title : r.exam)}${r.mode==='mistakes'?' · mistakes':''}</div>
     ${showScore ? `<p class="big">${r.score}/${r.total}</p><div style="text-align:center" class="muted">${p}% · ${fmt(r.secs)}</div>` : `<p class="big" style="font-size:26px">✓</p><div style="text-align:center" class="muted">Submitted · ${fmt(r.secs)}</div>`}
+    ${(r.vd || []).length ? `<div class="notice info">🚫 ${r.vd.length}টা question বাতিল হয়েছে (ভুল ছিল, report approved) — score থেকে বাদ দেওয়া হয়েছে।${showScore && r.raw ? ' আগে ছিল ' + r.raw.score + '/' + r.raw.total + '।' : ''}</div>` : ''}
     ${msgPass && showScore ? `<div style="text-align:center;font-weight:700;margin-top:8px">${esc(msgPass)}</div>` : ''}
     ${showScore ? `<div class="tiles">${tile(okN, T('correct'), 'var(--g)')}${tile(wrN, T('wrong'), 'var(--r)')}${tile(skN, T('skipped'), 'var(--m)')}</div>` : ''}
     ${mine && e && (R.mistakes || R.retake) ? `<div class="row">${R.mistakes ? `<button class="btn ghost" ${w?'':'disabled'} onclick="retake('${esc(r.exam)}','mistakes')">${esc(T('retakeMistakes'))} (${w})</button>` : '<span></span>'}${R.retake ? `<button class="btn" onclick="retake('${esc(r.exam)}','full')">${esc(T('fullAgain'))}</button>` : ''}</div>` : ''}</div>`;
@@ -25,9 +26,10 @@ function vResult(r){
   r.d.forEach(([qi, c, g, s], n) => {
     const q = LQ(qinfo(r.exam, qi), lg);
     if(!q) return;
-    rvh += `<div style="margin-bottom:18px"><div class="row" style="margin:0"><span class="muted">Q${n+1} · ${esc(q.t || '')} · ${s}s ${rv==='marks' ? (c < 0 ? '· —' : g ? '· ✅' : '· ❌') : ''}</span><span style="white-space:nowrap">${mine ? vSaveBtn(r.exam, qi) + ' ' : ''}<button class="btn sm ghost" onclick="copyRes(${n},this)" title="এই question AI-এর জন্য copy">📋 Copy</button></span></div><div class="q" style="font-size:.95em">${esc(q.q)}</div>` +
+    rvh += `<div style="margin-bottom:18px"><div class="row" style="margin:0"><span class="muted">Q${n+1} · ${esc(q.t || '')} · ${s}s ${rv==='marks' ? (c < 0 ? '· —' : g ? '· ✅' : '· ❌') : ''}</span><span style="white-space:nowrap">${mine ? repBtn(r.exam, qi) + ' ' + vSaveBtn(r.exam, qi) + ' ' : ''}<button class="btn sm ghost" onclick="copyRes(${n},this)" title="এই question AI-এর জন্য copy">📋 Copy</button></span></div><div class="q" style="font-size:.95em">${esc(q.q)}</div>` +
       q.o.map((o, i) => `<div class="opt ${rv==='full' && i===q.a ? 'ok' : i===c ? (rv==='full' ? 'bad' : (g ? 'ok' : 'bad')) : ''}" style="margin:4px 0;padding:8px"><span class="L">${LET[i]}</span><span>${esc(o)}${i===c?' <small>' + esc(T('yourAnswer')) + '</small>':''}</span></div>`).join('') +
       (c < 0 ? `<small class="err">${esc(T('skipped'))}</small>` : '') + (rv === 'full' && R.explain && q.e ? `<div class="exp">💡 ${esc(q.e)}</div>` : '') + '</div>';
   });
+  (r.vd || []).forEach(([qi]) => { const q = LQ(qinfo(r.exam, qi), lg); if(q) rvh += `<div class="vdq"><span class="tag" style="background:#fee2e2;color:#b91c1c;margin:0">🚫 বাতিল question</span> <small class="muted">report approved — score-এ গোনা হয়নি</small><div class="q" style="font-size:.9em">${esc(q.q)}</div></div>`; });
   return h + sec('r_review', '📝 ' + esc(T('reviewTitle')), rvh, wrN + skN ? '❌ ' + (wrN + skN) : '✅');
 }

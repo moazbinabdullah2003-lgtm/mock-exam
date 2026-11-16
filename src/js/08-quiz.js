@@ -4,7 +4,7 @@ function vQuiz(){
   const un = RUN.order.length - Object.keys(RUN.ans).length;
   const perm = (RUN.op && RUN.op[qi]) || q.o.map((_, i) => i);
   return `<div class="top"><div><b>${esc(e.title)}</b>${RUN.mode==='mistakes'?'<span class="tag">mistakes</span>':''}</div><div style="display:flex;gap:10px;align-items:center"><button class="link" onclick="EXITING=true;render(true)" title="Exam থেকে বের হও">✕ Exit</button>${CFG.rules.timer ? '<div id="tm" class="tm"></div>' : ''}</div></div>
-  <div class="card"><div class="row" style="margin:0"><span class="muted">Question ${p+1} / ${last+1}</span>${vSaveBtn(RUN.exam, qi)}</div><div class="q">${esc(q.q)}</div>
+  <div class="card"><div class="row" style="margin:0"><span class="muted">Question ${p+1} / ${last+1}</span><span style="white-space:nowrap">${repBtn(RUN.exam, qi)} ${vSaveBtn(RUN.exam, qi)}</span></div><div class="q">${esc(q.q)}</div>
     ${perm.map((oi, n) => `<button class="opt ${a===oi?'sel':''}" onclick="pick(${oi})"><span class="L">${n+1}</span><span>${esc(q.o[oi])}</span></button>`).join('')}
     <div class="kbhint">⌨ ${perm.length > 1 ? '1–' + perm.length : '1'} = option · Enter = save &amp; next · ← → = prev / next</div>
     <div class="row"><button class="btn ghost" onclick="go(${p-1})" ${p===0?'disabled':''}>${esc(T('prev'))}</button>
@@ -23,7 +23,7 @@ function pick(i){
 /* Keyboard: 1..N = option (দেখানো position), Enter = save & next (শেষ question-এ submit confirm), ← → = prev/next */
 function onQuizKey(e){
   if(view !== 'quiz' || !RUN || e.ctrlKey || e.metaKey || e.altKey) return;
-  if(EXITING || VSAVE){ if(e.key === 'Escape'){ EXITING = false; VSAVE = null; render(true); } return; }
+  if(EXITING || VSAVE || RPT){ if(e.key === 'Escape'){ EXITING = false; VSAVE = null; RPT = null; render(true); } return; }
   const t = e.target; if(t && /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName)) return;
   const k = e.key;
   if(confirming){
@@ -71,7 +71,7 @@ function finish(auto){
   const loc = LS.get('mq_local', []); loc.push(rec); LS.set('mq_local', loc);
   const ob = LS.get('mq_out', []); ob.push(rec); LS.set('mq_out', ob);
   LS.del('mq_run'); RUN = null; confirming = false;
-  LAST = rec; RVLANG = ''; BACK = 'home'; view = 'result'; syncMsg = CAN_SYNC() ? 'Saving…' : '';
+  LAST = adj(rec); RVLANG = ''; BACK = 'home'; view = 'result'; syncMsg = CAN_SYNC() ? 'Saving…' : '';
   render();
   if(CAN_SYNC()) flush().then(n => { syncMsg = n === 0 ? 'Saved ✓' : n > 0 ? 'Network নেই — পরে auto save হবে' : syncMsg; const el = $('#sync'); if(el) el.textContent = syncMsg; });
 }

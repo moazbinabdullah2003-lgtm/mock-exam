@@ -133,6 +133,53 @@ eq(B.get({ action: 'login', sid: '0101', pin: 'abc' }).ok, true, 'leading zeros 
   eq([L.post({ action: 'logs', op: 'x', aids: '["a2"]', key: K }), L.post({ action: 'logs', op: 'hide', aids: '{bad', key: K }), L.post({ action: 'logs', op: 'hide', aids: '[]', key: K })], ['bad op', 'badjson', 'none'], 'bad requests refused');
   post('5', 'a1'); eq(L.get({ key: K }).length, 3, 'a deleted aid can be saved again'); }
 
+// ---- 🚩 question reports + void (বাতিল) questions ----
+{ const Q = createBackend(), rep = (sid, qi, why, note) => Q.post({ action: 'report', sid, name: 'N' + sid, exam: 'demo1', qi: String(qi), why, note: note || '', q: 'question text' });
+  eq(rep('5', 1, 'typo', 'sin spelling'), 'ok', 'student report saved');
+  eq(rep('5', 1, 'key'), 'dup', 'same student, same open question -> dup');
+  eq(rep('6', 1, 'key'), 'ok', 'another student reports same question');
+  eq(rep('5', 2, 'noopt'), 'ok', 'report on another question');
+  eq([Q.post({ action: 'report', sid: '5', exam: '', qi: '1' }), Q.post({ action: 'report', sid: '5', exam: 'X', qi: '-1' }), Q.post({ action: 'report', sid: '', exam: 'X', qi: '1' })], ['bad', 'bad', 'bad'], 'bad reports refused');
+  eq(Q.get({ action: 'reports', key: 'x' }).ok, false, 'reports list needs teacher key');
+  let R = Q.get({ action: 'reports', key: K });
+  eq(R.reports.map(r => [r.sid, r.exam, r.qi, r.why, r.st]), [['5', 'DEMO1', 1, 'typo', 'new'], ['6', 'DEMO1', 1, 'key', 'new'], ['5', 'DEMO1', 2, 'noopt', 'new']], 'teacher sees reports (exam upper-cased)');
+  eq(R.reports[0].note, 'sin spelling', 'note kept');
+  eq(Q.get({ action: 'myreports', sid: '005' }).map(r => r.qi), [1, 2], 'student sees own reports (id normalised)');
+  eq(Q.post({ action: 'qvoid', key: 'x', code: 'DEMO1', qi: '1', op: 'approve' }), 'denied', 'approve needs key');
+  eq(Q.post({ action: 'qvoid', key: K, code: 'DEMO1', qi: '1', op: 'approve' }), 'ok:2', 'approve -> both new reports approved');
+  let V = Q.get({ action: 'settings' }).voids;
+  ok(V.DEMO1 && V.DEMO1[1].length === 1 && V.DEMO1[1][0].fx === 0 && V.DEMO1[1][0].at > 0, 'void is public in settings (active, not fixed)');
+  eq(Q.post({ action: 'qvoid', key: K, code: 'DEMO1', qi: '1', op: 'approve' }), 'ok:0', 'approve again does not add a 2nd period');
+  eq(Q.get({ action: 'settings' }).voids.DEMO1[1].length, 1, 'still one period');
+  eq(Q.post({ action: 'qvoid', key: K, code: 'DEMO1', qi: '2', op: 'reject' }), 'ok:1', 'reject');
+  eq(Q.get({ action: 'settings' }).voids.DEMO1[2], undefined, 'reject does not void');
+  eq(Q.get({ action: 'myreports', sid: '5' }).map(r => r.st), ['approved', 'rejected'], 'student sees decisions');
+  ok(Q.get({ action: 'myreports', sid: '5' })[0].dts > 0, 'decision time stored');
+  eq(Q.post({ action: 'qvoid', key: K, code: 'DEMO1', qi: '1', op: 'fix' }), 'ok:2', 'fix -> approved reports become fixed');
+  V = Q.get({ action: 'settings' }).voids; ok(V.DEMO1[1][0].fx >= V.DEMO1[1][0].at, 'fix time stored');
+  eq(Q.post({ action: 'qvoid', key: K, code: 'DEMO1', qi: '1', op: 'fix' }), 'notvoid', 'fix twice refused');
+  eq(rep('5', 1, 'typo'), 'ok', 'can report the same question again after it was fixed');
+  Q.post({ action: 'qvoid', key: K, code: 'DEMO1', qi: '1', op: 'approve' });
+  eq(Q.get({ action: 'settings' }).voids.DEMO1[1].length, 2, 'second void period');
+  eq(Q.post({ action: 'qvoid', key: K, code: 'DEMO1', qi: '1', op: 'undo' }), 'ok:1', 'undo approve');
+  eq([Q.get({ action: 'settings' }).voids.DEMO1[1].length, Q.get({ action: 'reports', key: K }).reports[3].st], [1, 'new'], 'undo removes the period, report back to new');
+  eq(Q.post({ action: 'qvoid', key: K, code: 'DEMO1', qi: '1', op: 'zap' }), 'bad op', 'bad op');
+  // rename moves reports + voids
+  eq(Q.post({ action: 'rename', key: K, code: 'DEMO1', newcode: 'DEMO9' }), 'ok', 'rename exam');
+  ok(Q.get({ action: 'reports', key: K }).reports.every(r => r.exam === 'DEMO9') && Q.get({ action: 'settings' }).voids.DEMO9 && !Q.get({ action: 'settings' }).voids.DEMO1, 'rename moves reports + voids');
+  // gmail notification
+  eq(Q.mails.length, 0, 'no mail while notify off');
+  eq(Q.post({ action: 'setnotify', key: K, on: 'YES', to: 'bad' }), 'bademail', 'bad email refused');
+  eq(Q.post({ action: 'setnotify', key: K, on: 'YES', to: 't@x.com' }), 'ok', 'notify on');
+  rep('7', 0, 'sol', 'no solution');
+  ok(Q.mails.length === 1 && Q.mails[0].to === 't@x.com' && /DEMO1 Q1/.test(Q.mails[0].sub) && /no solution/.test(Q.mails[0].body), 'mail sent on report');
+  Q.mailCfg.allowed = false; rep('8', 0, 'sol');
+  ok(/permission/.test(Q.get({ action: 'reports', key: K }).notify.err), 'missing Gmail permission -> error stored, report still saved');
+  eq(Q.get({ action: 'reports', key: K }).reports.length, 6, 'report saved even if mail fails');
+  Q.mailCfg.allowed = true; rep('9', 0, 'sol');
+  eq([Q.mails.length, Q.get({ action: 'reports', key: K }).notify.err], [2, ''], 'error cleared after a successful mail');
+  eq(Q.get({ action: 'reports', key: K }).notify.to, 't@x.com', 'notify address only for teacher'); ok(!JSON.stringify(Q.get({ action: 'settings' })).includes('t@x.com'), 'email not in public settings'); }
+
 // ---- change teacher password ----
 eq(B.post({ action: 'setpass', key: K, newpass: 'ab' }), 'short', 'short password rejected');
 eq(B.post({ action: 'setpass', key: K, newpass: 'newpass1' }), 'ok', 'password changed');

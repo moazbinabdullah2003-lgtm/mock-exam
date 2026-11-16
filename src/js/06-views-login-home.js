@@ -105,7 +105,7 @@ function backToTeacher(){
 function logout(){ SESS = null; LS.del('mq_sess'); view = 'login'; LMODE = ''; TSTU = null; msg = ''; render(); }
 async function refresh(){
   loading = true; render(true);
-  await loadCfg(); await loadRemote(); if(SESS && SESS.teacher) await loadExamList(); await ensureExams(); await flush();
+  await loadCfg(); await loadRemote(); if(SESS && SESS.teacher){ await loadExamList(); await loadReps(); } else await loadMyRep(); await ensureExams(); await flush();
   loading = false;
   if(view === 'home' || view === 'teacher') render(true);
   if(SESS && !SESS.teacher) vPull();
@@ -122,7 +122,7 @@ function vHome(){
     return top + hello + `<div class="card center"><div class="muted">${esc(s.code)}</div><h2 style="font-size:24px;margin:6px 0">${esc(e ? e.title : s.code)}</h2>
       ${e ? `<div class="muted">${e.questions.length} questions · ${e.minutes} min</div>` : ''}
       ${errBox()}
-      <button class="btn full lg" onclick="startGuest()">${esc(T('startBtn'))}</button></div>${vHomeBtn()}${intro}`;
+      <button class="btn full lg" onclick="startGuest()">${esc(T('startBtn'))}</button></div>${vHomeBtn()}${vMyRep()}${intro}`;
   }
   return top + hello + `
   <div class="card"><h2>${esc(T('startTitle'))}</h2>
@@ -131,6 +131,7 @@ function vHome(){
     <button class="btn full lg" onclick="startCode()">${esc(T('startBtn'))}</button>
   </div>
   ${vHomeBtn()}
+  ${vMyRep()}
   ${CFG.rules.analytics ? vBoard(s.sid, false) : ''}${intro}`;
 }
 function startGuest(){
@@ -179,7 +180,8 @@ function startRun(exam, mode, idxs, lang){
   const e = EXAMS[exam];
   applyOv(e, exam);
   if(isBi(e) && !lang){ LANGASK = {exam, mode, idxs}; return render(true); }   // আগে ভাষা বেছে নাও
-  let order = idxs && idxs.length ? idxs.slice() : e.questions.map((_, i) => i);
+  let order = (idxs && idxs.length ? idxs.slice() : e.questions.map((_, i) => i)).filter(qi => !voidActive(exam, qi));   // 🚩 বাতিল question ঠিক না হওয়া পর্যন্ত আসে না
+  if(!order.length){ msg = 'এই exam-এ এখন কোনো চালু question নেই।'; view = 'home'; return render(); }
   /* সবসময় shuffle (settings দিয়ে বন্ধ করা যায় না): প্রতি attempt-এ question order আর option order নতুন করে এলোমেলো।
      একই student-এর আগের attempt-এর সাথে question order হুবহু এক হলে আবার shuffle করা হয়। */
   shuffle(order);

@@ -25,7 +25,7 @@ const fK = (p, l) => `<label class="chk"><input type="checkbox" data-p="${eA(p)}
 const sec = (id, title, body, sub) => `<details class="sec" ${SO[id] ? 'open' : ''} ontoggle="SO['${id}']=this.open"><summary><span>${title}</span>${sub ? `<span class="sub">${sub}</span>` : ''}</summary><div class="in">${body}</div></details>`;
 
 function vTabs(){
-  const t = [['dash','📊 Dashboard'],['exams','📚 Exams'],['stu','👥 Students'],['set','⚙ Settings']];
+  const nr = repNew(), t = [['dash','📊 Dashboard'],['rep','🚩 Reports' + (nr ? ` <span class="badge">${nr}</span>` : '')],['exams','📚 Exams'],['stu','👥 Students'],['set','⚙ Settings']];
   return `<div class="tabs">${t.map(([k, l]) => `<button class="${TTAB === k ? 'on' : ''}" onclick="gotoTab('${k}')">${l}</button>`).join('')}</div>`;
 }
 async function gotoTab(k){
@@ -33,6 +33,7 @@ async function gotoTab(k){
   if(!DIRTY || !CD) CD = clone(CFG);
   render();
   if(k === 'stu' && !ROSTER_OK) await loadRoster();
+  if(k === 'rep' || k === 'set'){ if(await loadReps()) render(true); }
 }
 async function loadRoster(){
   if(!CONFIG.SCRIPT_URL) return;
@@ -125,12 +126,13 @@ function vSettings(){
     ${fK('rules.retake', 'Full exam আবার দেওয়া যাবে')}${fK('rules.mistakes', '"Retake mistakes" button')}${fN('rules.maxAttempts', 'প্রতি exam-এ max attempt (0 = unlimited)', 0)}
     <small class="muted">🔀 Question আর option order প্রতি attempt-এ সবসময় এলোমেলো হয় (বন্ধ করা যায় না)।</small>${fK('rules.timer', 'Timer দেখাবে')}${fK('rules.confirm', 'Submit-এর আগে confirm জিজ্ঞেস করবে')}
     ${fK('rules.analytics', 'Student নিজের Analytics দেখবে')}${fK('rules.history', 'Student নিজের History দেখবে')}
+    ${fK('rules.report', '🚩 Student question report করতে পারবে')}${fK('rules.reportGuest', '🚩 Guest-ও report করতে পারবে')}${fK('rules.reportNotify', '🚩 Report approve/reject হলে student-কে জানাবে')}
     <button class="btn ghost sm" onclick="resetSec('rules')">↺ Reset rules</button>`;
   const sec2 = `${fT('access.teacherId', 'Teacher ID (login-এ এটা লাগবে)', 'teacher')}<small class="muted">Teacher password বদলাও (কমপক্ষে ৪ অক্ষর)। বদলালে নতুন password দিয়ে আবার login করতে হবে।</small>
     <input id="np1" type="password" placeholder="New password"><input id="np2" type="password" placeholder="Confirm new password">
     <button class="btn ghost full" onclick="changePass()">🔐 Change password</button>`;
   return `<h2 style="margin:6px 0">⚙ App Settings</h2><small class="muted">যা বদলাবে তা সাথে সাথে preview হবে। শেষে নিচের Save চাপলে সব student দেখবে।</small>
-    ${sec('theme', '🎨 Theme & look', theme)}${sec('brand', '🏷 Branding, notice & instructions', brand)}${sec('rules', '📋 Exam rules & features', rules)}${sec('texts', '✏️ All button / label texts', texts)}${sec('pw', '🔐 Security', sec2)}${vSaveBar()}`;
+    ${sec('theme', '🎨 Theme & look', theme)}${sec('brand', '🏷 Branding, notice & instructions', brand)}${sec('rules', '📋 Exam rules & features', rules)}${sec('texts', '✏️ All button / label texts', texts)}${sec('notify', '🔔 Report notification (Gmail)', vNotifySet())}${sec('pw', '🔐 Security', sec2)}${vSaveBar()}`;
 }
 async function changePass(){
   const a = $('#np1').value, b = $('#np2').value;

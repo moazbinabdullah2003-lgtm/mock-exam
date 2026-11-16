@@ -21,7 +21,8 @@ function render(keep){
   const KEEP = ['#code', '#sid', '#pw', '#tid', '#tp', '#gcode', '#gname'], kv = KEEP.map(k => $(k) ? $(k).value : '');
   if(CFG.brand.footer && view !== 'quiz') h += `<div class="foot">${esc(CFG.brand.footer)}</div>`;
   if(LANGASK && view !== 'quiz') h += vLangAsk();
-  if(LOGED && view === 'teacher') h += vLogEd();     // ✏ log editor (teacher)
+  if(LOGED && view === 'teacher') h += vLogEd();
+  if(RPT) h += vRepPopup();                          // 🚩 report popup     // ✏ log editor (teacher)
   if(VSAVE) h += vSavePopup();                        // 🔖 save popup (quiz / result / vault)
   if(EXITING && view === 'quiz') h += vExitPopup();   // ✕ exam exit   // ভাষা বাছাই popup (bilingual exam)
   try{ document.body.classList.toggle('in-quiz', view === 'quiz'); }catch(e){}
