@@ -38,6 +38,8 @@ function edOpt(i, add){
   markDirtyEd(); render(true);
 }
 function edHead(k, v){ EDX[k] = v; markDirtyEd(); }
+function edCode(v){ EDX.newCode = v; markDirtyEd(); }
+const exGet = async c => { try{ const r = await (await fetch(CONFIG.SCRIPT_URL + '?action=exam&code=' + encodeURIComponent(c) + '&t=' + Date.now())).json(); return !!(r && r.questions && r.questions.length); }catch(e){ return null; } };
 function vExamEditor(){
   const x = EDX;
   if(x.loading) return '<div class="card muted">Loading…</div>';
@@ -45,6 +47,8 @@ function vExamEditor(){
   if(!CD.exams) CD.exams = {};
   const head = `<div class="top"><button class="link" onclick="EDX=null;render()">← Exams</button><b>${esc(x.code)}</b></div>
     <div class="card"><h2>Exam info</h2>
+      <label class="fld"><span>Exam code (student-রা এটা দিয়ে exam ধরে)</span><input value="${eA(x.newCode == null ? x.code : x.newCode)}" autocapitalize="characters" autocomplete="off" oninput="edCode(this.value)"></label>
+      <small class="muted">${x.isNew ? 'নতুন exam — code এখনো বদলানো যায়।' : 'Code বদলালে এই exam-এর পুরোনো সব attempt/result-ও নতুন code-এ চলে যাবে। Student-দের নতুন code জানাতে হবে।'}</small>
       <label class="fld"><span>Title</span><input value="${eA(x.title)}" oninput="edHead('title',this.value)"></label>
       <div class="g2"><label class="fld"><span>Minutes</span><input type="number" min="1" value="${eA(x.minutes)}" oninput="edHead('minutes',this.value)"></label>
       <label class="fld"><span>Negative mark / wrong</span><input type="number" step="0.05" min="0" value="${eA(x.neg)}" oninput="edHead('neg',this.value)"></label></div>
@@ -77,6 +81,27 @@ async function saveExam(){
     return {q:String(q.q).trim(), o, a:q.a, t:String(q.t).trim() || 'General', e:String(q.e || '').trim()};
   });
   if(errs.length){ x.msg = errs.slice(0, 8).join(' · '); return render(true); }
+  const old = x.code, nc = String(x.newCode == null ? old : x.newCode).trim().toUpperCase();
+  if(nc !== old){
+    if(!/^[A-Z0-9_-]{1,30}$/.test(nc)){ x.msg = 'Exam code-এ শুধু A-Z, 0-9, - _ চলবে (সর্বোচ্চ ৩০ অক্ষর, space নয়)'; return render(true); }
+    x.msg = 'Code check করা হচ্ছে…'; render(true);
+    const taken = await exGet(nc);
+    if(taken === null){ x.msg = 'Network সমস্যা — আবার চেষ্টা করো।'; return render(true); }
+    if(taken){ x.msg = '"' + nc + '" নামে আরেকটা exam আগে থেকেই আছে — অন্য code দাও।'; return render(true); }
+    if(!x.isNew){
+      x.msg = 'Code বদলানো হচ্ছে…'; render(true);
+      await tPost({action:'rename', code:old, newcode:nc});
+      let done = false;
+      for(let i = 0; i < 6 && !done; i++){ await sleep(1500); done = (await exGet(nc)) === true && (await exGet(old)) === false; }
+      if(!done){ x.msg = '⚠ Code বদলানো confirm হয়নি (backend Code.gs deploy/password দেখো)'; return render(true); }
+      LS.set('mq_local', LS.get('mq_local', []).map(r => r.exam === old ? {...r, exam:nc} : r));
+      delete EXAMS[old]; LS.set('mq_exams', EXAMS);
+    }
+    // এই exam-এর আলাদা rules নতুন code-এ সরাও
+    if(CD && CD.exams && CD.exams[old]){ CD.exams[nc] = CD.exams[old]; delete CD.exams[old]; DIRTY = true; CFG = deepMerge(DEF_CFG, CD); }
+    x.code = nc; x.newCode = nc;
+    if(!x.isNew){ await loadRemote(); }
+  }
   x.msg = 'Saving…'; render(true);
   const ex = {code:x.code, title:x.title || x.code, minutes:String(x.minutes || 10), neg:String(x.neg || 0), open:x.open ? 'YES' : 'NO', rows};
   await tPost({action:'upload', code:ex.code, rows:JSON.stringify(rowsOf(ex))});

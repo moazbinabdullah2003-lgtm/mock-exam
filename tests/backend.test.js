@@ -48,6 +48,22 @@ eq(B.get({ sid: '7' }).length, 1, 'student sees own attempt (leading zeros norma
 eq(B.get({ sid: '7' })[0].score, 2, 'score stored as number');
 eq(B.get({}).length, 0, 'no sid and no key -> nothing');
 eq(B.get({ key: K }).length, 2, 'teacher sees all attempts');
+
+// ---- rename exam code (questions + old attempts move together) ----
+eq(B.post({ action: 'rename', code: 'DEMO1', newcode: 'x', key: 'bad' }), 'denied', 'rename needs key');
+eq(B.post({ action: 'rename', code: 'DEMO1', newcode: 'bad code!', key: K }), 'badcode', 'rename: invalid new code rejected');
+eq(B.post({ action: 'rename', code: 'DEMO1', newcode: 'demo1', key: K }), 'same', 'rename: same code');
+eq(B.post({ action: 'rename', code: 'NOPE', newcode: 'NEW1', key: K }), 'notfound', 'rename: unknown exam');
+eq(B.post({ action: 'rename', code: 'DEMO1', newcode: ' math-1 ', key: K }), 'ok', 'rename ok (trim + uppercase)');
+eq(B.get({ action: 'exam', code: 'DEMO1' }).error, 'notfound', 'old code gone');
+eq(B.get({ action: 'exam', code: 'MATH-1' }).questions.length, 3, 'questions under new code');
+eq(B.get({ key: K }).map(r => r.exam), ['MATH-1', 'MATH-1'], 'old attempts moved to new code');
+B.post({ action: 'upload', code: 'OTHER', key: K, rows: JSON.stringify([['OTHER', 'o', '5', '0', 'YES', 'q', '1', '2', '', '', '', 'A', 'T', '']]) });
+eq(B.post({ action: 'rename', code: 'OTHER', newcode: 'MATH-1', key: K }), 'exists', 'rename onto existing code refused');
+eq(B.get({ action: 'exam', code: 'MATH-1' }).questions.length, 3, 'existing exam not overwritten');
+B.post({ action: 'delete', code: 'OTHER', key: K });
+eq(B.post({ action: 'rename', code: 'MATH-1', newcode: 'DEMO1', key: K }), 'ok', 'rename back');
+eq(B.get({ key: K }).map(r => r.exam), ['DEMO1', 'DEMO1'], 'attempts back on DEMO1');
 eq(B.get({ key: 'x', sid: '8' }).length, 1, 'wrong key falls back to own');
 
 // ---- settings / roster ----

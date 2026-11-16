@@ -86,5 +86,16 @@ TT.ok(SESS && SESS.sid === '9999' && !SESS.teacher && SESS.back && SESS.back.tea
 TT.ok(vHome().includes('backToTeacher'), 'student home shows back-to-teacher button');
 backToTeacher();
 TT.ok(SESS && SESS.teacher && SESS.key === 'teacher123' && view === 'teacher', 'back to teacher keeps session');
+await openEditor('CT1');
+EDX.newCode = 'ct 2!'; await saveExam();
+TT.ok(/শুধু A-Z/.test(EDX.msg) && B.get({ action: 'exam', code: 'CT1' }).questions, 'invalid new exam code refused, exam untouched');
+EDX.newCode = ' ct-2 '; await saveExam();
+TT.ok(EDX.code === 'CT-2' && /saved/.test(EDX.msg), 'exam code changed in editor: ' + EDX.msg);
+TT.eq(B.get({ action: 'exam', code: 'CT1' }).error, 'notfound', 'old code gone after rename');
+TT.eq(B.get({ action: 'exam', code: 'CT-2' }).questions.length, 3, 'questions under new code');
+TT.eq(B.get({ key: 'teacher123' }).map(a => a.exam), ['CT-2'], 'old attempt moved to new code');
+EDX.newCode = 'CT-2'; await openEditor('CT-2'); EDX.newCode = 'ct1'; await saveExam();
+TT.eq(B.get({ action: 'exam', code: 'CT1' }).questions.length, 3, 'renamed back to CT1');
+EDX = null;
 await delExam('CT1'); TT.eq(DELC, 'CT1', 'first tap asks confirmation');
 await delExam('CT1'); TT.eq(B.get({ action: 'exam', code: 'CT1' }).error, 'notfound', 'second tap deletes in backend');

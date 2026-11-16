@@ -146,6 +146,19 @@ function admin_(p) {
     if (p.action === 'upload') {
       const nr = JSON.parse(p.rows).map(r => QHEAD.map((_, i) => String(r[i] == null ? '' : r[i])));
       out = other.concat(nr);
+    } else if (p.action === 'rename') {
+      // exam code বদলানো: Questions-এর CODE + পুরোনো সব attempt-এর EXAM নতুন code-এ চলে যায় (history/analytics ঠিক থাকে)
+      const nc = String(p.newcode || '').trim().toUpperCase();
+      if (!/^[A-Z0-9_-]{1,30}$/.test(nc)) return text('badcode');
+      if (nc === code) return text('same');
+      if (body.some(r => String(r[0]).trim().toUpperCase() === nc)) return text('exists');
+      if (!body.some(r => String(r[0]).trim().toUpperCase() === code)) return text('notfound');
+      out = body.map(r => { if (String(r[0]).trim().toUpperCase() === code) r[0] = nc; return r; });
+      const ash = sheet_(), alast = ash.getLastRow();
+      if (alast > 1) {
+        const rg = ash.getRange(2, 4, alast - 1, 1);
+        rg.setValues(rg.getValues().map(r => [String(r[0]).trim().toUpperCase() === code ? nc : r[0]]));
+      }
     } else if (p.action === 'delete') {
       out = other;
     } else if (p.action === 'setopen') {
