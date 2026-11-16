@@ -118,6 +118,21 @@ eq(B.get({ action: 'login', sid: '0101', pin: 'abc' }).ok, true, 'leading zeros 
   eq(B.post({ action: 'savevault', sid: '101', pin: 'abc', vault: '{bad' }), 'badjson', 'bad json rejected');
   eq(B.post({ action: 'savevault', sid: '101', pin: 'abc', vault: JSON.stringify({ x: 'y'.repeat(45000 * 21) }) }), 'toobig', 'too big vault rejected'); }
 
+// ---- attempt logs: hide / unhide / permanent delete (teacher only) ----
+{ const L = createBackend(), post = (sid, aid, mode) => L.post({ sid, name: 'S' + sid, exam: 'DEMO1', aid, mode: mode || 'full', score: '1', total: '3', secs: '9', details: '[[0,1,0,3]]' });
+  post('5', 'a1'); post('5', 'a2'); post('6', 'a3'); post('5', 'a4', 'exit');
+  eq(L.post({ action: 'logs', op: 'hide', aids: '["a1"]', key: 'x' }), 'denied', 'logs need teacher key');
+  eq(L.post({ action: 'logs', op: 'hide', aids: JSON.stringify(['a1', 'a4', 'zz']), key: K }), 'ok:2', 'hide 2 logs (unknown aid ignored)');
+  eq(L.get({ sid: '5' }).map(r => r.aid), ['a2'], 'student does not see hidden logs (attempt + exit)');
+  eq(L.get({ key: K }).map(r => r.aid + (r.hidden ? 'H' : '')), ['a1H', 'a2', 'a3', 'a4H'], 'teacher sees hidden logs with flag');
+  eq(L.sheets[0]._s.rows[0][10], 'HIDDEN', 'HIDDEN header written');
+  eq(L.post({ action: 'logs', op: 'unhide', aids: '["a4"]', key: K }), 'ok:1', 'unhide');
+  eq(L.get({ sid: '5' }).map(r => r.aid), ['a2', 'a4'], 'unhidden log visible again');
+  eq(L.post({ action: 'logs', op: 'delete', aids: JSON.stringify(['a1', 'a3']), key: K }), 'ok:2', 'permanent delete 2');
+  eq(L.get({ key: K }).map(r => r.aid), ['a2', 'a4'], 'deleted rows gone, others kept in order');
+  eq([L.post({ action: 'logs', op: 'x', aids: '["a2"]', key: K }), L.post({ action: 'logs', op: 'hide', aids: '{bad', key: K }), L.post({ action: 'logs', op: 'hide', aids: '[]', key: K })], ['bad op', 'badjson', 'none'], 'bad requests refused');
+  post('5', 'a1'); eq(L.get({ key: K }).length, 3, 'a deleted aid can be saved again'); }
+
 // ---- change teacher password ----
 eq(B.post({ action: 'setpass', key: K, newpass: 'ab' }), 'short', 'short password rejected');
 eq(B.post({ action: 'setpass', key: K, newpass: 'newpass1' }), 'ok', 'password changed');

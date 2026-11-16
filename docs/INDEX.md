@@ -8,7 +8,7 @@ Build: `python3 build.py` concatenates `src/js/*.js` (**filename order**) into `
 | `02-helpers.js` | Tiny utils: $, esc (HTML-escape + \n→<br>), norm, LS (localStorage wrapper), fmt, pct, avg, heat, shuffle, aidTime, newAid, LET, parseCSV, **mathify** (KaTeX auto-render) | esc:5, norm:6, LS:7, fmt:12, pct:13, avg:14, heat:15, shuffle:16, aidTime:17, newAid:18, LET:19, parseCSV:21, mathify:38 |
 | `02a-cfg.js` | **Settings engine**: PRESETS/FONTS, DEF_CFG (theme/brand/text/access/rules/exams), TX (all UI labels) + T(key), deepMerge, CFG/DIRTY, applyTheme, setCfg/loadCfg, per-exam overrides (exOv/applyOv/canStart/introOf), vNotice | PRESETS:4, FONTS:14, DEF_CFG:20, TX:30, T:41, deepMerge:43, DIRTY:51, CFG:52, applyTheme:54, setCfg:67, loadCfg:74, exOv:84, applyOv:85, attemptsOf:91, canStart:93, introOf:101, vNotice:102 |
 | `02b-motif.js` | **Science motif** (background symbols): MOTIFS (math/physics/chemistry/biology/circuit/periodic/graph/blueprint/mix: symbols `s`, shapes `sh`, hero watermark), ELEMS, MOTIF_SHAPES (atom/hex/bond/wave/helix/cell/curve/axes/trace/chip/res/elem), motifSVG(kind,color) seeded SVG tile, motifURL (cached data URL, no raw quotes), motifCSS(theme) → `--motif --mop --msz --msym`. Used by applyTheme (02a) + gallery (13). CSS: `body.has-motif::before`, hidden in exam (`body.in-quiz`) unless `theme.motifQuiz` | MOTIFS, motifSVG, motifURL, motifCSS |
-| `03-sync.js` | **Network**: jget (timeout+typed errors), describeErr, netFail/errBox/diag (Connection check); legacy FORM; send/flush outbox; loadRemote; allRecs (REMOTE ∪ local) | INAPP:4, jget:6, describeErr:23, NETERR:32, netFail:33, errBox:34, diag:37, FORM:54, CAN_SYNC:62, send:63, flushing:80, flush:81, REMOTE:92, loadRemote:93, allRecs:122 |
+| `03-sync.js` | **Network**: jget (timeout+typed errors), describeErr, netFail/errBox/diag (Connection check); legacy FORM; send/flush outbox; loadRemote (`hid` flag) + pruneLocal; allRawH (incl. hidden) → allRaw (no hidden) → allRecs / allExits | INAPP:4, jget:6, describeErr:23, NETERR:32, netFail:33, errBox:34, diag:37, FORM:54, CAN_SYNC:62, send:63, flushing:80, flush:81, REMOTE:92, loadRemote:93, allRecs:122 |
 | `04-analytics.js` | qinfo(exam,idx), topicStats(recs), wrongIdx(sid,exam) | qinfo:4, topicStats:5, wrongIdx:14 |
 | `04a-lang.js` | **🌐 Bilingual questions**: LANGS, isBi(exam), LQ(q, lang) (bn view with English fallback per field), LANGASK + chooseLang + vLangAsk (language popup before a bilingual exam; rendered by render() in 05), RVLANG + vLangSwitch (result review language), prefLang (`mq_lang`) | isBi, LQ, chooseLang, vLangAsk, vLangSwitch |
 | `05-state-render.js` | Global state vars + render() router (view: login|home|quiz|result|teacher); keeps typed inputs (KEEP list); footer; mathify; editor previews | SESS:5, view:6, EXL:7, TTAB:8, msg:9, render:11 |
@@ -16,6 +16,7 @@ Build: `python3 build.py` concatenates `src/js/*.js` (**filename order**) into `
 | `07-view-board.js` | vBoard(sid,isT) student/teacher-drilldown analytics; openRec(aid) | vBoard:2, openRec:35 |
 | `07a-view-profile.js` | **Teacher's student profile** (`vProfile(sid)`): auto summary, stats, trend chart, exam-wise, topic strong/weak vs class, still-wrong questions, slow questions, full activity log; `trendOf`, `trendTag` | pcol, trendOf, trendTag, vProfile |
 | `07b-time-analytics.js` | **⏱ Time analytics block** `vTimeBlock(recs,id,{cmp,stu})` used on dashboard (`d_time`), exam page (`ea_time`), profile (`p_time`, vs class), student board (`b_time`), result (`r_time`): tiles, topic-wise time, question-wise time per exam (slowest first), student-wise time table; helpers `topicTime`, `stuTime`, `secS` | secS, topicTime, stuTime, vTimeBlock |
+| `07c-range-logs.js` | **📅 Date range + ✏ log editor**: DR (LS `mq_dr`, presets all/1/7/30/90 or custom f/t), drSpan, inDR, `rng(list)` (use in every analytics view), setDRp/setDRd, `vRange(scope, allLogs)` (bar + teacher ✏ button), vNoneInRange, `editBtn(scope,label)` (teacher only), LOGED + openLogs/vLogEd/logTick/logSelAll/`logOp(op)` (POST `action=logs`, verifies by re-loading) | rng, vRange, editBtn, openLogs, vLogEd, logOp |
 | `08-quiz.js` | vQuiz (shuffled option view), pick/go/addTime, startTimer/tick, finish() (scoring + save record) | vQuiz:2, pick:17, addTime:22, go:27, startTimer:31, tick:32, finish:39 |
 | `08a-vault.js` | **🔖 Saved-question vault + ✕ exam exit**: vault in LS `mq_vault_<sid>` {ts, folders, items[{id:'EXAM#qi', f, ex, qi, at, title, q:snapshot}]}, synced to backend (`action=vault` GET / `savevault` POST, auth ID+password from `SESS.pin` or teacher key for test student; newer `ts` wins: vPull/vPush). saveQ/doSaveQ/vSavePopup (folder chips + new folder), vSaveBtn (quiz + result review), vVault page (`view='vault'`: folder filter, rename/delete folder, move, remove, copy for AI, EN/বাংলা), answers shown only after the student submitted that exam (vSeen). Exit: EXITING popup → finish (submit) or cancelRun (discard, not counted) | saveQ, vVault, vPull, vPush, cancelRun, vExitPopup |
 | `09-result.js` | vResult(rec): score, topic-wise, per-question review honouring rules.review/showScore/passMark/explain | vResult:2 |
@@ -38,6 +39,7 @@ Other source: `src/css/app.css` (theme variables `--p --bg --card --t --m --b --
 | Colors / layout / mobile look (defaults) | `src/css/app.css` (+ markup strings in the view module). Teacher-editable look: `PRESETS`/`DEF_CFG.theme`/`applyTheme` in `02a-cfg.js` |
 | English + বাংলা questions | data: backend QHEAD `*_BN` columns (`Code.gs` getExam_), upload rows `rowsOf` (11), parse `bnErr` + `[BN]` block (11a), view `LQ`/language popup (04a), quiz `vQuiz` (08), review `vResult` (09), editor `.bnx` section (14) |
 | Exit records / cheating flags | record: `cancelRun` (`08a`) → mode `exit`/`exit-mistakes` in Attempts via the normal outbox; `isExit`/`allRaw`/`allExits` + `allRecs` excludes exits (`03`); report `10b-exits.js` |
+| Date range on analytics / hide-delete logs | `07c-range-logs.js`; each analytics view calls `rng()` + `vRange()` (`07`, `07a`, `10`, `10a`, `10b`); backend `logs_` + HIDDEN column (`Code.gs`) |
 | Saved questions / folders / exam exit | `08a-vault.js`; backend `getVault_`/`saveVault_` (sheet `Vault`: SID, TS, DATA1..20 chunks of 45k chars) |
 | AI prompt text / MD exam format | `11a-ai-prompt.js` (keep MD_SAMPLE/CSV_SAMPLE parseable — tests check both) |
 | Science background symbols / new science theme | add symbols/shapes to `MOTIFS` / `MOTIF_SHAPES` in `02b-motif.js`; a full science preset = PRESETS entry with `sci:1` + `motif`,`motifInk`,`motifOp`,`motifSize` (`02a`); controls in `vSettings` (`13`) |
@@ -67,7 +69,7 @@ Other source: `src/css/app.css` (theme variables `--p --bg --card --t --m --b --
 | Teacher password / teacher ID | UI: Settings → Security (`changePass` in `13`; stored as Script property `TPASS`; ID = `access.teacherId`). Default const `TEACHER_PASS` in `Code.gs` (+ legacy fallback in `01-config.js`) |
 
 After any edit: `python3 build.py`, run tests, deploy with `./deploy.sh` / `./deploy-backend.sh` (see `CLAUDE.md`).
-Backend functions (Code.gs): `pass_ ss_ sheet_ qsheet_ norm_ doPost doGet getExam_ json_ admin_ listExams_ kvSheet_ kvGet_ kvSet_ login_`.
+Backend functions (Code.gs): `pass_ ss_ sheet_ qsheet_ norm_ doPost doGet getExam_ json_ admin_ isHid_ logs_ listExams_ kvSheet_ kvGet_ kvSet_ login_`.
 
 Regenerate the symbol list: `python3 tools/symbols.py`.
 
@@ -80,7 +82,7 @@ Regenerate the symbol list: `python3 tools/symbols.py`.
 | `tools/health.py` | read-only live health check (page hash, backend, teacher key, test student, backup age) |
 | `tools/restore.py` | restore a backup (dry run by default, `--yes` to write) |
 | `tests/gas_harness.js` | runs the real `Code.gs` under node with in-memory Sheet fakes |
-| `tests/backend.test.js` | 58 backend logic tests |
+| `tests/backend.test.js` | 89 backend logic tests |
 | `tests/run_tests.js` + `tests/scenarios.js` | frontend flow tests against the real backend (add scenarios at the bottom; assertions are `TT.ok/TT.eq`) |
 | `.github/workflows/pages.yml` | CI: tests → build → publish to Pages |
 | `.clasp.json` | Apps Script project link (rootDir `backend`) |

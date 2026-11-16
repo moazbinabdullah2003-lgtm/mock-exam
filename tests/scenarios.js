@@ -273,3 +273,50 @@ TT.eq(B.get({ action: 'exam', code: 'CT1' }).questions.length, 3, 'renamed back 
 EDX = null;
 await delExam('CT1'); TT.eq(DELC, 'CT1', 'first tap asks confirmation');
 await delExam('CT1'); TT.eq(B.get({ action: 'exam', code: 'CT1' }).error, 'notfound', 'second tap deletes in backend');
+
+// ---- 📅 date range filter + ✏ log editor (hide / unhide / permanent delete) ----
+{ const ago = n => (Date.now() - n * 86400000).toString(36) + '00', a1 = ago(0), a2 = ago(10), a3 = ago(40), a4 = ago(20);
+  [[a1, 'full'], [a2, 'full'], [a3, 'exit'], [a4, 'full']].forEach(([aid, mode]) => B.post({ sid: '7', name: 'Rahim', exam: 'LOG1', aid, mode, score: '1', total: '2', secs: '5', details: '[[0,1,1,3],[1,0,0,2]]' }));
+  const T0 = SESS; SESS = { sid: 'teacher', name: 'Teacher', teacher: true, key: 'teacher123' }; view = 'teacher';
+  await loadRemote();
+  const L = () => rng(allRaw()).filter(r => r.exam === 'LOG1').map(r => r.aid);
+  setDRp('all'); TT.eq(L().length, 4, 'range: all time shows every log');
+  setDRp('7'); TT.eq(L(), [a1], 'range: last 7 days');
+  setDRp('30'); TT.eq(L(), [a4, a2, a1], 'range: last 30 days');
+  setDRd('f', ymd(new Date(Date.now() - 45 * 86400000))); setDRd('t', ymd(new Date(Date.now() - 5 * 86400000)));
+  TT.ok(DR.p === 'c' && L().join() === [a3, a4, a2].join(), 'range: custom from/to dates');
+  setDRd('f', ymd(new Date(Date.now() - 2 * 86400000))); setDRd('t', ymd(new Date(Date.now() - 30 * 86400000)));
+  TT.ok(DR.f < DR.t && L().join() === [a4, a2].join(), 'range: from > to is swapped');
+  TT.eq(LS.get('mq_dr', {}).p, 'c', 'range remembered on device');
+  { const ea = vExamAnalytics('LOG1'); TT.ok(ea.includes('📅 সময়সীমা') && ea.includes('openLogs') && ea.includes('4টা log'), 'exam analytics: range bar + edit button + count'); }
+  setDRp('7'); TT.ok(!vExamAnalytics('LOG1').includes('Score distribution') || L().length === 1, 'exam analytics uses only logs in range');
+  setDRd('f', ymd(new Date(Date.now() - 400 * 86400000))); setDRd('t', ymd(new Date(Date.now() - 300 * 86400000)));
+  TT.ok(vExamAnalytics('LOG1').includes('এই সময়সীমায় কোনো data নেই') && vProfile('7').includes('এই সময়সীমায়'), 'empty range message (exam + profile)');
+  setDRp('all');
+  TT.ok(vTeacher().includes('📅 সময়সীমা') && vProfile('7').includes('📅 সময়সীমা'), 'dashboard + profile show range bar');
+  TT.ok(vTeacher().includes('data-s="7"') && /openLogs/.test(vProfile('7')), 'student-wise ✏ edit buttons for teacher');
+  // hide
+  openLogs({ s: '7', e: 'LOG1', x: '' });
+  TT.ok(vLogEd().includes('Rahim') && vLogEd().includes('🚪 exit') && (vLogEd().match(/class="lgc"/g) || []).length === 4, 'log editor lists the 4 logs incl. exit');
+  LOGED.sel[a2] = true; await logOp('hide');
+  TT.ok(/^✅ 1টা log লুকানো/.test(LOGED.msg), 'hide done: ' + LOGED.msg);
+  TT.ok(!allRaw().some(r => r.aid === a2) && allRawH().find(r => r.aid === a2).hid, 'hidden log out of analytics, still in editor');
+  TT.ok(vLogEd().includes('🙈 লুকানো') && vProfile('7').includes('🙈 1টা লুকানো'), 'hidden shown as 🙈 in editor + range bar');
+  TT.eq(B.get({ sid: '7' }).filter(r => r.exam === 'LOG1').map(r => r.aid), [a1, a3, a4], 'student server view excludes hidden');
+  LOGED.sel[a2] = true; await logOp('unhide');
+  TT.ok(allRaw().some(r => r.aid === a2) && /আবার দেখা যাবে/.test(LOGED.msg), 'unhide brings it back');
+  // permanent delete (2-step)
+  LOGED.sel[a3] = true; LOGED.ask = 'delete';
+  TT.ok(vLogEd().includes('চিরতরে মুছে যাবে') && vLogEd().includes("logOp('delete')"), 'delete asks for confirmation first');
+  await logOp('delete');
+  TT.ok(!allRawH().some(r => r.aid === a3) && !B.get({ key: 'teacher123' }).some(r => r.aid === a3) && /চিরতরে/.test(LOGED.msg), 'permanent delete removes from server + app');
+  LOGED = null;
+  // student: can filter, never edit; stale local copies of hidden/deleted logs are pruned
+  B.post({ action: 'logs', op: 'hide', aids: JSON.stringify([a4]), key: 'teacher123' });
+  SESS = { sid: '7', name: 'Rahim', teacher: false }; view = 'home';
+  LS.set('mq_local', [{ sid: '7', name: 'Rahim', exam: 'LOG1', aid: a4, mode: 'full', score: 1, total: 2, secs: 5, d: [[0, 1, 1, 3]] }, { sid: '8', name: 'X', exam: 'LOG1', aid: ago(50), mode: 'full', score: 1, total: 2, secs: 5, d: [[0, 1, 1, 3]] }]);
+  await loadRemote();
+  TT.eq(LS.get('mq_local', []).map(r => r.sid), ['8'], 'student device drops its hidden/deleted log copy, keeps others');
+  { const b = vBoard('7', false); TT.ok(b.includes('📅 সময়সীমা') && !b.includes('openLogs') && !b.includes('Edit logs'), 'student sees range bar but no edit button'); }
+  openLogs({ s: '7' }); TT.eq(LOGED, null, 'student cannot open log editor');
+  setDRp('all'); SESS = T0; LS.set('mq_local', []); }

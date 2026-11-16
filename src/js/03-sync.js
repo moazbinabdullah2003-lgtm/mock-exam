@@ -98,9 +98,12 @@ async function loadRemote(){
       const arr = await (await fetch(u)).json();
       REMOTE = arr.map(r => {
         let d = []; try{ d = JSON.parse(r.details); }catch(e){}
-        return {sid:norm(r.sid),name:r.name,exam:String(r.exam||'').trim().toUpperCase(),aid:String(r.aid||'').trim(),mode:r.mode,score:parseFloat(r.score)||0,total:parseInt(r.total)||0,secs:parseInt(r.secs)||0,d:Array.isArray(d)?d:[]};
+        const o = {sid:norm(r.sid),name:r.name,exam:String(r.exam||'').trim().toUpperCase(),aid:String(r.aid||'').trim(),mode:r.mode,score:parseFloat(r.score)||0,total:parseInt(r.total)||0,secs:parseInt(r.secs)||0,d:Array.isArray(d)?d:[]};
+        if(r.hidden) o.hid = true;
+        return o;
       }).filter(x => x.aid && x.d.length);
       remoteMsg = '';
+      pruneLocal();
     }catch(e){ remoteMsg = 'Server থেকে data আনা যায়নি (offline? বা Script deploy ঠিক নেই)'; }
     return;
   }
@@ -121,11 +124,22 @@ async function loadRemote(){
 }
 /* exit record (exam বাতিল করে বের হওয়া): mode 'exit' / 'exit-mistakes' — attempt নয়, শুধু teacher-এর exit report-এ */
 const isExit = r => /^exit/.test(String((r && r.mode) || ''));
-function allRaw(){
+/* teacher যে log লুকিয়েছে / মুছেছে, এই device-এর পুরোনো copy (mq_local) থেকেও সরাও।
+   রাখা হয়: server-এ আছে, এখনো পাঠানো বাকি (mq_out), ১০ মিনিটের নতুন, বা অন্য student-এর (student device-এ) */
+function pruneLocal(){
+  if(!SESS) return;
+  const have = new Set(REMOTE.map(r => r.aid)), out = new Set(LS.get('mq_out', []).map(r => r.aid)), now = Date.now();
+  const loc = LS.get('mq_local', []);
+  const keep = loc.filter(r => have.has(r.aid) || out.has(r.aid) || now - aidTime(r.aid) < 600000 || (!SESS.teacher && norm(r.sid) !== norm(SESS.sid)));
+  if(keep.length !== loc.length) LS.set('mq_local', keep);
+}
+/* সব log (লুকানোগুলো সহ) — শুধু teacher-এর ✏ log editor-এর জন্য */
+function allRawH(){
   const m = new Map();
   [...REMOTE, ...LS.get('mq_local', [])].forEach(r => { if(!m.has(r.aid)) m.set(r.aid, r); });
   return [...m.values()].sort((a,b) => aidTime(a.aid) - aidTime(b.aid));
 }
+const allRaw = () => allRawH().filter(r => !r.hid);   // লুকানো log কোথাও গোনা হয় না (score, limit, analytics)
 const allRecs = () => allRaw().filter(r => !isExit(r));   // সব হিসাব (score, attempt limit, analytics) শুধু আসল attempt দিয়ে
 const allExits = () => allRaw().filter(isExit);
 

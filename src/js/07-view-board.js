@@ -1,10 +1,12 @@
 /* ---------- Dashboard (student's own view): few big numbers up front, details in folds ---------- */
 const tile = (v, l, c) => `<div class="tile"><b ${c ? 'style="color:' + c + '"' : ''}>${v}</b><small>${esc(l)}</small></div>`;
 function vBoard(sid, isT){
-  const recs = allRecs().filter(r => norm(r.sid) === norm(sid));
+  const mine = allRecs().filter(r => norm(r.sid) === norm(sid)), recs = rng(mine);
   let h = '';
   if(remoteMsg) h += `<div class="warn">${esc(remoteMsg)}</div>`;
-  if(!recs.length) return h + '<div class="card muted center">এখনো কোনো attempt নেই। উপরে exam code দিয়ে শুরু করো 🚀</div>';
+  if(!mine.length) return h + '<div class="card muted center">এখনো কোনো attempt নেই। উপরে exam code দিয়ে শুরু করো 🚀</div>';
+  h += vRange({s:sid}, mine);
+  if(!recs.length) return h + vNoneInRange();
   const ps = recs.map(pct), ts = topicStats(recs);
   h += `<div class="tiles">${tile(recs.length, T('statAttempts'))}${tile(avg(ps) + '%', T('statAvg'))}${tile(Math.max(...ps) + '%', T('statBest'), 'var(--g)')}</div>`;
   const weak = ts.filter(t => t.p < 0.8);
@@ -14,7 +16,7 @@ function vBoard(sid, isT){
   h += sec('b_trend', esc(T('trendTitle')), `<div class="tr">${ps.slice(-12).map(p => `<div style="height:${Math.max(4,Math.min(100,p))}%" title="${p}%"></div>`).join('')}</div><small class="muted">শেষ ${Math.min(12, ps.length)}টা attempt</small>`);
   h += vTimeBlock(recs, 'b_time');
   if(!isT){
-    const exams = [...new Set(recs.map(r => r.exam))].filter(c => EXAMS[c]);
+    const exams = [...new Set(mine.map(r => r.exam))].filter(c => EXAMS[c]);
     if(exams.length) h += sec('b_retake', esc(T('retakeTitle')), exams.map(c => {
       const w = wrongIdx(sid, c).length;
       return `<div class="hist"><div><b>${esc(EXAMS[c].title)}</b> <small>${esc(c)}</small></div><div>

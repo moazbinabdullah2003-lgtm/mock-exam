@@ -33,7 +33,7 @@ Everything the teacher controls is edited **in the web UI** — no code edits ne
 |---|---|
 | **Student URL** | https://moazbinabdullah2003-lgtm.github.io/mock-exam/quiz.html |
 | GitHub repo | `moazbinabdullah2003-lgtm/mock-exam`, branch `main` — now holds the **full project** (src, backend, docs, tests, tools). GitHub Actions (`.github/workflows/pages.yml`) runs the tests, builds `dist/quiz.html` and publishes it to Pages (Settings → Pages → Source = GitHub Actions). The repo is public: never commit secrets or backups. |
-| Apps Script project | id `1y8kV5WPEO9-HJtnVhwdu0nnxV0a-xC6ug-J61AUgqMr7QJ6SOnFTdH-T` (title "Untitled project"). Active Web-app deployment "Untitled" (Execute as Me, Access: Anyone) — **Version 6** (2026-11-16, deployed with clasp; versions bump on every `./deploy-backend.sh`). Archived: "Untitled", "mock test". |
+| Apps Script project | id `1y8kV5WPEO9-HJtnVhwdu0nnxV0a-xC6ug-J61AUgqMr7QJ6SOnFTdH-T` (title "Untitled project"). Active Web-app deployment "Untitled" (Execute as Me, Access: Anyone) — **Version 9** (2026-11-16, deployed with clasp; versions bump on every `./deploy-backend.sh`). Archived: "Untitled", "mock test". |
 | Web app `/exec` URL | in `src/js/01-config.js` → `CONFIG.SCRIPT_URL` (`https://script.google.com/macros/s/AKfycbx2xuErMRJf9XPij0Yt28hqLXf79oAN3MnQva2ERw4rTJLQsFrkmQwO6qpFxTCG3IRPjw/exec`). **Never create a "New deployment"** — it changes the URL. Always *Manage deployments → edit → New version*. |
 | Spreadsheet "MCQ Mock Data" | id `1sU8tzNalkI30mmx8aAOQwz8lA_8jX4atM0m4fsnK3og` (also Script property `SSID`). Tabs: `Attempts`, `Questions`, `Settings`. |
 | Teacher login | ID `teacher`, password `teacher123` (defaults; password can be changed in Settings→Security which stores Script property `TPASS`; ID is `access.teacherId` in settings) |
@@ -106,8 +106,9 @@ All via the one `/exec` URL.
 | GET | `action=tlogin&key=PASS` | — | `{ok:bool}` teacher password check |
 | GET | `action=exams&key` | teacher | `[{code,title,minutes,neg,open,count}]` |
 | GET | `action=roster&key` | teacher | roster array `[{id,pin,name,blocked}]` |
-| GET | `sid=ID` | none | that student's attempts (own rows) |
-| GET | `key=PASS` | teacher | all attempts |
+| GET | `sid=ID` | none | that student's attempts (own rows, **hidden rows left out**) |
+| GET | `key=PASS` | teacher | all attempts (hidden ones have `hidden:true`) |
+| POST | `action=logs,key,op=hide\|unhide\|delete,aids(JSON array)` | teacher | ✏ log editor: hide/unhide = HIDDEN column K, delete = rows removed for good. Returns `ok:N` / `none` / `badjson` / `bad op` |
 | POST | `sid,name,exam,aid,mode,score,total,secs,details` | none | append to `Attempts` (dup `aid` ignored) |
 | POST | `action=upload,key,code,rows(JSON, QHEAD order)` | teacher | replace all rows of CODE in `Questions` |
 | POST | `action=delete\|setopen,key,code[,open]` | teacher | delete / open-close exam |
@@ -226,7 +227,8 @@ UI/visual checks still use the built-in browser pane + `tools/browser_fake_backe
 
 ## 12. Status, open items, backlog (2026-11-16)
 
-**Working & deployed (2026-11-16, backend Version 8):** everything in §1–§9 plus this session's work:
+**Working & deployed (2026-11-16, backend Version 9):** everything in §1–§9 plus this session's work:
+- **📅 Date range + ✏ log editor (2026-11-16, backend Version 9, backup 2026-11-16_180207 taken first):** every analytics page (teacher dashboard, exam analytics, student profile, exit report, student's own home analytics) has a 📅 সময়সীমা bar: সব সময় / আজ / ৭ / ৩০ / ৯০ দিন or custom from→to dates (shared across pages, remembered in `mq_dr`). Analytics/CSV use only logs in range; history logic (attempt limit, retake mistakes, exit ⚠ flags, vault unlock) still uses everything. **Teacher only**: ✏ Edit logs (range bar, every student-wise row, exit report) → popup list with checkboxes → 🙈 Hide / 👁 Unhide (restorable; hidden logs vanish from analytics, limits and the student's app) or 🗑 Delete (2-step confirm, permanent). Students can filter but never edit. Student/teacher devices drop local copies of hidden/deleted logs after a sync (`pruneLocal`, keeps pending + <10 min old).
 - Login choose screen (Student / Guest / Teacher); guest = name + exam code.
 - Teacher-side: full **student profile** (`07a`), **🎓 Test student** one-click switch (`asTestStudent`), **exam code rename** (backend `rename`, history kept), **per-exam analytics** (`10a`), **⏱ time analytics** everywhere (`07b`), **📋 Copy for AI** (`09a`).
 - Quiz: keyboard shortcuts (1–N, Enter, ← →), options numbered 1–N; per-question time saved.
@@ -237,7 +239,7 @@ UI/visual checks still use the built-in browser pane + `tools/browser_fake_backe
 - **🌐 Bilingual exams (2026-11-16, backend schema change, backup 2026-11-16_165036 taken first):** every question can have an English (Q/A–E/EXPLANATION) and a বাংলা version (Q_BN/A_BN–E_BN/EXPLANATION_BN; MD: a `[BN]` block after SOL). Student picks the language ONCE before a bilingual exam starts (`LANGASK` popup, `RUN.lang`, remembered in `mq_lang`); quiz shows that language; result review starts in that language with an English/বাংলা switch. Missing Bengali option/solution falls back to English. Exam editor has a "🇧🇩 বাংলা version" section per question (edit keeps Bengali). AI prompts ask for BOTH languages (translate if raw has one). Teacher analytics/copy show English. Attempt `lang` is kept locally only (not a backend column).
 - **🤖 AI exam prompt (2026-11-16):** Exams tab → "AI দিয়ে question set বানাও": copy a full prompt (MD + LaTeX ⭐ or CSV) with rules + sample; teacher fills EXAM INFO + raw questions, gives it to any AI, pastes the answer into the upload box. Upload box now accepts **Markdown + LaTeX** (`# EXAM:` / `## Q1` / `Q:` / `A)` / `ANS:` / `SOL:`) as well as CSV. CSV prompt quotes every text field (LaTeX `\,` has commas). Upload preview colours now follow the theme. **Exam rules in the same file**: MAXATTEMPTS / GUEST (YES/NO) / START / END (`YYYY-MM-DD HH:MM`, date-only END = 23:59) / INTRO — saved into settings `exams[code]` on Publish (only if the file has any of these keys), shown in the upload preview.
 - **🧱 Colorful boxes (2026-11-16):** box style Plain / Tint / Rainbow (each box a different palette color) / Bold (filled tiles + icons), 3 extra palette colors, symbol texture inside cards/tiles/choices (fades into a corner; hidden during the exam like the background). Science presets use them; old full-look presets reset to plain.
-- Verified: tests 58 backend + 61 frontend; `tools/health.py` ALL GOOD; each feature looked at in the browser pane with the fake backend. NOT yet done by Claude on the live site: a full test-student exam end-to-end after the redesign (do it at the start of the next session if asked).
+- Verified: tests 89 backend + 201 frontend; `tools/health.py` ALL GOOD; each feature looked at in the browser pane with the fake backend. NOT yet done by Claude on the live site: a full test-student exam end-to-end after the redesign (do it at the start of the next session if asked).
 
 **Open / pending:**
 1. **User reported "Network nei" when logging in on their device.** The server is healthy from our side. The new diagnostic UI was deployed to find the real cause; **waiting for the user to send the new message/`[kind: …]` tag or the Connection-check output**. Likely causes: ISP/WiFi blocking Google, Messenger/Facebook in-app browser, VPN/ad-blocker, stale cached old page (hard refresh).

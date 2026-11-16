@@ -24,7 +24,7 @@ See the table in `PROJECT_CONTEXT.md` §4 (authoritative list of GET/POST action
 - `doPost` takes a script lock; dup `aid` ignored (`dup`).
 
 ## Sheets (auto-created on first request by `ss_()/sheet_()/qsheet_()/kvSheet_()`)
-- **Attempts**: Timestamp, SID, NAME, EXAM, AID, MODE, SCORE, TOTAL, SECS, DETAILS(JSON). Columns B:E text format.
+- **Attempts**: Timestamp, SID, NAME, EXAM, AID, MODE, SCORE, TOTAL, SECS, DETAILS(JSON), HIDDEN (`1` = teacher hid it; written on first hide). Columns B:E text format. Hidden rows are never sent to `?sid=`; the teacher GET marks them `hidden:true`. Teacher `action=logs` hides/unhides (column K) or permanently deletes rows (`deleteRow`, bottom-up).
 - **Vault** (since 2026-11-16): SID, TS, DATA1..DATA20 — one row per student, vault JSON split into ≤45,000-char cells.
 - **Questions** (`QHEAD`, 21 columns since 2026-11-16): CODE, TITLE, MINUTES, NEG, OPEN, Q, A, B, C, D, E, ANS(letter), TOPIC, EXPLANATION, Q_BN, A_BN, B_BN, C_BN, D_BN, E_BN, EXPLANATION_BN (Q/A–E/EXPLANATION = English main version; *_BN = optional বাংলা version, same option order; empty = single-language question). Old 14-column sheets are migrated on the next write (columns matched by header name). TITLE/MINUTES/NEG/OPEN only on the first row of each CODE. Whole sheet is text format; `admin_` rewrites the sheet on upload/delete/setopen. Seeded with DEMO1.
 - **Settings**: header `KEY | VALUE`; row `cfg` = public settings JSON, row `roster` = `[{id,pin,name,blocked}]` JSON (never returned except to the teacher). Script properties: `SSID`, `TPASS`.

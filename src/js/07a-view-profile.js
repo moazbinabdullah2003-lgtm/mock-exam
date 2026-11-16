@@ -10,13 +10,14 @@ function trendOf(ps){
 }
 const trendTag = d => d === null ? '–' : d >= 5 ? '<span style="color:var(--g)">▲ +' + d + '</span>' : d <= -5 ? '<span style="color:var(--r)">▼ ' + d + '</span>' : '<span class="muted">▬ ' + (d > 0 ? '+' : '') + d + '</span>';
 function vProfile(sid){
-  const all = allRecs(), recs = all.filter(r => norm(r.sid) === norm(sid));
+  const all = rng(allRecs()), recs = all.filter(r => norm(r.sid) === norm(sid));
   let h = '';
   if(remoteMsg) h += `<div class="warn">${esc(remoteMsg)}</div>`;
   const name = (recs[recs.length - 1] || allExits().filter(r => norm(r.sid) === norm(sid)).pop() || {}).name || sid, guest = /^G-/i.test(String(sid));
   h += `<div class="card"><div class="row" style="margin:0"><div><h2 style="margin:0">${esc(name)}</h2><small class="muted">${guest ? 'Guest' : 'ID: ' + esc(sid)}</small></div><button class="btn ghost sm" onclick="refresh()">${loading ? 'Syncing…' : '↻ Refresh'}</button></div></div>`;
+  h += vRange({s:sid}, allRaw().filter(r => norm(r.sid) === norm(sid)));
   h += vExitProfile(sid);
-  if(!recs.length) return h + '<div class="card muted">এই student এখনো কোনো exam দেয়নি।</div>';
+  if(!recs.length) return h + (allRecs().some(r => norm(r.sid) === norm(sid)) ? vNoneInRange() : '<div class="card muted">এই student এখনো কোনো exam দেয়নি।</div>');
 
   const ps = recs.map(pct), n = recs.length;
   let ok = 0, wr = 0, sk = 0, qs = 0, qn = 0;
@@ -49,7 +50,7 @@ function vProfile(sid){
   if(strongT.length) L.push(`💪 শক্তিশালী topic: <b>${strongT.map(t => esc(t.t)).join(', ')}</b>`);
   if(tot && sk / tot > 0.15) L.push(`⏭ ${Math.round(sk / tot * 100)}% question skip করে — time management/confidence দেখো।`);
   if(n >= 2 && ps[n - 1] < ps[n - 2] - 10) L.push('🔻 শেষ attempt আগেরটার চেয়ে অনেক কম।');
-  { const xs = allExits().filter(r => norm(r.sid) === norm(sid)), xf = xs.filter(r => exitInfo(r).flags.length).length;
+  { const xs = rng(allExits()).filter(r => norm(r.sid) === norm(sid)), xf = xs.filter(r => exitInfo(r).flags.length).length;
     if(xs.length) L.push(`🚪 <b>${xs.length}</b> বার exam বাতিল করে বের হয়েছে${xf ? ` — <b style="color:var(--r)">⚠ ${xf}টা সন্দেহজনক</b> (নিচে exit history দেখো)` : ''}.`); }
   h += `<div class="tiles">${tile(n, 'Attempts')}${tile(myAvg + '%', 'Average')}${tile(ps[n - 1] + '%', 'Latest', pcol(ps[n - 1] / 100))}${tile(trendTag(tr), 'Trend')}</div>`;
   h += `<div class="card"><h2>📝 Summary</h2>${L.map(x => `<div style="margin:5px 0">${x}</div>`).join('')}</div>`;

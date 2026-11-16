@@ -9,6 +9,7 @@ function makeSheet(name) {
     getLastRow: () => s.rows.length,
     setFrozenRows(n) { s.frozen = n; },
     clearContents() { s.rows = []; },
+    deleteRow(n) { s.rows.splice(n - 1, 1); },
     getDataRange() { return { getValues: () => s.rows.map(r => r.slice()) }; },
     getRange(a, b, c, d) {
       if (typeof a === 'string') return { setNumberFormat() {} };

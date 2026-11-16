@@ -27,6 +27,9 @@ window.fetch = async (u, o) => {
         DB.exams[p.code] = { title: f[1], minutes: +f[2] || 10, neg: +f[3] || 0, open: f[4] !== 'NO',
           questions: rows.map(r => ({ q: r[5], o: r.slice(6, 11).filter(x => x !== ''), a: 'ABCDE'.indexOf(r[11]), t: r[12], e: r[13] })) }; }
       if (p.action === 'delete') delete DB.exams[p.code];
+      if (p.action === 'logs') { const ids = JSON.parse(p.aids || '[]');   // ✏ log editor: hide / unhide / delete
+        if (p.op === 'delete') DB.attempts = DB.attempts.filter(x => !ids.includes(x.aid));
+        else DB.attempts.forEach(x => { if (ids.includes(x.aid)) x.hidden = p.op === 'hide' || undefined; }); }
       return J({});
     }
     DB.attempts.push(p); return J({});               // student attempt
@@ -44,6 +47,6 @@ window.fetch = async (u, o) => {
   }
   if (a === 'exams') return J(q.get('key') === DB.pass ? Object.entries(DB.exams).map(([code, e]) => ({ code, title: e.title, minutes: e.minutes, neg: e.neg, open: e.open, count: e.questions.length })) : []);
   if (a === 'exam') { const e = DB.exams[q.get('code')]; return J(e ? JSON.parse(JSON.stringify(e)) : { error: 'notfound' }); }
-  return J(q.get('key') === DB.pass ? DB.attempts.map(p => ({ ...p })) : (q.get('sid') ? DB.attempts.filter(p => norm(p.sid) === norm(q.get('sid'))) : []));
+  return J(q.get('key') === DB.pass ? DB.attempts.map(p => ({ ...p })) : (q.get('sid') ? DB.attempts.filter(p => norm(p.sid) === norm(q.get('sid')) && !p.hidden) : []));
 };
 'fake backend installed';

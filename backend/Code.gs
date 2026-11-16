@@ -3,7 +3,7 @@
 const TEACHER_PASS = 'teacher123';
 const pass_ = () => PropertiesService.getScriptProperties().getProperty('TPASS') || TEACHER_PASS;
 
-const HEAD  = ['Timestamp','SID','NAME','EXAM','AID','MODE','SCORE','TOTAL','SECS','DETAILS'];
+const HEAD  = ['Timestamp','SID','NAME','EXAM','AID','MODE','SCORE','TOTAL','SECS','DETAILS','HIDDEN'];   // HIDDEN = '1' → teacher লুকিয়েছে (student দেখে না, analytics-এ নেই)
 const QHEAD = ['CODE','TITLE','MINUTES','NEG','OPEN','Q','A','B','C','D','E','ANS','TOPIC','EXPLANATION',
                'Q_BN','A_BN','B_BN','C_BN','D_BN','E_BN','EXPLANATION_BN'];   // _BN = বাংলা version (ঐচ্ছিক)
 
@@ -83,16 +83,18 @@ function doGet(e) {
   if (p.action === 'vault') return json_(getVault_(p));
   const sh = sheet_();
   const last = sh.getLastRow();
-  let rows = last > 1 ? sh.getRange(2, 1, last - 1, 10).getValues() : [];
+  let rows = last > 1 ? sh.getRange(2, 1, last - 1, 11).getValues() : [];
   const isT = p.key && p.key === pass_();
   if (!isT) {
     if (!p.sid) return json_([]);
-    rows = rows.filter(r => norm_(r[1]) === norm_(p.sid));
+    rows = rows.filter(r => norm_(r[1]) === norm_(p.sid) && !isHid_(r[10]));   // student লুকানো log দেখে না
   }
-  return json_(rows.map(r => ({
-    sid: String(r[1]), name: r[2], exam: r[3], aid: String(r[4]), mode: r[5],
-    score: r[6], total: r[7], secs: r[8], details: r[9]
-  })));
+  return json_(rows.map(r => {
+    const o = { sid: String(r[1]), name: r[2], exam: r[3], aid: String(r[4]), mode: r[5],
+      score: r[6], total: r[7], secs: r[8], details: r[9] };
+    if (isHid_(r[10])) o.hidden = true;
+    return o;
+  }));
 }
 
 function getExam_(code) {
@@ -144,6 +146,7 @@ function admin_(p) {
   try {
     if (p.action === 'savecfg') { kvSet_('cfg', String(p.cfg || '{}')); return text('ok'); }
     if (p.action === 'saveroster') { kvSet_('roster', String(p.roster || '[]')); return text('ok'); }
+    if (p.action === 'logs') return text(logs_(p));
     if (p.action === 'setpass') {
       const np = String(p.newpass || '');
       if (np.length < 4) return text('short');
@@ -192,6 +195,29 @@ function admin_(p) {
   } finally {
     lock.releaseLock();
   }
+}
+
+const isHid_ = v => String(v == null ? '' : v).trim() === '1';
+// Attempt/exit log: op=hide|unhide|delete, aids=JSON ["aid",...]  (admin_-এর lock-এর ভেতরে চলে)
+// hide/unhide = HIDDEN column (ফেরত আনা যায়); delete = row চিরতরে মুছে ফেলা
+function logs_(p) {
+  let aids;
+  try { aids = JSON.parse(p.aids || '[]'); } catch (e) { return 'badjson'; }
+  if (!Array.isArray(aids) || !aids.length) return 'none';
+  const want = {}; aids.forEach(a => { want[String(a).trim()] = 1; });
+  const sh = sheet_(), last = sh.getLastRow();
+  if (last < 2) return 'ok:0';
+  const ids = sh.getRange(2, 5, last - 1, 1).getValues().map(r => String(r[0]).trim());
+  const hit = []; ids.forEach((a, i) => { if (want[a]) hit.push(i + 2); });
+  if (p.op === 'delete') {
+    for (let k = hit.length - 1; k >= 0; k--) sh.deleteRow(hit[k]);   // নিচ থেকে, যাতে row নম্বর না সরে
+    return 'ok:' + hit.length;
+  }
+  if (p.op !== 'hide' && p.op !== 'unhide') return 'bad op';
+  if (sh.getMaxColumns && sh.getMaxColumns() < 11) sh.insertColumnsAfter(sh.getMaxColumns(), 11 - sh.getMaxColumns());
+  if (String(sh.getRange(1, 11).getValues()[0][0]) !== 'HIDDEN') sh.getRange(1, 11).setValue('HIDDEN');
+  hit.forEach(r => sh.getRange(r, 11).setValue(p.op === 'hide' ? '1' : ''));
+  return 'ok:' + hit.length;
 }
 
 function listExams_() {

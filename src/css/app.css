@@ -159,3 +159,14 @@ body.box-sym.in-quiz:not(.motif-quiz) :is(.card,.tile,.choice,details.sec)::befo
 .chip small{color:var(--m);margin-left:2px}.chip.on{border-color:var(--p);background:var(--pl);font-weight:700}
 .btn.saved{border-color:var(--p);color:var(--p)}
 .btn.ghost.red{background:var(--rl);color:var(--r);border-color:color-mix(in srgb,var(--r) 40%,var(--b))}
+
+/* ---------- 📅 Date range bar + ✏ log editor ---------- */
+.drbar{padding:12px 14px}.drbar .chips{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}
+.drbar .chip{padding:5px 11px;font-size:13px}
+.drd{display:flex;align-items:center;gap:6px;margin:0 0 6px}.drd input{flex:1;min-width:0;margin:0;padding:8px}.drd span{color:var(--m)}
+.edl{padding:4px 9px!important;font-size:12px!important;white-space:nowrap}
+.modal .card.loged{max-width:680px;max-height:88vh;overflow:auto}
+.lgs{max-height:46vh;overflow:auto}.lgs td,.lgs th{white-space:nowrap}
+.lgs input[type=checkbox],.lgall input{width:18px;height:18px;margin:0;accent-color:var(--p);vertical-align:middle}
+.lgall{display:flex;gap:8px;align-items:center;font-size:14px;margin:8px 0 0;cursor:pointer}
+.lgb:disabled{opacity:.45;cursor:not-allowed}

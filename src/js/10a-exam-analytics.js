@@ -6,14 +6,15 @@ async function openExA(code){
 }
 function vExamAnalytics(code){
   const e = EXAMS[code], meta = (EXL || []).find(x => x.code === code) || {};
-  const all = allRecs().filter(r => r.exam === code), recs = all.filter(r => r.mode !== 'mistakes');
+  const all = rng(allRecs()).filter(r => r.exam === code), recs = all.filter(r => r.mode !== 'mistakes');
   const PM = +CFG.rules.passMark || 0;
   let h = `<div class="top"><button class="link" onclick="EXA=null;render()">← Exams</button><button class="btn ghost sm" onclick="refresh()">${loading ? 'Syncing…' : '↻ Refresh'}</button></div>
     <div class="card"><div class="muted">${esc(code)}</div><h2 style="font-size:22px;margin:2px 0">${esc((e && e.title) || meta.title || code)}</h2>
     <small>${e ? e.questions.length + ' questions · ' + e.minutes + ' min' + (e.neg ? ' · negative ' + e.neg : '') : ''}${meta.open === false ? ' · closed' : ''}</small></div>`;
+  h += vRange({e:code}, allRaw().filter(r => r.exam === code));
   if(e) h += aiHint('সঠিক উত্তর আর আমাদের solution ') + `<button class="btn full" data-c="${esc(code)}" onclick="copyExam(this.dataset.c,-1,this)">📋 Copy full exam for AI</button><small class="muted">প্রতিটা question আলাদা copy: নিচে ❓ Question-wise খুলে 📋</small></div>`;
   h += vExitDash(code);
-  if(!recs.length) return h + '<div class="card muted center">এই exam এখনো কেউ দেয়নি।</div>';
+  if(!recs.length) return h + (allRecs().some(r => r.exam === code) ? vNoneInRange() : '<div class="card muted center">এই exam এখনো কেউ দেয়নি।</div>');
 
   const ps = recs.map(pct), bys = {};
   recs.forEach(r => { (bys[norm(r.sid)] = bys[norm(r.sid)] || []).push(r); });
@@ -27,10 +28,10 @@ function vExamAnalytics(code){
   }).sort((a, b) => b.best - a.best || a.secs - b.secs);
   const medal = i => ['🥇', '🥈', '🥉'][i] || (i + 1);
   h += `<div class="card"><h2>👥 Student-wise (কে কেমন করল)</h2><div class="scroll"><table>
-    <tr><th>#</th><th>Name</th><th>Best</th><th>Score</th><th>1st try</th><th>Last</th><th>Att.</th><th>Time</th><th></th></tr>
+    <tr><th>#</th><th>Name</th><th>Best</th><th>Score</th><th>1st try</th><th>Last</th><th>Att.</th><th>Time</th><th></th><th></th></tr>
     ${st.map((s, i) => `<tr class="click" data-s="${esc(s.sid)}" onclick="openStu(this.dataset.s)"><td>${medal(i)}</td><td><b>${esc(s.name)}</b> <small>${esc(s.sid)}</small></td>
       <td class="h" style="background:${heat(s.best / 100)}">${s.best}%</td><td>${s.bs}/${s.total}</td><td>${s.first}%</td><td>${s.last}%</td><td>${s.n}</td><td>${fmt(s.secs)}</td>
-      <td><button class="link" data-a="${esc(s.aid)}" onclick="event.stopPropagation();openRec(this.dataset.a)">Review</button></td></tr>`).join('')}
+      <td><button class="link" data-a="${esc(s.aid)}" onclick="event.stopPropagation();openRec(this.dataset.a)">Review</button></td><td>${editBtn({s:s.sid, e:code})}</td></tr>`).join('')}
   </table></div><small class="muted">Best score অনুযায়ী সাজানো (সমান হলে কম সময় আগে)। নামে tap করলে full profile।${all.length > recs.length ? ' "Retake mistakes" attempt এখানে গোনা হয়নি।' : ''}</small></div>`;
 
   // ---- general analytics (folds)

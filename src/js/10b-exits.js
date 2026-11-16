@@ -37,22 +37,22 @@ function exitBySt(list){
 }
 /* dashboard section */
 function vExitDash(exam){
-  const list = allExits().filter(r => !exam || r.exam === exam);
+  const list = rng(allExits()).filter(r => !exam || r.exam === exam);
   const st = exitBySt(list), fl = list.filter(r => exitInfo(r).flags.length).length;
   const body = !list.length ? '<div class="muted">কেউ এখনো exam বাতিল করে বের হয়নি 👍</div>' :
-    `<small class="muted">Student exam-এর মাঝে "বাতিল করে বের হও" চাপলে এখানে আসে (attempt হিসেবে গোনা হয় না)। ⚠ = ফাঁকি দেওয়ার সন্দেহ: বের হয়ে আবার একই exam দিয়েছে, বারবার exit, বা অনেক question দেখে বের হয়েছে।</small>
-    <h3 style="margin:10px 0 4px">👤 কে কতবার</h3><div class="scroll"><table><tr><th>Student</th><th>Exit</th><th>⚠</th><th>কোন exam-এ</th><th>শেষ exit</th></tr>
-      ${st.map(o => `<tr class="click" data-s="${esc(o.sid)}" onclick="openStu(this.dataset.s)"><td><b>${esc(o.name)}</b> <small>${esc(o.sid)}</small></td><td><b>${o.n}</b></td><td>${o.flagged ? `<b style="color:var(--r)">${o.flagged}</b>` : '–'}</td><td><small>${Object.entries(o.exams).map(([c, n]) => esc(c) + (n > 1 ? ' ×' + n : '')).join(', ')}</small></td><td><small>${esc(exitWhen(o.last))}</small></td></tr>`).join('')}
+    `${editBtn({x:'1', e:exam || ''}, 'Edit exits')}<br><small class="muted">Student exam-এর মাঝে "বাতিল করে বের হও" চাপলে এখানে আসে (attempt হিসেবে গোনা হয় না)। ⚠ = ফাঁকি দেওয়ার সন্দেহ: বের হয়ে আবার একই exam দিয়েছে, বারবার exit, বা অনেক question দেখে বের হয়েছে।</small>
+    <h3 style="margin:10px 0 4px">👤 কে কতবার</h3><div class="scroll"><table><tr><th>Student</th><th>Exit</th><th>⚠</th><th>কোন exam-এ</th><th>শেষ exit</th><th></th></tr>
+      ${st.map(o => `<tr class="click" data-s="${esc(o.sid)}" onclick="openStu(this.dataset.s)"><td><b>${esc(o.name)}</b> <small>${esc(o.sid)}</small></td><td><b>${o.n}</b></td><td>${o.flagged ? `<b style="color:var(--r)">${o.flagged}</b>` : '–'}</td><td><small>${Object.entries(o.exams).map(([c, n]) => esc(c) + (n > 1 ? ' ×' + n : '')).join(', ')}</small></td><td><small>${esc(exitWhen(o.last))}</small></td><td>${editBtn({x:'1', s:o.sid, e:exam || ''})}</td></tr>`).join('')}
     </table></div>
     <h3 style="margin:12px 0 4px">🧾 সব exit (নতুন আগে)</h3>${vExitTable(list, true, !exam)}`;
   return sec(exam ? 'x_exit_' + exam : 'd_exit', '🚪 Exam exit report', body, list.length ? list.length + ' exit' + (fl ? ' · ⚠ ' + fl : '') : '0');
 }
 /* student profile section + summary line */
 function vExitProfile(sid){
-  const list = allExits().filter(r => norm(r.sid) === norm(sid));
+  const list = rng(allExits()).filter(r => norm(r.sid) === norm(sid));
   if(!list.length) return '';
   const fl = list.filter(r => exitInfo(r).flags.length).length, ex = [...new Set(list.map(r => r.exam))];
-  return `<div class="card" style="border-left:4px solid ${fl ? 'var(--r)' : '#f59e0b'}"><h2 style="margin-top:0">🚪 Exam exit history</h2>
+  return `<div class="card" style="border-left:4px solid ${fl ? 'var(--r)' : '#f59e0b'}"><div class="row" style="margin:0"><h2 style="margin:0">🚪 Exam exit history</h2>${editBtn({x:'1', s:sid}, 'Edit')}</div>
     <div style="margin-bottom:6px"><b>${list.length}</b> বার exam বাতিল করে বের হয়েছে (${ex.map(esc).join(', ')})${fl ? ` · <b style="color:var(--r)">⚠ ${fl}টা সন্দেহজনক</b>` : ''}</div>
     ${vExitTable(list, false, true)}</div>`;
 }
