@@ -27,39 +27,15 @@ Manual alternative for the user: script.google.com → project → paste code �
 
 ---------------------------------------------------------------------------------------------------
 
-## B. Frontend deploy (dist/quiz.html → GitHub Pages)
+## B. Frontend deploy (src/ → GitHub Pages) — AUTOMATIC since 2026-11-16
 
-Do not push the whole 80 KB through the tool if you can avoid it. Use a **diff patch**:
+Local folder is a git repo (remote `origin` = github.com/moazbinabdullah2003-lgtm/mock-exam, branch `main`). Push credential (fine-grained token) is stored in the macOS Keychain, so `git push` works from Claude's Bash.
 
-1. `python3 build.py` (prints size). `shasum -a 256 dist/quiz.html` → **NEWHASH**.
-2. Get the live file and make the patch:
-   ```bash
-   curl -s "https://moazbinabdullah2003-lgtm.github.io/mock-exam/quiz.html?x=$RANDOM" -o /tmp/live.html
-   python3 tools/make_patch.py /tmp/live.html dist/quiz.html > /tmp/ops.json     # stderr shows both hashes
-   cat /tmp/ops.json
-   ```
-   (If the live hash ≠ the hash of the previous deploy, someone edited GitHub directly — diff against the live file anyway; the patch is computed against the live file.)
-3. Navigate a tab to the GitHub editor URL. In `javascript_tool` on github.com paste the ops JSON and run:
-   ```js
-   const OPS = /* paste /tmp/ops.json */;
-   const v = document.querySelector('.cm-content').cmTile.view;           // CodeMirror 6 view
-   const sha = async s => [...new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(s)))].map(b=>b.toString(16).padStart(2,'0')).join('');
-   const old = v.state.doc.toString(); let t = old;
-   for (const [a,b,x] of OPS.slice().reverse()) t = t.slice(0,a) + x + t.slice(b);
-   const ok = (await sha(t)) === 'NEWHASH';
-   if (ok) { v.dispatch({changes:{from:0, to:v.state.doc.length, insert:t}});
-             await new Promise(r=>setTimeout(r,600));
-             [...document.querySelectorAll('button')].find(x=>/Commit changes\.\.\./.test(x.textContent))?.click(); }
-   ({ok})
-   ```
-   **Never** use select-all + paste in the editor (virtualised DOM → only the visible part is replaced). Only `v.dispatch`.
-4. The commit dialog opens: `find "Commit changes"` → `computer scroll_to` the heading ref → screenshot → click the green **Commit changes** (≈(588,660) at 800 px; keep "Commit directly to the main branch") → screenshot shows "Saving…".
-5. Verify: navigate a tab to the **github.io** live URL (with `?v=something`), then in `javascript_tool` loop `fetch(location.pathname+'?v='+Date.now(),{cache:'no-store'})`, sha256 it until it equals NEWHASH (Pages needs ~10–60 s). Then do a read-only smoke test on the live page (e.g. call `diag()`, teacher login → tabs count, guest home). Browser caches the old page: always navigate with a new `?v=` parameter.
-6. If the patch is huge or the hash doesn't match: fallback = gzip+base64 the full file, split in 7864-char chunks, store each in `window.__C[i]` with a per-chunk sha256 check (`split -b 7864 -d`), then join, `atob`, `DecompressionStream('gzip')`, compare full hash, `v.dispatch`.
+1. Edit `src/`, then run `./deploy.sh "what changed"` (does `python3 build.py`, commit, push).
+2. GitHub Actions (`.github/workflows/pages.yml`) rebuilds `dist/quiz.html` and publishes it to Pages (Settings → Pages → Source = GitHub Actions). Live in ~30-60 s at the same URL.
+3. Verify: poll the live URL with `?x=$RANDOM` and compare `shasum -a 256` with `dist/quiz.html`.
 
-Manual alternative for the user: github.com/moazbinabdullah2003-lgtm/mock-exam → Add file → Upload files → `dist/quiz.html` (same name replaces) → Commit to main. Live in 1–2 min; hard-refresh.
-
-Constraints: github.com's CSP blocks `fetch` to localhost and other origins, so you can't pull the file from a local server into the editor page.
+The old browser-editor patch method is obsolete. If the token expires, user creates a new fine-grained token (Contents + Workflows: read/write on mock-exam) and runs `git push` once in Terminal.
 
 ---------------------------------------------------------------------------------------------------
 
