@@ -37,7 +37,7 @@ Everything the teacher controls is edited **in the web UI** — no code edits ne
 | Web app `/exec` URL | in `src/js/01-config.js` → `CONFIG.SCRIPT_URL` (`https://script.google.com/macros/s/AKfycbx2xuErMRJf9XPij0Yt28hqLXf79oAN3MnQva2ERw4rTJLQsFrkmQwO6qpFxTCG3IRPjw/exec`). **Never create a "New deployment"** — it changes the URL. Always *Manage deployments → edit → New version*. |
 | Spreadsheet "MCQ Mock Data" | id `1sU8tzNalkI30mmx8aAOQwz8lA_8jX4atM0m4fsnK3og` (also Script property `SSID`). Tabs: `Attempts`, `Questions`, `Settings`. |
 | Teacher login | ID `teacher`, password `teacher123` (defaults; password can be changed in Settings→Security which stores Script property `TPASS`; ID is `access.teacherId` in settings) |
-| Live `quiz.html` sha256 | starts `a511f2325f4d…` (full: `a511f2325f4dad21a25e00e815f96b2ffa229bb8524b992f43ca0e8755f17e10`) = current `dist/quiz.html` |
+| Live `quiz.html` sha256 | starts `d97f5d482886…` (2026-11-16, login choose screen + guest name) = current `dist/quiz.html` |
 
 ### Live data right now
 - Exams: `DEMO1` (3 Q), **`MATH-B`** Beginner (17 Q, 20 min), **`MATH-I`** Intermediate (17 Q, 25 min), **`MATH-A`** Advanced (16 Q, 30 min); negative mark 0.25 on the three MATH exams. Source: `samples/math_3levels.csv` ← `samples/math_questions_with_solutions.md` (50 Higher-Math questions with step-by-step solutions, KaTeX).
@@ -142,9 +142,9 @@ CFG = {
 
 ## 6. Login model (src/js/06-views-login-home.js)
 
-Three tabs on the login page (`LMODE`): **Student | Guest | Teacher** (Guest tab hidden if `access.guest` is false).
+Login page first shows a **choose screen** with 3 big buttons: **Student | Guest | Teacher** (Guest hidden if `access.guest` is false); `LMODE=''` = choose screen, picking one shows its form + a "← Back" link (`setLM('')`).
 - **Student** `doLogin()`: `GET login&sid&pin` → `SESS={sid,name,teacher:false}`. Name comes from the roster (no name field). Roster empty ⇒ nobody can log in as student (guests still can). Password blank ⇒ that ID cannot log in.
-- **Guest** `doGuest()`: exam code → `getExam` → checks open / `exams.CODE.guest!=='no'` / `canStart` → `SESS={sid:'G-XXXX' (per device, LS mq_gid), name:'Guest', guest:true, code}` → Guest home = one card for that exam + Start button (no code box, no analytics).
+- **Guest** `doGuest()`: **name (required) + exam code** (no ID/password) → `getExam` → checks open / `exams.CODE.guest!=='no'` / `canStart` → `SESS={sid:'G-XXXX' (per device, LS mq_gid), name:'<typed name> (Guest)', guest:true, code}` → Guest home = one card for that exam + Start button (no code box, no analytics).
 - **Teacher** `doTeacher()`: ID must equal `access.teacherId` (case-insensitive) AND password must pass `tlogin`. `SESS.key` = the typed password, used as `key=` on every admin call (`TKEY()`).
 - Sessions persist in `localStorage.mq_sess` (auto-login on reload, also mid-exam resume via `mq_run`).
 - Teacher ID is not secret; security rests on the password. Student passwords are stored in plain text in the sheet (teacher can read/generate them) — acceptable for a class; not for high stakes.
