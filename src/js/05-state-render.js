@@ -19,6 +19,7 @@ function render(keep){
   else if(view === 'teacher') h = vTeacher();
   const KEEP = ['#code', '#sid', '#pw', '#tid', '#tp', '#gcode', '#gname'], kv = KEEP.map(k => $(k) ? $(k).value : '');
   if(CFG.brand.footer && view !== 'quiz') h += `<div class="foot">${esc(CFG.brand.footer)}</div>`;
+  if(LANGASK && view !== 'quiz') h += vLangAsk();   // ভাষা বাছাই popup (bilingual exam)
   try{ document.body.classList.toggle('in-quiz', view === 'quiz'); }catch(e){}
   a.classList.toggle('enter', !keep);
   a.innerHTML = h;

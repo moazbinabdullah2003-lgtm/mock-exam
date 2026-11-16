@@ -162,6 +162,7 @@ body.box-sym :is(.card,.tile,.choice,details.sec){position:relative;isolation:is
 body.box-sym :is(.card,.tile,.choice,details.sec)::before{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;border-radius:inherit;background-image:var(--motif);background-size:calc(var(--msz) * .7) calc(var(--msz) * .7);opacity:var(--bop);-webkit-mask-image:linear-gradient(125deg,transparent 30%,#000 95%);mask-image:linear-gradient(125deg,transparent 30%,#000 95%)}
 body.box-bold.box-sym .tile::before{filter:brightness(0) invert(1);opacity:calc(var(--bop) * .8)}
 body.box-sym.in-quiz:not(.motif-quiz) :is(.card,.tile,.choice,details.sec)::before{display:none}
+.bnx{margin:8px 0;border:1px dashed var(--b);border-radius:10px;padding:6px 10px}.bnx>summary{cursor:pointer;font-weight:600;font-size:14px;padding:4px 0}
 </style>
 </head>
 <body>
@@ -625,6 +626,36 @@ function qTimeStats(recs){
   return Object.values(m).filter(o => qinfo(o.exam, o.i)).map(o => ({...o, avg:o.sum / o.n}));
 }
 /* ============================================================
+   Bilingual questions (English + বাংলা)
+   question: q/o/e = English (প্রধান), qb/ob/eb = বাংলা version (ঐচ্ছিক; backend Q_BN, A_BN…E_BN, EXPLANATION_BN)
+   Student exam শুরুর আগে একবার ভাষা বেছে নেয় (RUN.lang), result/review সেই ভাষায় (চাইলে বদলানো যায়)
+   ============================================================ */
+const LANGS = {en:'English', bn:'বাংলা'};
+const isBi = e => !!(e && e.questions && e.questions.some(q => q && String(q.qb || '').trim()));
+/* দেখানোর জন্য question-এর সেই ভাষার copy; বাংলা কোনো অংশ ফাঁকা থাকলে English দেখায় */
+function LQ(q, lang){
+  if(!q || lang !== 'bn' || !String(q.qb || '').trim()) return q;
+  return {...q, q:q.qb, o:q.o.map((x, i) => (q.ob && String(q.ob[i] || '').trim()) ? q.ob[i] : x), e:String(q.eb || '').trim() ? q.eb : q.e};
+}
+let LANGASK = null;   // {exam, mode, idxs} — ভাষা বাছাইয়ের popup খোলা
+let RVLANG = '';      // result page-এ review-এর ভাষা (ফাঁকা = attempt-এর ভাষা)
+const prefLang = () => LS.get('mq_lang', 'en');
+function chooseLang(l){
+  const a = LANGASK; if(!a) return;
+  LS.set('mq_lang', l); LANGASK = null; RVLANG = '';
+  startRun(a.exam, a.mode, a.idxs, l);
+}
+function vLangAsk(){
+  if(!LANGASK) return '';
+  const e = EXAMS[LANGASK.exam], p = LS.get('mq_lang', '');   // আগে কখনো বেছে থাকলে সেটা দেখাও
+  return `<div class="modal"><div class="card center"><h2 style="margin-top:0">🌐 ভাষা বেছে নাও / Choose language</h2>
+    <div class="muted" style="margin-bottom:12px">${esc(e ? e.title : LANGASK.exam)} — পুরো exam এই ভাষায় দেখাবে (মাঝে বদলানো যাবে না)</div>
+    <div class="choices" style="margin:8px 0">${Object.entries(LANGS).map(([k, n]) => `<button class="choice" onclick="chooseLang('${k}')"><span class="ic">${k === 'en' ? '🇬🇧' : '🇧🇩'}</span><span><b>${n}</b><small>${k === p ? 'আগের বার এটা নিয়েছিলে' : '&nbsp;'}</small></span></button>`).join('')}</div>
+    <button class="btn ghost" onclick="LANGASK=null;render(true)">${esc(T('cancel'))}</button></div></div>`;
+}
+/* result page: review-এর ভাষা বদলানোর ছোট switch */
+const vLangSwitch = (cur) => `<div class="row" style="justify-content:flex-start;gap:6px;margin:6px 0"><small class="muted">🌐 Review-এর ভাষা:</small> ${Object.entries(LANGS).map(([k, n]) => `<button class="btn sm ${cur === k ? '' : 'ghost'}" onclick="RVLANG='${k}';render(true)">${n}</button>`).join('')}</div>`;
+/* ============================================================
    State
    ============================================================ */
 Object.assign(EXAMS, LS.get('mq_exams', {}));
@@ -645,6 +676,7 @@ function render(keep){
   else if(view === 'teacher') h = vTeacher();
   const KEEP = ['#code', '#sid', '#pw', '#tid', '#tp', '#gcode', '#gname'], kv = KEEP.map(k => $(k) ? $(k).value : '');
   if(CFG.brand.footer && view !== 'quiz') h += `<div class="foot">${esc(CFG.brand.footer)}</div>`;
+  if(LANGASK && view !== 'quiz') h += vLangAsk();   // ভাষা বাছাই popup (bilingual exam)
   try{ document.body.classList.toggle('in-quiz', view === 'quiz'); }catch(e){}
   a.classList.toggle('enter', !keep);
   a.innerHTML = h;
@@ -830,9 +862,10 @@ async function startCode(){
   startRun(c, 'full');
 }
 const RUNKEY = (sid, exam, mode) => norm(sid) + '_' + exam + '_' + mode;
-function startRun(exam, mode, idxs){
+function startRun(exam, mode, idxs, lang){
   const e = EXAMS[exam];
   applyOv(e, exam);
+  if(isBi(e) && !lang){ LANGASK = {exam, mode, idxs}; return render(true); }   // আগে ভাষা বেছে নাও
   let order = idxs && idxs.length ? idxs.slice() : e.questions.map((_, i) => i);
   /* সবসময় shuffle (settings দিয়ে বন্ধ করা যায় না): প্রতি attempt-এ question order আর option order নতুন করে এলোমেলো।
      একই student-এর আগের attempt-এর সাথে question order হুবহু এক হলে আবার shuffle করা হয়। */
@@ -850,7 +883,7 @@ function startRun(exam, mode, idxs){
   });
   const perQ = e.minutes * 60 / e.questions.length;
   const dur = mode === 'mistakes' ? Math.max(60, Math.ceil(order.length * perQ)) : e.minutes * 60;
-  RUN = {sid:SESS.sid, name:SESS.name, exam, mode, order, op, ans:{}, secs:{}, cur:0, start:Date.now(), dur, last:Date.now()};
+  RUN = {sid:SESS.sid, name:SESS.name, exam, mode, order, op, ans:{}, secs:{}, cur:0, start:Date.now(), dur, last:Date.now(), lang:lang || 'en'};
   LS.set('mq_run', RUN); confirming = false; view = 'quiz'; render(); startTimer();
 }
 function retake(exam, mode){
@@ -898,7 +931,7 @@ function vBoard(sid, isT){
 function openRec(aid){
   const r = allRecs().find(x => x.aid === aid);
   if(!r) return;
-  BACK = SESS && SESS.teacher ? 'teacher' : 'home'; LAST = r; view = 'result'; render();
+  BACK = SESS && SESS.teacher ? 'teacher' : 'home'; LAST = r; RVLANG = ''; view = 'result'; render();
 }
 /* ---------- Student profile (teacher drill-down): activity, scores, strengths, weak points ---------- */
 const pcol = p => p < 0.5 ? 'var(--r)' : p < 0.8 ? '#f59e0b' : 'var(--g)';
@@ -1065,7 +1098,7 @@ function vTimeBlock(recs, id, opt){
 }
 /* ---------- Quiz ---------- */
 function vQuiz(){
-  const e = EXAMS[RUN.exam], p = RUN.cur, last = RUN.order.length - 1, qi = RUN.order[p], q = e.questions[qi], a = RUN.ans[p];
+  const e = EXAMS[RUN.exam], p = RUN.cur, last = RUN.order.length - 1, qi = RUN.order[p], q = LQ(e.questions[qi], RUN.lang), a = RUN.ans[p];
   const un = RUN.order.length - Object.keys(RUN.ans).length;
   const perm = (RUN.op && RUN.op[qi]) || q.o.map((_, i) => i);
   return `<div class="top"><div><b>${esc(e.title)}</b>${RUN.mode==='mistakes'?'<span class="tag">mistakes</span>':''}</div>${CFG.rules.timer ? '<div id="tm" class="tm"></div>' : ''}</div>
@@ -1131,10 +1164,11 @@ function finish(auto){
   const rec = {aid:newAid(), sid:RUN.sid, name:RUN.name, exam:RUN.exam, mode:RUN.mode,
     score:+(ok - wr * neg).toFixed(2), total:RUN.order.length,
     secs:Math.min(RUN.dur, Math.round((Date.now() - RUN.start) / 1000)), d};
+  if(isBi(e)) rec.lang = RUN.lang || 'en';
   const loc = LS.get('mq_local', []); loc.push(rec); LS.set('mq_local', loc);
   const ob = LS.get('mq_out', []); ob.push(rec); LS.set('mq_out', ob);
   LS.del('mq_run'); RUN = null; confirming = false;
-  LAST = rec; BACK = 'home'; view = 'result'; syncMsg = CAN_SYNC() ? 'Saving…' : '';
+  LAST = rec; RVLANG = ''; BACK = 'home'; view = 'result'; syncMsg = CAN_SYNC() ? 'Saving…' : '';
   render();
   if(CAN_SYNC()) flush().then(n => { syncMsg = n === 0 ? 'Saved ✓' : n > 0 ? 'Network নেই — পরে auto save হবে' : syncMsg; const el = $('#sync'); if(el) el.textContent = syncMsg; });
 }
@@ -1159,11 +1193,12 @@ function vResult(r){
   if(showScore) h += sec('r_topic', '📊 ' + esc(T('topicWise')), `${ts.map(t => `<div class="trow"><span>${esc(t.t)} <small>${t.ok}/${t.n}</small></span><div class="bar"><i style="width:${Math.round(t.p*100)}%;background:${t.p<0.5?'var(--r)':t.p<0.8?'#f59e0b':'var(--g)'}"></i></div><b>${Math.round(t.p*100)}%</b></div>`).join('')}`, ts.length + ' topic');
   h += vTimeBlock([r], 'r_time');
   if(rv === 'none') return h + `<div class="card muted">${esc(T('reviewLocked'))}</div>`;
-  const fullLv = rv === 'full';
+  const fullLv = rv === 'full', lg = RVLANG || r.lang || prefLang();
+  if(isBi(e)) h += vLangSwitch(lg);
   h += aiHint(fullLv ? 'তোমার উত্তর, সঠিক উত্তর আর ' + (isT || R.explain ? 'solution ' : '') : 'তোমার উত্তর (✅/❌) ') + `<button class="btn full" onclick="copyRes(-1,this)">📋 Copy full exam for AI</button></div>`;
   let rvh = '';
   r.d.forEach(([qi, c, g, s], n) => {
-    const q = qinfo(r.exam, qi);
+    const q = LQ(qinfo(r.exam, qi), lg);
     if(!q) return;
     rvh += `<div style="margin-bottom:18px"><div class="row" style="margin:0"><span class="muted">Q${n+1} · ${esc(q.t || '')} · ${s}s ${rv==='marks' ? (c < 0 ? '· —' : g ? '· ✅' : '· ❌') : ''}</span><button class="btn sm ghost" onclick="copyRes(${n},this)" title="এই question AI-এর জন্য copy">📋 Copy</button></div><div class="q" style="font-size:.95em">${esc(q.q)}</div>` +
       q.o.map((o, i) => `<div class="opt ${rv==='full' && i===q.a ? 'ok' : i===c ? (rv==='full' ? 'bad' : (g ? 'ok' : 'bad')) : ''}" style="margin:4px 0;padding:8px"><span class="L">${LET[i]}</span><span>${esc(o)}${i===c?' <small>' + esc(T('yourAnswer')) + '</small>':''}</span></div>`).join('') +
@@ -1202,7 +1237,7 @@ function copyRes(n, btn){
   const r = LAST, e = r && EXAMS[r.exam]; if(!e) return;
   const isT = SESS && SESS.teacher, lv = isT ? 'full' : CFG.rules.review, withExp = isT || CFG.rules.explain;
   if(lv === 'none') return;
-  const one = ([qi, c], k) => { const q = qinfo(r.exam, qi); return q ? aiQ(q, k + 1, c, lv, withExp) : ''; };
+  const lg = RVLANG || r.lang || prefLang(), one = ([qi, c], k) => { const q = LQ(qinfo(r.exam, qi), lg); return q ? aiQ(q, k + 1, c, lv, withExp) : ''; };
   let t;
   if(n < 0){
     const ok = r.d.filter(x => x[2]).length, wr = r.d.filter(x => !x[2] && x[1] >= 0).length;
@@ -1381,12 +1416,17 @@ function parseQ(text){
     const ex = exams[c] = exams[c] || {code:c, rows:[]};
     if(!ex.rows.length){ ex.title = g('TITLE') || c; ex.minutes = g('MINUTES') || '10'; ex.neg = g('NEG') || '0'; ex.open = g('OPEN').toUpperCase() === 'NO' ? 'NO' : 'YES';
       const raw = {}; RULE_KEYS.forEach(k => { if(ix(k) >= 0) raw[k] = g(k); }); ex.ov = readRules(raw, 'Row ' + rn + ' (' + c + ')', errs); }
-    ex.rows.push({q:g('Q'), o, a, t:g('TOPIC') || 'General', e:g('EXPLANATION')});
+    const row = {q:g('Q'), o, a, t:g('TOPIC') || 'General', e:g('EXPLANATION')};
+    const be = bnErr(g('Q_BN'), ['A','B','C','D','E'].map(k => g(k + '_BN')), g('EXPLANATION_BN'), o.length, row);
+    if(be){ errs.push('Row ' + rn + ': ' + be); return; }
+    ex.rows.push(row);
   });
   if(!Object.keys(exams).length && !errs.length) errs.push('কোনো valid question পাওয়া যায়নি');
   return {errors:errs, exams};
 }
-const rowsOf = ex => ex.rows.map((r, i) => [ex.code, i ? '' : ex.title, i ? '' : ex.minutes, i ? '' : ex.neg, i ? '' : ex.open, r.q, r.o[0]||'', r.o[1]||'', r.o[2]||'', r.o[3]||'', r.o[4]||'', 'ABCDE'[r.a], r.t, r.e]);
+const rowsOf = ex => ex.rows.map((r, i) => { const b = r.qb ? r.ob || [] : [];
+  return [ex.code, i ? '' : ex.title, i ? '' : ex.minutes, i ? '' : ex.neg, i ? '' : ex.open, r.q, r.o[0]||'', r.o[1]||'', r.o[2]||'', r.o[3]||'', r.o[4]||'', 'ABCDE'[r.a], r.t, r.e,
+    r.qb || '', b[0]||'', b[1]||'', b[2]||'', b[3]||'', b[4]||'', r.qb ? r.eb || '' : '']; });
 function onFile(f){ if(!f) return; const rd = new FileReader(); rd.onload = () => { PASTE = String(rd.result); doPreview(); }; rd.readAsText(f, 'UTF-8'); }
 function doPreview(){ UP = parseQ(PASTE); upMsg = ''; render(true); }
 async function verifyExam(ex){
@@ -1394,7 +1434,7 @@ async function verifyExam(ex){
     await sleep(1500);
     try{
       const r = await (await fetch(CONFIG.SCRIPT_URL + '?action=exam&code=' + encodeURIComponent(ex.code) + '&t=' + Date.now())).json();
-      if(r && r.questions && r.questions.length === ex.rows.length && r.questions.every((q, i) => q.q === ex.rows[i].q && q.a === ex.rows[i].a && q.o.join('|') === ex.rows[i].o.join('|') && String(q.e || '') === String(ex.rows[i].e || ''))) return true;
+      if(r && r.questions && r.questions.length === ex.rows.length && r.questions.every((q, i) => q.q === ex.rows[i].q && q.a === ex.rows[i].a && q.o.join('|') === ex.rows[i].o.join('|') && String(q.e || '') === String(ex.rows[i].e || '') && String(q.qb || '') === String(ex.rows[i].qb || '') && String(q.eb || '') === String(ex.rows[i].qb ? ex.rows[i].eb || '' : ''))) return true;
     }catch(e){}
   }
   return false;
@@ -1447,7 +1487,7 @@ function vExams(){
       h += Object.values(UP.exams).map(ex => {
         const tc = {}; ex.rows.forEach(r => tc[r.t] = (tc[r.t] || 0) + 1);
         const exists = EXL.find(e => e.code === ex.code);
-        return `<div class="card" style="margin:8px 0"><b>${esc(ex.code)}</b> — ${esc(ex.title)}${exists ? '<span class="tag" style="background:#fef9c3;color:#a16207">আগেরটা replace হবে</span>' : '<span class="tag">নতুন</span>'}<br>
+        return `<div class="card" style="margin:8px 0"><b>${esc(ex.code)}</b> — ${esc(ex.title)}${exists ? '<span class="tag" style="background:#fef9c3;color:#a16207">আগেরটা replace হবে</span>' : '<span class="tag">নতুন</span>'}${(() => { const nb = ex.rows.filter(r => r.qb).length; return nb ? ` <span class="tag">🌐 English + বাংলা${nb < ex.rows.length ? ' (' + nb + '/' + ex.rows.length + ')' : ''}</span>` : ''; })()}<br>
           <small>${ex.rows.length} questions · ${esc(ex.minutes)} min · negative ${esc(ex.neg)} · ${ex.open === 'NO' ? 'closed' : 'open'}</small><br>
           <small>Topics: ${Object.entries(tc).map(([k, v]) => esc(k) + ' (' + v + ')').join(', ')}</small><br><small>${esc(rulesTxt(ex.ov))}</small><br><small class="muted">Q1: ${esc(ex.rows[0].q.slice(0, 80))}</small></div>`;
       }).join('') + '<button class="btn full" onclick="publishUp()">✅ Publish — exam ready করো</button>';
@@ -1472,27 +1512,41 @@ INTRO: প্রতিটা প্রশ্নের ১টাই সঠিক 
 
 ## Q1
 TOPIC: Kinematics
-Q: একটি বস্তু $u = 0$ থেকে $a = 2\\,\\text{m/s}^2$ ত্বরণে চলে। $5\\,\\text{s}$ পরে বেগ কত?
+Q: A body starts from rest ($u = 0$) with acceleration $a = 2\\,\\text{m/s}^2$. What is its velocity after $5\\,\\text{s}$?
 A) $5\\,\\text{m/s}$
 B) $10\\,\\text{m/s}$
 C) $15\\,\\text{m/s}$
 D) $20\\,\\text{m/s}$
 ANS: B
 SOL: $v = u + at = 0 + 2 \\times 5 = 10\\,\\text{m/s}$
+[BN]
+Q: একটি বস্তু স্থির অবস্থা ($u = 0$) থেকে $a = 2\\,\\text{m/s}^2$ ত্বরণে চলে। $5\\,\\text{s}$ পরে বেগ কত?
+A) $5\\,\\text{m/s}$
+B) $10\\,\\text{m/s}$
+C) $15\\,\\text{m/s}$
+D) $20\\,\\text{m/s}$
+SOL: $v = u + at = 0 + 2 \\times 5 = 10\\,\\text{m/s}$
 
 ## Q2
-TOPIC: Calculus
-Q: $\\displaystyle \\int_0^1 2x\\,dx = $ ?
-A) $0$
-B) $\\frac{1}{2}$
-C) $1$
-D) $2$
+TOPIC: Chemical Bonding
+Q: Which of the following is a polar molecule?
+A) $\\text{CO}_2$
+B) $\\text{CH}_4$
+C) $\\text{H}_2\\text{O}$
+D) None of these
 ANS: C
-SOL: $\\int_0^1 2x\\,dx = \\left[x^2\\right]_0^1 = 1 - 0 = 1$`;
+SOL: $\\text{H}_2\\text{O}$ is bent, so its bond dipoles do not cancel; $\\text{CO}_2$ is linear and $\\text{CH}_4$ is symmetric.
+[BN]
+Q: নিচের কোনটি পোলার অণু?
+A) $\\text{CO}_2$
+B) $\\text{CH}_4$
+C) $\\text{H}_2\\text{O}$
+D) কোনোটিই নয়
+SOL: $\\text{H}_2\\text{O}$ বাঁকা আকৃতির, তাই বন্ধনের ডাইপোল কাটাকাটি হয় না; $\\text{CO}_2$ রৈখিক আর $\\text{CH}_4$ প্রতিসম।`;
 
-const CSV_SAMPLE = `CODE,TITLE,MINUTES,NEG,OPEN,MAXATTEMPTS,GUEST,START,END,INTRO,Q,A,B,C,D,E,ANS,TOPIC,EXPLANATION
-PHY-CT1,"Physics Class Test 1",20,0.25,YES,1,NO,"","","প্রতিটা প্রশ্নের ১টাই সঠিক উত্তর। ভুল উত্তরে 0.25 কাটা যাবে।","একটি বস্তু $u = 0$ থেকে $a = 2\\,\\text{m/s}^2$ ত্বরণে চলে। $5\\,\\text{s}$ পরে বেগ কত?","$5\\,\\text{m/s}$","$10\\,\\text{m/s}$","$15\\,\\text{m/s}$","$20\\,\\text{m/s}$","",B,"Kinematics","$v = u + at = 0 + 2 \\times 5 = 10\\,\\text{m/s}$"
-PHY-CT1,"","","","","","","","","","$\\displaystyle \\int_0^1 2x\\,dx = $ ?","$0$","$\\frac{1}{2}$","$1$","$2$","",C,"Calculus","$\\int_0^1 2x\\,dx = \\left[x^2\\right]_0^1 = 1$"`;
+const CSV_SAMPLE = `CODE,TITLE,MINUTES,NEG,OPEN,MAXATTEMPTS,GUEST,START,END,INTRO,Q,A,B,C,D,E,ANS,TOPIC,EXPLANATION,Q_BN,A_BN,B_BN,C_BN,D_BN,E_BN,EXPLANATION_BN
+PHY-CT1,"Physics Class Test 1",20,0.25,YES,1,NO,"","","প্রতিটা প্রশ্নের ১টাই সঠিক উত্তর। ভুল উত্তরে 0.25 কাটা যাবে।","A body starts from rest ($u = 0$) with acceleration $a = 2\\,\\text{m/s}^2$. What is its velocity after $5\\,\\text{s}$?","$5\\,\\text{m/s}$","$10\\,\\text{m/s}$","$15\\,\\text{m/s}$","$20\\,\\text{m/s}$","",B,"Kinematics","$v = u + at = 0 + 2 \\times 5 = 10\\,\\text{m/s}$","একটি বস্তু স্থির অবস্থা ($u = 0$) থেকে $a = 2\\,\\text{m/s}^2$ ত্বরণে চলে। $5\\,\\text{s}$ পরে বেগ কত?","$5\\,\\text{m/s}$","$10\\,\\text{m/s}$","$15\\,\\text{m/s}$","$20\\,\\text{m/s}$","","$v = u + at = 0 + 2 \\times 5 = 10\\,\\text{m/s}$"
+PHY-CT1,"","","","","","","","","","Which of the following is a polar molecule?","$\\text{CO}_2$","$\\text{CH}_4$","$\\text{H}_2\\text{O}$","None of these","",C,"Chemical Bonding","$\\text{H}_2\\text{O}$ is bent, so its bond dipoles do not cancel; $\\text{CO}_2$ is linear and $\\text{CH}_4$ is symmetric.","নিচের কোনটি পোলার অণু?","$\\text{CO}_2$","$\\text{CH}_4$","$\\text{H}_2\\text{O}$","কোনোটিই নয়","","$\\text{H}_2\\text{O}$ বাঁকা আকৃতির, তাই বন্ধনের ডাইপোল কাটাকাটি হয় না; $\\text{CO}_2$ রৈখিক আর $\\text{CH}_4$ প্রতিসম।"`;
 
 const AI_COMMON = `You are an expert exam-paper formatter and subject teacher. I will give you RAW questions (copied from a book, PDF, photo text, Word file or my notes — maybe messy, maybe in Bengali, English or mixed). Convert them into the EXACT format below so I can paste it directly into my MCQ exam web app.
 
@@ -1507,10 +1561,11 @@ const AI_COMMON = `You are an expert exam-paper formatter and subject teacher. I
 - Start time: ?       (format YYYY-MM-DD HH:MM, 24-hour, Bangladesh time, e.g. 2026-11-20 10:00 ; empty = no start limit)
 - End time: ?         (same format; empty = no end limit)
 - Instructions shown before the exam starts: ?   (short; empty = none)
+- Languages: BOTH   (BOTH = every question in English AND Bengali; write EN or BN here for a single-language exam)
 
 ### RULES (follow ALL of them)
 1. Every question is MCQ with 2 to 5 options, labelled A, B, C, D, E in that order. Exactly ONE correct answer.
-2. Keep the question language exactly as given (Bengali stays Bengali). Do NOT translate. Fix only obvious typos/OCR errors; never change the meaning, numbers or units.
+2. LANGUAGES: if "Languages" is BOTH, every question needs an ENGLISH version (main) AND a BENGALI (বাংলা) version — question, every option and the solution. If the raw data has only one language, TRANSLATE accurately into the other (natural textbook Bengali / standard English terms used in Bangladesh HSC/SSC books). Both versions must have the SAME meaning, numbers, units, LaTeX, number of options and option ORDER (option A in English = option A in Bengali). Pure-math options are identical in both. Fix only obvious typos/OCR errors; never change the meaning. If Languages is EN or BN, write only that language (no Bengali block).
 3. ALL math, chemistry and physics notation in LaTeX:
    - inline: $...$   display (own line, big): $$...$$
    - NEVER use \\( \\) or \\[ \\]. Never use a bare $ for money — write "Tk" or "taka".
@@ -1527,10 +1582,10 @@ function aiPrompt(kind){
   if(kind === 'csv') return AI_COMMON + `
 
 ### OUTPUT FORMAT — CSV (comma separated, UTF-8)
-- First line EXACTLY: CODE,TITLE,MINUTES,NEG,OPEN,MAXATTEMPTS,GUEST,START,END,INTRO,Q,A,B,C,D,E,ANS,TOPIC,EXPLANATION
+- First line EXACTLY: CODE,TITLE,MINUTES,NEG,OPEN,MAXATTEMPTS,GUEST,START,END,INTRO,Q,A,B,C,D,E,ANS,TOPIC,EXPLANATION,Q_BN,A_BN,B_BN,C_BN,D_BN,E_BN,EXPLANATION_BN
 - One question per line. CODE on every line. TITLE, MINUTES, NEG, OPEN, MAXATTEMPTS, GUEST, START, END, INTRO only on the FIRST question line (empty "" on the rest).
-- Columns A–E = option texts (leave E, or D and E, empty if fewer options). ANS = a single letter A–E. EXPLANATION = the solution.
-- Wrap EVERY text field (TITLE, START, END, INTRO, Q, A–E, TOPIC, EXPLANATION) in double quotes "..." — even empty ones ("") — because LaTeX like \\, contains commas. Write an inner " as "". Put the whole question/solution on ONE line (no line breaks inside a field; use "; " instead).
+- Columns Q, A–E, EXPLANATION = ENGLISH version. Columns Q_BN, A_BN–E_BN, EXPLANATION_BN = BENGALI version of the same question (same option order; leave all _BN columns "" for a single-language exam). Leave E (and D) empty if fewer options. ANS = a single letter A–E.
+- Wrap EVERY text field (TITLE, START, END, INTRO, Q, A–E, TOPIC, EXPLANATION and all _BN columns) in double quotes "..." — even empty ones ("") — because LaTeX like \\, contains commas. Write an inner " as "". Put the whole question/solution on ONE line (no line breaks inside a field; use "; " instead).
 - Output ONLY one \`\`\`csv code block (nothing before it). After the block, optionally a short "⚠ CHECK" list.
 
 ### SAMPLE (copy this style exactly)
@@ -1550,6 +1605,11 @@ ${CSV_SAMPLE}
   A) <option>   B) <option>   ... each option on its OWN line, starting with the letter and ")"
   ANS: <one letter>
   SOL: <solution — may continue on the next lines>
+  [BN]          ← a line with only [BN], then the BENGALI version of the SAME question:
+  Q: <বাংলা প্রশ্ন>
+  A) … B) …     (same options, same order, in Bengali; pure math stays the same)
+  SOL: <বাংলা সমাধান>
+  (no TOPIC/ANS in the [BN] part. Single-language exam: leave out the [BN] part.)
 - Do not use bold/italic markdown (**, _) or bullet lists inside questions. No blank line inside one question except before the next "## Q".
 - Output ONLY one \`\`\`markdown code block (nothing before it). After the block, optionally a short "⚠ CHECK" list.
 
@@ -1590,6 +1650,15 @@ function readRules(raw, lab, errs){
 const rulesTxt = ov => !ov ? 'Rules: আগের মতো (file-এ নেই)' : 'Rules: ' + [ov.maxAttempts ? 'max ' + ov.maxAttempts + ' attempt' : 'attempt: global', ov.guest === 'yes' ? 'guest ✓' : ov.guest === 'no' ? 'guest ✗' : 'guest: global',
   ov.start || ov.end ? '🕒 ' + (ov.start ? ov.start.replace('T', ' ') : '…') + ' → ' + (ov.end ? ov.end.replace('T', ' ') : '…') : 'সময়-সীমা নেই', ov.intro ? 'instructions ✓' : 'instructions নেই'].join(' · ');
 
+/* বাংলা version check + row-এ বসানো. বাংলা option ফাঁকা থাকলে English দেখাবে (সংখ্যা/সূত্র হলে একই থাকে) */
+function bnErr(qb, ob, eb, n, row){
+  qb = String(qb || '').trim(); ob = (ob || []).map(x => String(x == null ? '' : x).trim()); eb = String(eb || '').trim();
+  if(!qb) return ob.some(Boolean) || eb ? 'বাংলা option/solution আছে কিন্তু বাংলা প্রশ্ন (Q_BN / [BN] Q:) নেই' : '';
+  if(ob.slice(n).some(Boolean)) return 'বাংলা option English option-এর চেয়ে বেশি';
+  row.qb = qb; row.ob = Array.from({length:n}, (_, i) => ob[i] || ''); row.eb = eb;
+  return '';
+}
+
 /* MD detection: "# EXAM:" line or "## Q" + "ANS:" lines. AI-র ```markdown fence থাকলেও চলবে */
 const isMD = t => /^\s*#\s*EXAM\s*:/mi.test(t) || (/^\s*##\s*Q\s*\d*/mi.test(t) && /^\s*ANS\s*:/mi.test(t));
 function parseMD(text){
@@ -1604,10 +1673,12 @@ function parseMD(text){
     else if(!q.q.trim()) errs.push(lab + ': Question (Q:) লেখা নেই');
     else if(o.length < 2 || o.some(x => !x)) errs.push(lab + ': Option ঠিক নেই (অন্তত ২টা A) B) …, মাঝে ফাঁকা নয়)');
     else if(q.ans < 0 || q.ans >= o.length) errs.push(lab + ': ANS ভুল ("' + q.ansRaw + '")');
-    else ex.rows.push({q:q.q.trim(), o, a:q.ans, t:q.t.trim() || 'General', e:q.e.trim()});
+    else { const row = {q:q.q.trim(), o, a:q.ans, t:q.t.trim() || 'General', e:q.e.trim()}, be = bnErr(q.qb, q.ob, q.eb, o.length, row);
+      if(be) errs.push(lab + ': ' + be); else ex.rows.push(row); }
     q = null; field = null;
   };
-  const add = (k, s) => { if(k === 'q') q.q += (q.q ? '\n' : '') + s; else if(k === 'e') q.e += (q.e ? '\n' : '') + s; else if(typeof k === 'number') q.o[k] += (q.o[k] ? '\n' : '') + s; };
+  const add = (k, s) => { const j = (a, x) => a + (a ? '\n' : '') + x;
+    if(k === 'q' || k === 'e' || k === 'qb' || k === 'eb') q[k] = j(q[k], s); else if(typeof k === 'number') q.o[k] = j(q.o[k], s); else if(/^b\d$/.test(k)) q.ob[+k[1]] = j(q.ob[+k[1]], s); };
   for(const raw of lines){
     const L = raw.trim();
     if(/^```/.test(L)) continue;                                   // code fence
@@ -1617,7 +1688,7 @@ function parseMD(text){
       if(!/^[A-Z0-9_-]{1,30}$/.test(c)){ errs.push('Exam code "' + m[1].trim() + '" ভুল — শুধু A-Z, 0-9, - _ (space নয়)'); ex = null; continue; }
       ex = exams[c] = exams[c] || {code:c, title:c, minutes:'10', neg:'0', open:'YES', rows:[], raw:{}}; qn = 0; field = null; continue;
     }
-    if(/^##\s*Q/i.test(L)){ finish(); qn++; q = {n:(L.match(/\d+/) || [qn])[0], q:'', o:[], ans:-1, ansRaw:'', t:'', e:''}; field = null; continue; }
+    if(/^##\s*Q/i.test(L)){ finish(); qn++; q = {n:(L.match(/\d+/) || [qn])[0], q:'', o:[], ans:-1, ansRaw:'', t:'', e:'', bn:false, qb:'', ob:[], eb:''}; field = null; continue; }
     if(!q && ex && (m = L.match(/^(MAXATTEMPTS|MAX ATTEMPTS|GUEST|START|END|INTRO)\s*:\s*(.*)$/i))){
       const k = m[1].toUpperCase().replace(' ', ''); ex.raw[k] = m[2].trim(); field = k === 'INTRO' ? 'intro' : null; continue;
     }
@@ -1628,19 +1699,20 @@ function parseMD(text){
     }
     if(!q && ex && field === 'intro'){ ex.raw.INTRO += (ex.raw.INTRO ? '\n' : '') + L; continue; }
     if(!q) continue;                                               // প্রশ্নের বাইরের লেখা (⚠ CHECK ইত্যাদি) বাদ
-    if((m = L.match(/^TOPIC\s*:\s*(.*)$/i))){ q.t = m[1]; field = null; continue; }
-    if((m = L.match(/^Q\s*[:.)]\s*(.*)$/i))){ q.q = m[1]; field = 'q'; continue; }
-    if((m = L.match(/^\(?([A-E])\s*[).]\s*(.*)$/))){ const i = 'ABCDE'.indexOf(m[1]); while(q.o.length < i) q.o.push(''); q.o[i] = m[2]; field = i; continue; }
-    if((m = L.match(/^(ANS|ANSWER)\s*:\s*\(?([A-Za-z]?)\)?/i))){ q.ansRaw = m[2]; q.ans = 'ABCDE'.indexOf(m[2].toUpperCase()); if(!m[2]) q.ans = -1; field = null; continue; }
-    if((m = L.match(/^(SOL|SOLUTION|EXPLANATION)\s*:\s*(.*)$/i))){ q.e = m[2]; field = 'e'; continue; }
-    if(!L){ if(field === 'q' || field === 'e') add(field, ''); continue; }
+    if(/^(\[\s*(BN|বাংলা|BANGLA|BENGALI)\s*\]|(BN|বাংলা|BANGLA|BENGALI)\s*:|-{2,}\s*(BN|বাংলা|BANGLA|BENGALI)\s*-{2,})$/i.test(L)){ q.bn = true; field = null; continue; }   // এরপর থেকে বাংলা version
+    if((m = L.match(/^TOPIC\s*:\s*(.*)$/i))){ if(!q.bn) q.t = m[1]; field = null; continue; }
+    if((m = L.match(/^Q\s*[:.)]\s*(.*)$/i))){ if(q.bn){ q.qb = m[1]; field = 'qb'; } else { q.q = m[1]; field = 'q'; } continue; }
+    if((m = L.match(/^\(?([A-E])\s*[).]\s*(.*)$/))){ const i = 'ABCDE'.indexOf(m[1]), arr = q.bn ? q.ob : q.o; while(arr.length < i) arr.push(''); arr[i] = m[2]; field = q.bn ? 'b' + i : i; continue; }
+    if((m = L.match(/^(ANS|ANSWER)\s*:\s*\(?([A-Za-z]?)\)?/i))){ if(q.bn){ field = null; continue; } q.ansRaw = m[2]; q.ans = 'ABCDE'.indexOf(m[2].toUpperCase()); if(!m[2]) q.ans = -1; field = null; continue; }
+    if((m = L.match(/^(SOL|SOLUTION|EXPLANATION)\s*:\s*(.*)$/i))){ if(q.bn){ q.eb = m[2]; field = 'eb'; } else { q.e = m[2]; field = 'e'; } continue; }
+    if(!L){ if(['q', 'e', 'qb', 'eb'].includes(field)) add(field, ''); continue; }
     if(field !== null) add(field, L);
   }
   finish();
   Object.values(exams).forEach(e => { e.ov = readRules(e.raw, e.code, errs); e.raw.INTRO != null && (e.ov.intro = e.ov.intro.replace(/\n+$/, '')); delete e.raw; });
   Object.values(exams).forEach(e => { if(!e.rows.length && !errs.length) errs.push(e.code + ': কোনো valid question পাওয়া যায়নি'); });
   if(!Object.keys(exams).length && !errs.length) errs.push('কোনো exam পাওয়া যায়নি — "# EXAM: CODE" লাইন আছে কিনা দেখো');
-  Object.values(exams).forEach(e => e.rows.forEach(r => { r.q = r.q.replace(/\n{3,}/g, '\n\n'); r.e = r.e.replace(/\n{3,}/g, '\n\n'); }));
+  Object.values(exams).forEach(e => e.rows.forEach(r => ['q', 'e', 'qb', 'eb'].forEach(k => { if(typeof r[k] === 'string') r[k] = r[k].replace(/\n{3,}/g, '\n\n'); })));
   return {errors:errs, exams};
 }
 
@@ -1897,18 +1969,20 @@ async function openEditor(code){
   try{
     const r = await (await fetch(CONFIG.SCRIPT_URL + '?action=exam&code=' + encodeURIComponent(code) + '&t=' + Date.now())).json();
     if(!r || !r.questions) throw 0;
-    EDX = {code, title:r.title, minutes:r.minutes, neg:r.neg, open:r.open !== false, msg:'', qs:r.questions.map(q => ({q:q.q, o:q.o.slice(), a:q.a, t:q.t, e:q.e}))};
+    EDX = {code, title:r.title, minutes:r.minutes, neg:r.neg, open:r.open !== false, msg:'', qs:r.questions.map(q => ({q:q.q, o:q.o.slice(), a:q.a, t:q.t, e:q.e, qb:q.qb || '', ob:(q.ob || []).slice(), eb:q.eb || ''}))};
   }catch(e){ EDX = null; upMsg = 'Exam load হয়নি'; }
   render();
 }
-const blankQ = () => ({q:'', o:['', '', '', ''], a:0, t:'General', e:''});
+const blankQ = () => ({q:'', o:['', '', '', ''], a:0, t:'General', e:'', qb:'', ob:[], eb:''});
+function eoptb(i, n, v){ const q = EDX.qs[i]; q.ob = q.ob || []; while(q.ob.length <= n) q.ob.push(''); q.ob[n] = v; edPrev(i); markDirtyEd(); }
 function eset(i, k, v){ EDX.qs[i][k] = v; edPrev(i); markDirtyEd(); }
 function eopt(i, n, v){ EDX.qs[i].o[n] = v; edPrev(i); markDirtyEd(); }
 function markDirtyEd(){ EDX.dirty = true; const m = document.getElementById('edmsg'); if(m) m.textContent = '● unsaved'; }
 function edPrev(i){
   const q = EDX.qs[i], el = document.getElementById('pv' + i);
   if(!el) return;
-  el.innerHTML = `<div style="font-weight:600">${esc(q.q)}</div>` + q.o.map((o, n) => o ? `<div>${LET[n]}. ${esc(o)}${n === q.a ? ' ✅' : ''}</div>` : '').join('') + (q.e ? `<div class="exp" style="margin-top:6px">💡 ${esc(q.e)}</div>` : '');
+  el.innerHTML = `<div style="font-weight:600">${esc(q.q)}</div>` + q.o.map((o, n) => o ? `<div>${LET[n]}. ${esc(o)}${n === q.a ? ' ✅' : ''}</div>` : '').join('') + (q.e ? `<div class="exp" style="margin-top:6px">💡 ${esc(q.e)}</div>` : '') +
+    (String(q.qb || '').trim() ? (b => `<div style="border-top:1px dashed var(--b);margin-top:8px;padding-top:6px"><small class="muted">🇧🇩 বাংলা</small><div style="font-weight:600">${esc(b.q)}</div>` + b.o.map((o, n) => o ? `<div>${LET[n]}. ${esc(o)}${n === q.a ? ' ✅' : ''}</div>` : '').join('') + (b.e ? `<div class="exp" style="margin-top:6px">💡 ${esc(b.e)}</div>` : '') + '</div>')(LQ(q, 'bn')) : '');
   mathify(el);
 }
 function edAdd(){ EDX.qs.push(blankQ()); markDirtyEd(); render(true); }
@@ -1950,6 +2024,10 @@ function vExamEditor(){
       <div class="row" style="margin:2px 0"><span><button class="btn sm ghost" onclick="edOpt(${i},true)">+ option</button> <button class="btn sm ghost" onclick="edOpt(${i},false)">− option</button></span><small class="muted">● = সঠিক উত্তর</small></div>
       <div class="g2"><input placeholder="Topic" value="${eA(q.t)}" oninput="eset(${i},'t',this.value)"></div>
       <textarea rows="3" placeholder="Explanation / solution (ঐচ্ছিক)" oninput="eset(${i},'e',this.value)">${escT(q.e)}</textarea>
+      <details class="bnx" ${String(q.qb || '').trim() ? 'open' : ''}><summary>🇧🇩 বাংলা version ${String(q.qb || '').trim() ? '✓' : '(নেই — ঐচ্ছিক)'}</summary>
+        <textarea rows="2" placeholder="বাংলা প্রশ্ন" oninput="eset(${i},'qb',this.value)">${escT(q.qb || '')}</textarea>
+        ${q.o.map((o, n) => `<div class="oe"><b>${LET[n]}</b><input type="text" value="${eA((q.ob || [])[n] || '')}" placeholder="বাংলা option ${LET[n]} (ফাঁকা = English-টাই দেখাবে)" oninput="eoptb(${i},${n},this.value)"></div>`).join('')}
+        <textarea rows="2" placeholder="বাংলা solution (ঐচ্ছিক)" oninput="eset(${i},'eb',this.value)">${escT(q.eb || '')}</textarea></details>
       <div class="pv" id="pv${i}"></div></div>`).join('');
   return head + qs + `<button class="btn ghost full" onclick="edAdd()">+ Add question</button>
     ${x.msg ? `<div class="warn">${esc(x.msg)}</div>` : ''}
@@ -1962,7 +2040,10 @@ async function saveExam(){
     if(!String(q.q).trim()) errs.push('Q' + (i + 1) + ': question লেখা নেই');
     else if(o.length < 2 || o.some(s => !s)) errs.push('Q' + (i + 1) + ': অন্তত ২টা option লাগবে (মাঝে ফাঁকা নয়)');
     else if(q.a >= o.length) errs.push('Q' + (i + 1) + ': সঠিক উত্তর খালি option-এ');
-    return {q:String(q.q).trim(), o, a:q.a, t:String(q.t).trim() || 'General', e:String(q.e || '').trim()};
+    const row = {q:String(q.q).trim(), o, a:q.a, t:String(q.t).trim() || 'General', e:String(q.e || '').trim()};
+    const be = bnErr(q.qb, (q.ob || []).slice(0, o.length), q.eb, o.length, row);
+    if(be) errs.push('Q' + (i + 1) + ': ' + be);
+    return row;
   });
   if(errs.length){ x.msg = errs.slice(0, 8).join(' · '); return render(true); }
   const old = x.code, nc = String(x.newCode == null ? old : x.newCode).trim().toUpperCase();

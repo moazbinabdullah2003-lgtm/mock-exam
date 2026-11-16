@@ -14,27 +14,41 @@ INTRO: প্রতিটা প্রশ্নের ১টাই সঠিক 
 
 ## Q1
 TOPIC: Kinematics
-Q: একটি বস্তু $u = 0$ থেকে $a = 2\\,\\text{m/s}^2$ ত্বরণে চলে। $5\\,\\text{s}$ পরে বেগ কত?
+Q: A body starts from rest ($u = 0$) with acceleration $a = 2\\,\\text{m/s}^2$. What is its velocity after $5\\,\\text{s}$?
 A) $5\\,\\text{m/s}$
 B) $10\\,\\text{m/s}$
 C) $15\\,\\text{m/s}$
 D) $20\\,\\text{m/s}$
 ANS: B
 SOL: $v = u + at = 0 + 2 \\times 5 = 10\\,\\text{m/s}$
+[BN]
+Q: একটি বস্তু স্থির অবস্থা ($u = 0$) থেকে $a = 2\\,\\text{m/s}^2$ ত্বরণে চলে। $5\\,\\text{s}$ পরে বেগ কত?
+A) $5\\,\\text{m/s}$
+B) $10\\,\\text{m/s}$
+C) $15\\,\\text{m/s}$
+D) $20\\,\\text{m/s}$
+SOL: $v = u + at = 0 + 2 \\times 5 = 10\\,\\text{m/s}$
 
 ## Q2
-TOPIC: Calculus
-Q: $\\displaystyle \\int_0^1 2x\\,dx = $ ?
-A) $0$
-B) $\\frac{1}{2}$
-C) $1$
-D) $2$
+TOPIC: Chemical Bonding
+Q: Which of the following is a polar molecule?
+A) $\\text{CO}_2$
+B) $\\text{CH}_4$
+C) $\\text{H}_2\\text{O}$
+D) None of these
 ANS: C
-SOL: $\\int_0^1 2x\\,dx = \\left[x^2\\right]_0^1 = 1 - 0 = 1$`;
+SOL: $\\text{H}_2\\text{O}$ is bent, so its bond dipoles do not cancel; $\\text{CO}_2$ is linear and $\\text{CH}_4$ is symmetric.
+[BN]
+Q: নিচের কোনটি পোলার অণু?
+A) $\\text{CO}_2$
+B) $\\text{CH}_4$
+C) $\\text{H}_2\\text{O}$
+D) কোনোটিই নয়
+SOL: $\\text{H}_2\\text{O}$ বাঁকা আকৃতির, তাই বন্ধনের ডাইপোল কাটাকাটি হয় না; $\\text{CO}_2$ রৈখিক আর $\\text{CH}_4$ প্রতিসম।`;
 
-const CSV_SAMPLE = `CODE,TITLE,MINUTES,NEG,OPEN,MAXATTEMPTS,GUEST,START,END,INTRO,Q,A,B,C,D,E,ANS,TOPIC,EXPLANATION
-PHY-CT1,"Physics Class Test 1",20,0.25,YES,1,NO,"","","প্রতিটা প্রশ্নের ১টাই সঠিক উত্তর। ভুল উত্তরে 0.25 কাটা যাবে।","একটি বস্তু $u = 0$ থেকে $a = 2\\,\\text{m/s}^2$ ত্বরণে চলে। $5\\,\\text{s}$ পরে বেগ কত?","$5\\,\\text{m/s}$","$10\\,\\text{m/s}$","$15\\,\\text{m/s}$","$20\\,\\text{m/s}$","",B,"Kinematics","$v = u + at = 0 + 2 \\times 5 = 10\\,\\text{m/s}$"
-PHY-CT1,"","","","","","","","","","$\\displaystyle \\int_0^1 2x\\,dx = $ ?","$0$","$\\frac{1}{2}$","$1$","$2$","",C,"Calculus","$\\int_0^1 2x\\,dx = \\left[x^2\\right]_0^1 = 1$"`;
+const CSV_SAMPLE = `CODE,TITLE,MINUTES,NEG,OPEN,MAXATTEMPTS,GUEST,START,END,INTRO,Q,A,B,C,D,E,ANS,TOPIC,EXPLANATION,Q_BN,A_BN,B_BN,C_BN,D_BN,E_BN,EXPLANATION_BN
+PHY-CT1,"Physics Class Test 1",20,0.25,YES,1,NO,"","","প্রতিটা প্রশ্নের ১টাই সঠিক উত্তর। ভুল উত্তরে 0.25 কাটা যাবে।","A body starts from rest ($u = 0$) with acceleration $a = 2\\,\\text{m/s}^2$. What is its velocity after $5\\,\\text{s}$?","$5\\,\\text{m/s}$","$10\\,\\text{m/s}$","$15\\,\\text{m/s}$","$20\\,\\text{m/s}$","",B,"Kinematics","$v = u + at = 0 + 2 \\times 5 = 10\\,\\text{m/s}$","একটি বস্তু স্থির অবস্থা ($u = 0$) থেকে $a = 2\\,\\text{m/s}^2$ ত্বরণে চলে। $5\\,\\text{s}$ পরে বেগ কত?","$5\\,\\text{m/s}$","$10\\,\\text{m/s}$","$15\\,\\text{m/s}$","$20\\,\\text{m/s}$","","$v = u + at = 0 + 2 \\times 5 = 10\\,\\text{m/s}$"
+PHY-CT1,"","","","","","","","","","Which of the following is a polar molecule?","$\\text{CO}_2$","$\\text{CH}_4$","$\\text{H}_2\\text{O}$","None of these","",C,"Chemical Bonding","$\\text{H}_2\\text{O}$ is bent, so its bond dipoles do not cancel; $\\text{CO}_2$ is linear and $\\text{CH}_4$ is symmetric.","নিচের কোনটি পোলার অণু?","$\\text{CO}_2$","$\\text{CH}_4$","$\\text{H}_2\\text{O}$","কোনোটিই নয়","","$\\text{H}_2\\text{O}$ বাঁকা আকৃতির, তাই বন্ধনের ডাইপোল কাটাকাটি হয় না; $\\text{CO}_2$ রৈখিক আর $\\text{CH}_4$ প্রতিসম।"`;
 
 const AI_COMMON = `You are an expert exam-paper formatter and subject teacher. I will give you RAW questions (copied from a book, PDF, photo text, Word file or my notes — maybe messy, maybe in Bengali, English or mixed). Convert them into the EXACT format below so I can paste it directly into my MCQ exam web app.
 
@@ -49,10 +63,11 @@ const AI_COMMON = `You are an expert exam-paper formatter and subject teacher. I
 - Start time: ?       (format YYYY-MM-DD HH:MM, 24-hour, Bangladesh time, e.g. 2026-11-20 10:00 ; empty = no start limit)
 - End time: ?         (same format; empty = no end limit)
 - Instructions shown before the exam starts: ?   (short; empty = none)
+- Languages: BOTH   (BOTH = every question in English AND Bengali; write EN or BN here for a single-language exam)
 
 ### RULES (follow ALL of them)
 1. Every question is MCQ with 2 to 5 options, labelled A, B, C, D, E in that order. Exactly ONE correct answer.
-2. Keep the question language exactly as given (Bengali stays Bengali). Do NOT translate. Fix only obvious typos/OCR errors; never change the meaning, numbers or units.
+2. LANGUAGES: if "Languages" is BOTH, every question needs an ENGLISH version (main) AND a BENGALI (বাংলা) version — question, every option and the solution. If the raw data has only one language, TRANSLATE accurately into the other (natural textbook Bengali / standard English terms used in Bangladesh HSC/SSC books). Both versions must have the SAME meaning, numbers, units, LaTeX, number of options and option ORDER (option A in English = option A in Bengali). Pure-math options are identical in both. Fix only obvious typos/OCR errors; never change the meaning. If Languages is EN or BN, write only that language (no Bengali block).
 3. ALL math, chemistry and physics notation in LaTeX:
    - inline: $...$   display (own line, big): $$...$$
    - NEVER use \\( \\) or \\[ \\]. Never use a bare $ for money — write "Tk" or "taka".
@@ -69,10 +84,10 @@ function aiPrompt(kind){
   if(kind === 'csv') return AI_COMMON + `
 
 ### OUTPUT FORMAT — CSV (comma separated, UTF-8)
-- First line EXACTLY: CODE,TITLE,MINUTES,NEG,OPEN,MAXATTEMPTS,GUEST,START,END,INTRO,Q,A,B,C,D,E,ANS,TOPIC,EXPLANATION
+- First line EXACTLY: CODE,TITLE,MINUTES,NEG,OPEN,MAXATTEMPTS,GUEST,START,END,INTRO,Q,A,B,C,D,E,ANS,TOPIC,EXPLANATION,Q_BN,A_BN,B_BN,C_BN,D_BN,E_BN,EXPLANATION_BN
 - One question per line. CODE on every line. TITLE, MINUTES, NEG, OPEN, MAXATTEMPTS, GUEST, START, END, INTRO only on the FIRST question line (empty "" on the rest).
-- Columns A–E = option texts (leave E, or D and E, empty if fewer options). ANS = a single letter A–E. EXPLANATION = the solution.
-- Wrap EVERY text field (TITLE, START, END, INTRO, Q, A–E, TOPIC, EXPLANATION) in double quotes "..." — even empty ones ("") — because LaTeX like \\, contains commas. Write an inner " as "". Put the whole question/solution on ONE line (no line breaks inside a field; use "; " instead).
+- Columns Q, A–E, EXPLANATION = ENGLISH version. Columns Q_BN, A_BN–E_BN, EXPLANATION_BN = BENGALI version of the same question (same option order; leave all _BN columns "" for a single-language exam). Leave E (and D) empty if fewer options. ANS = a single letter A–E.
+- Wrap EVERY text field (TITLE, START, END, INTRO, Q, A–E, TOPIC, EXPLANATION and all _BN columns) in double quotes "..." — even empty ones ("") — because LaTeX like \\, contains commas. Write an inner " as "". Put the whole question/solution on ONE line (no line breaks inside a field; use "; " instead).
 - Output ONLY one \`\`\`csv code block (nothing before it). After the block, optionally a short "⚠ CHECK" list.
 
 ### SAMPLE (copy this style exactly)
@@ -92,6 +107,11 @@ ${CSV_SAMPLE}
   A) <option>   B) <option>   ... each option on its OWN line, starting with the letter and ")"
   ANS: <one letter>
   SOL: <solution — may continue on the next lines>
+  [BN]          ← a line with only [BN], then the BENGALI version of the SAME question:
+  Q: <বাংলা প্রশ্ন>
+  A) … B) …     (same options, same order, in Bengali; pure math stays the same)
+  SOL: <বাংলা সমাধান>
+  (no TOPIC/ANS in the [BN] part. Single-language exam: leave out the [BN] part.)
 - Do not use bold/italic markdown (**, _) or bullet lists inside questions. No blank line inside one question except before the next "## Q".
 - Output ONLY one \`\`\`markdown code block (nothing before it). After the block, optionally a short "⚠ CHECK" list.
 
@@ -132,6 +152,15 @@ function readRules(raw, lab, errs){
 const rulesTxt = ov => !ov ? 'Rules: আগের মতো (file-এ নেই)' : 'Rules: ' + [ov.maxAttempts ? 'max ' + ov.maxAttempts + ' attempt' : 'attempt: global', ov.guest === 'yes' ? 'guest ✓' : ov.guest === 'no' ? 'guest ✗' : 'guest: global',
   ov.start || ov.end ? '🕒 ' + (ov.start ? ov.start.replace('T', ' ') : '…') + ' → ' + (ov.end ? ov.end.replace('T', ' ') : '…') : 'সময়-সীমা নেই', ov.intro ? 'instructions ✓' : 'instructions নেই'].join(' · ');
 
+/* বাংলা version check + row-এ বসানো. বাংলা option ফাঁকা থাকলে English দেখাবে (সংখ্যা/সূত্র হলে একই থাকে) */
+function bnErr(qb, ob, eb, n, row){
+  qb = String(qb || '').trim(); ob = (ob || []).map(x => String(x == null ? '' : x).trim()); eb = String(eb || '').trim();
+  if(!qb) return ob.some(Boolean) || eb ? 'বাংলা option/solution আছে কিন্তু বাংলা প্রশ্ন (Q_BN / [BN] Q:) নেই' : '';
+  if(ob.slice(n).some(Boolean)) return 'বাংলা option English option-এর চেয়ে বেশি';
+  row.qb = qb; row.ob = Array.from({length:n}, (_, i) => ob[i] || ''); row.eb = eb;
+  return '';
+}
+
 /* MD detection: "# EXAM:" line or "## Q" + "ANS:" lines. AI-র ```markdown fence থাকলেও চলবে */
 const isMD = t => /^\s*#\s*EXAM\s*:/mi.test(t) || (/^\s*##\s*Q\s*\d*/mi.test(t) && /^\s*ANS\s*:/mi.test(t));
 function parseMD(text){
@@ -146,10 +175,12 @@ function parseMD(text){
     else if(!q.q.trim()) errs.push(lab + ': Question (Q:) লেখা নেই');
     else if(o.length < 2 || o.some(x => !x)) errs.push(lab + ': Option ঠিক নেই (অন্তত ২টা A) B) …, মাঝে ফাঁকা নয়)');
     else if(q.ans < 0 || q.ans >= o.length) errs.push(lab + ': ANS ভুল ("' + q.ansRaw + '")');
-    else ex.rows.push({q:q.q.trim(), o, a:q.ans, t:q.t.trim() || 'General', e:q.e.trim()});
+    else { const row = {q:q.q.trim(), o, a:q.ans, t:q.t.trim() || 'General', e:q.e.trim()}, be = bnErr(q.qb, q.ob, q.eb, o.length, row);
+      if(be) errs.push(lab + ': ' + be); else ex.rows.push(row); }
     q = null; field = null;
   };
-  const add = (k, s) => { if(k === 'q') q.q += (q.q ? '\n' : '') + s; else if(k === 'e') q.e += (q.e ? '\n' : '') + s; else if(typeof k === 'number') q.o[k] += (q.o[k] ? '\n' : '') + s; };
+  const add = (k, s) => { const j = (a, x) => a + (a ? '\n' : '') + x;
+    if(k === 'q' || k === 'e' || k === 'qb' || k === 'eb') q[k] = j(q[k], s); else if(typeof k === 'number') q.o[k] = j(q.o[k], s); else if(/^b\d$/.test(k)) q.ob[+k[1]] = j(q.ob[+k[1]], s); };
   for(const raw of lines){
     const L = raw.trim();
     if(/^```/.test(L)) continue;                                   // code fence
@@ -159,7 +190,7 @@ function parseMD(text){
       if(!/^[A-Z0-9_-]{1,30}$/.test(c)){ errs.push('Exam code "' + m[1].trim() + '" ভুল — শুধু A-Z, 0-9, - _ (space নয়)'); ex = null; continue; }
       ex = exams[c] = exams[c] || {code:c, title:c, minutes:'10', neg:'0', open:'YES', rows:[], raw:{}}; qn = 0; field = null; continue;
     }
-    if(/^##\s*Q/i.test(L)){ finish(); qn++; q = {n:(L.match(/\d+/) || [qn])[0], q:'', o:[], ans:-1, ansRaw:'', t:'', e:''}; field = null; continue; }
+    if(/^##\s*Q/i.test(L)){ finish(); qn++; q = {n:(L.match(/\d+/) || [qn])[0], q:'', o:[], ans:-1, ansRaw:'', t:'', e:'', bn:false, qb:'', ob:[], eb:''}; field = null; continue; }
     if(!q && ex && (m = L.match(/^(MAXATTEMPTS|MAX ATTEMPTS|GUEST|START|END|INTRO)\s*:\s*(.*)$/i))){
       const k = m[1].toUpperCase().replace(' ', ''); ex.raw[k] = m[2].trim(); field = k === 'INTRO' ? 'intro' : null; continue;
     }
@@ -170,19 +201,20 @@ function parseMD(text){
     }
     if(!q && ex && field === 'intro'){ ex.raw.INTRO += (ex.raw.INTRO ? '\n' : '') + L; continue; }
     if(!q) continue;                                               // প্রশ্নের বাইরের লেখা (⚠ CHECK ইত্যাদি) বাদ
-    if((m = L.match(/^TOPIC\s*:\s*(.*)$/i))){ q.t = m[1]; field = null; continue; }
-    if((m = L.match(/^Q\s*[:.)]\s*(.*)$/i))){ q.q = m[1]; field = 'q'; continue; }
-    if((m = L.match(/^\(?([A-E])\s*[).]\s*(.*)$/))){ const i = 'ABCDE'.indexOf(m[1]); while(q.o.length < i) q.o.push(''); q.o[i] = m[2]; field = i; continue; }
-    if((m = L.match(/^(ANS|ANSWER)\s*:\s*\(?([A-Za-z]?)\)?/i))){ q.ansRaw = m[2]; q.ans = 'ABCDE'.indexOf(m[2].toUpperCase()); if(!m[2]) q.ans = -1; field = null; continue; }
-    if((m = L.match(/^(SOL|SOLUTION|EXPLANATION)\s*:\s*(.*)$/i))){ q.e = m[2]; field = 'e'; continue; }
-    if(!L){ if(field === 'q' || field === 'e') add(field, ''); continue; }
+    if(/^(\[\s*(BN|বাংলা|BANGLA|BENGALI)\s*\]|(BN|বাংলা|BANGLA|BENGALI)\s*:|-{2,}\s*(BN|বাংলা|BANGLA|BENGALI)\s*-{2,})$/i.test(L)){ q.bn = true; field = null; continue; }   // এরপর থেকে বাংলা version
+    if((m = L.match(/^TOPIC\s*:\s*(.*)$/i))){ if(!q.bn) q.t = m[1]; field = null; continue; }
+    if((m = L.match(/^Q\s*[:.)]\s*(.*)$/i))){ if(q.bn){ q.qb = m[1]; field = 'qb'; } else { q.q = m[1]; field = 'q'; } continue; }
+    if((m = L.match(/^\(?([A-E])\s*[).]\s*(.*)$/))){ const i = 'ABCDE'.indexOf(m[1]), arr = q.bn ? q.ob : q.o; while(arr.length < i) arr.push(''); arr[i] = m[2]; field = q.bn ? 'b' + i : i; continue; }
+    if((m = L.match(/^(ANS|ANSWER)\s*:\s*\(?([A-Za-z]?)\)?/i))){ if(q.bn){ field = null; continue; } q.ansRaw = m[2]; q.ans = 'ABCDE'.indexOf(m[2].toUpperCase()); if(!m[2]) q.ans = -1; field = null; continue; }
+    if((m = L.match(/^(SOL|SOLUTION|EXPLANATION)\s*:\s*(.*)$/i))){ if(q.bn){ q.eb = m[2]; field = 'eb'; } else { q.e = m[2]; field = 'e'; } continue; }
+    if(!L){ if(['q', 'e', 'qb', 'eb'].includes(field)) add(field, ''); continue; }
     if(field !== null) add(field, L);
   }
   finish();
   Object.values(exams).forEach(e => { e.ov = readRules(e.raw, e.code, errs); e.raw.INTRO != null && (e.ov.intro = e.ov.intro.replace(/\n+$/, '')); delete e.raw; });
   Object.values(exams).forEach(e => { if(!e.rows.length && !errs.length) errs.push(e.code + ': কোনো valid question পাওয়া যায়নি'); });
   if(!Object.keys(exams).length && !errs.length) errs.push('কোনো exam পাওয়া যায়নি — "# EXAM: CODE" লাইন আছে কিনা দেখো');
-  Object.values(exams).forEach(e => e.rows.forEach(r => { r.q = r.q.replace(/\n{3,}/g, '\n\n'); r.e = r.e.replace(/\n{3,}/g, '\n\n'); }));
+  Object.values(exams).forEach(e => e.rows.forEach(r => ['q', 'e', 'qb', 'eb'].forEach(k => { if(typeof r[k] === 'string') r[k] = r[k].replace(/\n{3,}/g, '\n\n'); })));
   return {errors:errs, exams};
 }
 

@@ -173,9 +173,10 @@ async function startCode(){
   startRun(c, 'full');
 }
 const RUNKEY = (sid, exam, mode) => norm(sid) + '_' + exam + '_' + mode;
-function startRun(exam, mode, idxs){
+function startRun(exam, mode, idxs, lang){
   const e = EXAMS[exam];
   applyOv(e, exam);
+  if(isBi(e) && !lang){ LANGASK = {exam, mode, idxs}; return render(true); }   // আগে ভাষা বেছে নাও
   let order = idxs && idxs.length ? idxs.slice() : e.questions.map((_, i) => i);
   /* সবসময় shuffle (settings দিয়ে বন্ধ করা যায় না): প্রতি attempt-এ question order আর option order নতুন করে এলোমেলো।
      একই student-এর আগের attempt-এর সাথে question order হুবহু এক হলে আবার shuffle করা হয়। */
@@ -193,7 +194,7 @@ function startRun(exam, mode, idxs){
   });
   const perQ = e.minutes * 60 / e.questions.length;
   const dur = mode === 'mistakes' ? Math.max(60, Math.ceil(order.length * perQ)) : e.minutes * 60;
-  RUN = {sid:SESS.sid, name:SESS.name, exam, mode, order, op, ans:{}, secs:{}, cur:0, start:Date.now(), dur, last:Date.now()};
+  RUN = {sid:SESS.sid, name:SESS.name, exam, mode, order, op, ans:{}, secs:{}, cur:0, start:Date.now(), dur, last:Date.now(), lang:lang || 'en'};
   LS.set('mq_run', RUN); confirming = false; view = 'quiz'; render(); startTimer();
 }
 function retake(exam, mode){

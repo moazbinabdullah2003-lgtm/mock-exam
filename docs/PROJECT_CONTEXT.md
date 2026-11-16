@@ -98,7 +98,7 @@ All via the one `/exec` URL.
 
 | Method | Params | Auth | Result |
 |---|---|---|---|
-| GET | `action=exam&code=X` | none | `{title,minutes,neg,open,shuffle:true,questions:[{q,o[],a,t,e}]}` or `{error:'notfound'}` |
+| GET | `action=exam&code=X` | none | `{title,minutes,neg,open,shuffle:true,questions:[{q,o[],a,t,e, qb?,ob[]?,eb?}]}` (qb/ob/eb = বাংলা version, only when Q_BN filled) or `{error:'notfound'}` |
 | GET | `action=settings` | none | `{ok:true,cfg:{…}}` — **public** settings JSON (theme/brand/texts/rules/access/exams) |
 | GET | `action=login&sid&pin` | none | `{ok:true,name}` or `{ok:false,reason:'badlogin'|'blocked'}` — roster check; roster entry must exist, have a non-empty password, match, and not be blocked. (field is still called `pin`; UI says "Password") |
 | GET | `action=tlogin&key=PASS` | — | `{ok:bool}` teacher password check |
@@ -224,12 +224,13 @@ UI/visual checks still use the built-in browser pane + `tools/browser_fake_backe
 
 ## 12. Status, open items, backlog (2026-11-16)
 
-**Working & deployed (2026-11-16, backend Version 6):** everything in §1–§9 plus this session's work:
+**Working & deployed (2026-11-16, backend Version 7):** everything in §1–§9 plus this session's work:
 - Login choose screen (Student / Guest / Teacher); guest = name + exam code.
 - Teacher-side: full **student profile** (`07a`), **🎓 Test student** one-click switch (`asTestStudent`), **exam code rename** (backend `rename`, history kept), **per-exam analytics** (`10a`), **⏱ time analytics** everywhere (`07b`), **📋 Copy for AI** (`09a`).
 - Quiz: keyboard shortcuts (1–N, Enter, ← →), options numbered 1–N; per-question time saved.
 - UI redesign (§4b): brand Muaz's Classroom, hero login, big tiles, collapsible folds, animation, layout/style controls, **18 theme presets with a preview gallery**.
 - **🔬 Science themes (2026-11-16):** 9 new full-look presets (Chalkboard, Blueprint, Lab Notebook, Periodic Table, Quantum Dark, DNA Bio, Circuit Board, Graph Paper, Science Mix) with background symbol patterns drawn as SVG in code (`02b-motif.js`, no images). Settings → Theme: gallery split into Science / Color; controls for symbol type, color (main/text), intensity, size, show during exam (default off), big login-title symbol. Old full-look presets set `motif:'none'`; colour-only presets keep the current motif.
+- **🌐 Bilingual exams (2026-11-16, backend schema change, backup 2026-11-16_165036 taken first):** every question can have an English (Q/A–E/EXPLANATION) and a বাংলা version (Q_BN/A_BN–E_BN/EXPLANATION_BN; MD: a `[BN]` block after SOL). Student picks the language ONCE before a bilingual exam starts (`LANGASK` popup, `RUN.lang`, remembered in `mq_lang`); quiz shows that language; result review starts in that language with an English/বাংলা switch. Missing Bengali option/solution falls back to English. Exam editor has a "🇧🇩 বাংলা version" section per question (edit keeps Bengali). AI prompts ask for BOTH languages (translate if raw has one). Teacher analytics/copy show English. Attempt `lang` is kept locally only (not a backend column).
 - **🤖 AI exam prompt (2026-11-16):** Exams tab → "AI দিয়ে question set বানাও": copy a full prompt (MD + LaTeX ⭐ or CSV) with rules + sample; teacher fills EXAM INFO + raw questions, gives it to any AI, pastes the answer into the upload box. Upload box now accepts **Markdown + LaTeX** (`# EXAM:` / `## Q1` / `Q:` / `A)` / `ANS:` / `SOL:`) as well as CSV. CSV prompt quotes every text field (LaTeX `\,` has commas). Upload preview colours now follow the theme. **Exam rules in the same file**: MAXATTEMPTS / GUEST (YES/NO) / START / END (`YYYY-MM-DD HH:MM`, date-only END = 23:59) / INTRO — saved into settings `exams[code]` on Publish (only if the file has any of these keys), shown in the upload preview.
 - **🧱 Colorful boxes (2026-11-16):** box style Plain / Tint / Rainbow (each box a different palette color) / Bold (filled tiles + icons), 3 extra palette colors, symbol texture inside cards/tiles/choices (fades into a corner; hidden during the exam like the background). Science presets use them; old full-look presets reset to plain.
 - Verified: tests 58 backend + 61 frontend; `tools/health.py` ALL GOOD; each feature looked at in the browser pane with the fake backend. NOT yet done by Claude on the live site: a full test-student exam end-to-end after the redesign (do it at the start of the next session if asked).

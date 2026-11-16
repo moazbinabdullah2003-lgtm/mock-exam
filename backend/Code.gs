@@ -4,7 +4,8 @@ const TEACHER_PASS = 'teacher123';
 const pass_ = () => PropertiesService.getScriptProperties().getProperty('TPASS') || TEACHER_PASS;
 
 const HEAD  = ['Timestamp','SID','NAME','EXAM','AID','MODE','SCORE','TOTAL','SECS','DETAILS'];
-const QHEAD = ['CODE','TITLE','MINUTES','NEG','OPEN','Q','A','B','C','D','E','ANS','TOPIC','EXPLANATION'];
+const QHEAD = ['CODE','TITLE','MINUTES','NEG','OPEN','Q','A','B','C','D','E','ANS','TOPIC','EXPLANATION',
+               'Q_BN','A_BN','B_BN','C_BN','D_BN','E_BN','EXPLANATION_BN'];   // _BN = বাংলা version (ঐচ্ছিক)
 
 function ss_() {
   const props = PropertiesService.getScriptProperties();
@@ -33,7 +34,7 @@ function qsheet_() {
   let sh = ss.getSheetByName('Questions');
   if (!sh) {
     sh = ss.insertSheet('Questions');
-    sh.getRange('A:N').setNumberFormat('@'); // সব text, যাতে paste করলে বদলে না যায়
+    sh.getRange('A:U').setNumberFormat('@'); // সব text, যাতে paste করলে বদলে না যায়
     sh.appendRow(QHEAD);
     sh.appendRow(['DEMO1','Demo Mock Test','5','0','YES','2x + 3 = 11 হলে x = ?','2','3','4','5','','C','Algebra','2x = 8, x = 4']);
     sh.appendRow(['DEMO1','','','','','sin 30° = ?','1/2','√3/2','1','0','','A','Trigonometry','sin 30° = 1/2']);
@@ -101,13 +102,23 @@ function getExam_(code) {
     String(r[ix('CODE')]).trim().toUpperCase() === code && String(r[ix('Q')]).trim() !== '');
   if (!rows.length) return { error: 'notfound' };
   const f = rows[0];
-  const questions = rows.map(r => ({
-    q: String(r[ix('Q')]),
-    o: ['A','B','C','D','E'].map(k => r[ix(k)]).filter(x => String(x).trim() !== '').map(String),
-    a: 'ABCDE'.indexOf(String(r[ix('ANS')]).trim().toUpperCase()),
-    t: String(r[ix('TOPIC')] || 'General').trim(),
-    e: String(r[ix('EXPLANATION')] || '')
-  }));
+  const cell = (r, k) => ix(k) < 0 || r[ix(k)] == null ? '' : String(r[ix(k)]);
+  const questions = rows.map(r => {
+    const keep = ['A','B','C','D','E'].filter(k => cell(r, k).trim() !== '');
+    const q = {
+      q: cell(r, 'Q'),
+      o: keep.map(k => cell(r, k)),
+      a: 'ABCDE'.indexOf(cell(r, 'ANS').trim().toUpperCase()),
+      t: (cell(r, 'TOPIC') || 'General').trim(),
+      e: cell(r, 'EXPLANATION')
+    };
+    if (cell(r, 'Q_BN').trim() !== '') {   // বাংলা version থাকলে
+      q.qb = cell(r, 'Q_BN');
+      q.ob = keep.map(k => cell(r, k + '_BN'));
+      q.eb = cell(r, 'EXPLANATION_BN');
+    }
+    return q;
+  });
   return {
     title: String(f[ix('TITLE')] || code),
     minutes: Number(f[ix('MINUTES')]) || 10,
@@ -140,7 +151,9 @@ function admin_(p) {
     const code = String(p.code || '').trim().toUpperCase();
     if (!code) return text('no code');
     const sh = qsheet_();
-    const body = sh.getDataRange().getValues().slice(1).map(r => r.slice(0, QHEAD.length));
+    // পুরোনো sheet-এ কম column থাকতে পারে: header অনুযায়ী নতুন QHEAD order-এ সাজাও (ফাঁকা = '')
+    const vals = sh.getDataRange().getValues(), oh = (vals[0] || []).map(x => String(x).trim().toUpperCase());
+    const body = vals.slice(1).map(r => QHEAD.map((k, i) => { const j = oh.indexOf(k); return j >= 0 ? r[j] : (oh.length ? '' : r[i]); }));
     const other = body.filter(r => String(r[0]).trim().toUpperCase() !== code);
     let out;
     if (p.action === 'upload') {

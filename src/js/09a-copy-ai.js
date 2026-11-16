@@ -29,7 +29,7 @@ function copyRes(n, btn){
   const r = LAST, e = r && EXAMS[r.exam]; if(!e) return;
   const isT = SESS && SESS.teacher, lv = isT ? 'full' : CFG.rules.review, withExp = isT || CFG.rules.explain;
   if(lv === 'none') return;
-  const one = ([qi, c], k) => { const q = qinfo(r.exam, qi); return q ? aiQ(q, k + 1, c, lv, withExp) : ''; };
+  const lg = RVLANG || r.lang || prefLang(), one = ([qi, c], k) => { const q = LQ(qinfo(r.exam, qi), lg); return q ? aiQ(q, k + 1, c, lv, withExp) : ''; };
   let t;
   if(n < 0){
     const ok = r.d.filter(x => x[2]).length, wr = r.d.filter(x => !x[2] && x[1] >= 0).length;

@@ -30,5 +30,5 @@ function vBoard(sid, isT){
 function openRec(aid){
   const r = allRecs().find(x => x.aid === aid);
   if(!r) return;
-  BACK = SESS && SESS.teacher ? 'teacher' : 'home'; LAST = r; view = 'result'; render();
+  BACK = SESS && SESS.teacher ? 'teacher' : 'home'; LAST = r; RVLANG = ''; view = 'result'; render();
 }

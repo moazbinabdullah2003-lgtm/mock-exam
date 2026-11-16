@@ -39,12 +39,17 @@ function parseQ(text){
     const ex = exams[c] = exams[c] || {code:c, rows:[]};
     if(!ex.rows.length){ ex.title = g('TITLE') || c; ex.minutes = g('MINUTES') || '10'; ex.neg = g('NEG') || '0'; ex.open = g('OPEN').toUpperCase() === 'NO' ? 'NO' : 'YES';
       const raw = {}; RULE_KEYS.forEach(k => { if(ix(k) >= 0) raw[k] = g(k); }); ex.ov = readRules(raw, 'Row ' + rn + ' (' + c + ')', errs); }
-    ex.rows.push({q:g('Q'), o, a, t:g('TOPIC') || 'General', e:g('EXPLANATION')});
+    const row = {q:g('Q'), o, a, t:g('TOPIC') || 'General', e:g('EXPLANATION')};
+    const be = bnErr(g('Q_BN'), ['A','B','C','D','E'].map(k => g(k + '_BN')), g('EXPLANATION_BN'), o.length, row);
+    if(be){ errs.push('Row ' + rn + ': ' + be); return; }
+    ex.rows.push(row);
   });
   if(!Object.keys(exams).length && !errs.length) errs.push('কোনো valid question পাওয়া যায়নি');
   return {errors:errs, exams};
 }
-const rowsOf = ex => ex.rows.map((r, i) => [ex.code, i ? '' : ex.title, i ? '' : ex.minutes, i ? '' : ex.neg, i ? '' : ex.open, r.q, r.o[0]||'', r.o[1]||'', r.o[2]||'', r.o[3]||'', r.o[4]||'', 'ABCDE'[r.a], r.t, r.e]);
+const rowsOf = ex => ex.rows.map((r, i) => { const b = r.qb ? r.ob || [] : [];
+  return [ex.code, i ? '' : ex.title, i ? '' : ex.minutes, i ? '' : ex.neg, i ? '' : ex.open, r.q, r.o[0]||'', r.o[1]||'', r.o[2]||'', r.o[3]||'', r.o[4]||'', 'ABCDE'[r.a], r.t, r.e,
+    r.qb || '', b[0]||'', b[1]||'', b[2]||'', b[3]||'', b[4]||'', r.qb ? r.eb || '' : '']; });
 function onFile(f){ if(!f) return; const rd = new FileReader(); rd.onload = () => { PASTE = String(rd.result); doPreview(); }; rd.readAsText(f, 'UTF-8'); }
 function doPreview(){ UP = parseQ(PASTE); upMsg = ''; render(true); }
 async function verifyExam(ex){
@@ -52,7 +57,7 @@ async function verifyExam(ex){
     await sleep(1500);
     try{
       const r = await (await fetch(CONFIG.SCRIPT_URL + '?action=exam&code=' + encodeURIComponent(ex.code) + '&t=' + Date.now())).json();
-      if(r && r.questions && r.questions.length === ex.rows.length && r.questions.every((q, i) => q.q === ex.rows[i].q && q.a === ex.rows[i].a && q.o.join('|') === ex.rows[i].o.join('|') && String(q.e || '') === String(ex.rows[i].e || ''))) return true;
+      if(r && r.questions && r.questions.length === ex.rows.length && r.questions.every((q, i) => q.q === ex.rows[i].q && q.a === ex.rows[i].a && q.o.join('|') === ex.rows[i].o.join('|') && String(q.e || '') === String(ex.rows[i].e || '') && String(q.qb || '') === String(ex.rows[i].qb || '') && String(q.eb || '') === String(ex.rows[i].qb ? ex.rows[i].eb || '' : ''))) return true;
     }catch(e){}
   }
   return false;
@@ -105,7 +110,7 @@ function vExams(){
       h += Object.values(UP.exams).map(ex => {
         const tc = {}; ex.rows.forEach(r => tc[r.t] = (tc[r.t] || 0) + 1);
         const exists = EXL.find(e => e.code === ex.code);
-        return `<div class="card" style="margin:8px 0"><b>${esc(ex.code)}</b> — ${esc(ex.title)}${exists ? '<span class="tag" style="background:#fef9c3;color:#a16207">আগেরটা replace হবে</span>' : '<span class="tag">নতুন</span>'}<br>
+        return `<div class="card" style="margin:8px 0"><b>${esc(ex.code)}</b> — ${esc(ex.title)}${exists ? '<span class="tag" style="background:#fef9c3;color:#a16207">আগেরটা replace হবে</span>' : '<span class="tag">নতুন</span>'}${(() => { const nb = ex.rows.filter(r => r.qb).length; return nb ? ` <span class="tag">🌐 English + বাংলা${nb < ex.rows.length ? ' (' + nb + '/' + ex.rows.length + ')' : ''}</span>` : ''; })()}<br>
           <small>${ex.rows.length} questions · ${esc(ex.minutes)} min · negative ${esc(ex.neg)} · ${ex.open === 'NO' ? 'closed' : 'open'}</small><br>
           <small>Topics: ${Object.entries(tc).map(([k, v]) => esc(k) + ' (' + v + ')').join(', ')}</small><br><small>${esc(rulesTxt(ex.ov))}</small><br><small class="muted">Q1: ${esc(ex.rows[0].q.slice(0, 80))}</small></div>`;
       }).join('') + '<button class="btn full" onclick="publishUp()">✅ Publish — exam ready করো</button>';

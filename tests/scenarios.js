@@ -62,7 +62,7 @@ await setOpen('CT1', true);  TT.eq(B.get({ action: 'exam', code: 'CT1' }).open, 
   TT.ok(!m.errors.length && e && e.rows.length === 2, 'MD sample parsed: ' + m.errors.join('|'));
   TT.ok(e.title === 'Physics Class Test 1' && e.minutes === '20' && e.neg === '0.25' && e.open === 'YES', 'MD exam header read');
   TT.ok(e.rows[0].a === 1 && e.rows[1].a === 2 && e.rows[0].o.length === 4 && e.rows[0].t === 'Kinematics', 'MD answers/options/topic');
-  TT.ok(e.rows[0].q.includes('$a = 2\\,\\text{m/s}^2$') && e.rows[1].e.includes('\\left[x^2\\right]'), 'LaTeX kept as-is'); }
+  TT.ok(e.rows[0].q.includes('$a = 2\\,\\text{m/s}^2$') && e.rows[1].e.includes('$\\text{CO}_2$ is linear'), 'LaTeX kept as-is'); }
 { const c = parseQ(CSV_SAMPLE); TT.ok(!c.errors.length && c.exams['PHY-CT1'].rows.length === 2 && c.exams['PHY-CT1'].rows[1].a === 2, 'CSV sample parsed: ' + c.errors.join('|')); }
 { const t = "Here you go:\n```markdown\n# EXAM: x-1\nTITLE: T\n\n## Q1\nTOPIC: Alg\nQ: line one\nline two $x^2$\nA) 1\nB) 2\nC) 3\nANS: (c)\nSOL: step 1\n\nstep 2\n## Q2\nQ: no topic\nA) yes\nB) no\nANS: A\n```\n⚠ CHECK: Q1 answer\n";
   const m = parseQ(t), e = m.exams['X-1'];
@@ -90,9 +90,50 @@ TT.eq(parseQ('CODE,Q,A,B,ANS\nX,q,1,2,A').exams.X.ov, null, 'old CSV without rul
 TT.ok(parseQ('# EXAM: R4\nSTART: 2026-11-20 10:00\nEND: 2026-11-20 09:00\n## Q1\nQ: q\nA) 1\nB) 2\nANS: A').errors.join('|').includes('END সময়'), 'END before START rejected');
 TT.ok(rulesTxt(null).includes('আগের মতো') && rulesTxt({maxAttempts:2, guest:'no', start:'2026-11-20T10:00', end:'', intro:'x'}).includes('max 2 attempt'), 'rules summary text');
 TT.ok(aiPrompt('md').includes('MAXATTEMPTS:') && aiPrompt('csv').includes('MAXATTEMPTS,GUEST,START,END,INTRO') && aiPrompt('md').includes('Start time'), 'prompts ask for exam rules');
+
+// 3d. Bilingual (English + বাংলা) questions
+{ const e = parseQ(MD_SAMPLE).exams['PHY-CT1'], [a, b] = e.rows;
+  TT.ok(a.qb.startsWith('একটি বস্তু') && a.ob.length === 4 && a.ob[1] === '$10\\,\\text{m/s}$' && a.eb.includes('v = u + at') && a.t === 'Kinematics' && a.a === 1, 'MD [BN] block -> qb/ob/eb, topic/answer from English');
+  TT.ok(b.o[3] === 'None of these' && b.ob[3] === 'কোনোটিই নয়' && b.q === 'Which of the following is a polar molecule?', 'Q2 English + Bengali options aligned');
+  const c = parseQ(CSV_SAMPLE).exams['PHY-CT1'];
+  TT.eq(c.rows.map(r => [r.q, r.o, r.a, r.qb, r.ob, r.eb]), e.rows.map(r => [r.q, r.o, r.a, r.qb, r.ob, r.eb]), 'CSV _BN columns == MD [BN] blocks');
+  TT.eq(rowsOf(c)[0].length, 21, 'upload rows have 21 columns (with _BN)');
+  TT.eq(rowsOf({code:'X', title:'X', minutes:'1', neg:'0', open:'YES', rows:[{q:'q', o:['1','2'], a:0, t:'T', e:''}]})[0].slice(14), ['','','','','','',''], 'single-language row: empty _BN columns'); }
+TT.ok(parseQ('# EXAM: B1\n## Q1\nQ: q\nA) 1\nB) 2\nANS: A\n[BN]\nA) এক').errors[0].includes('বাংলা প্রশ্ন'), 'BN options without BN question rejected');
+TT.ok(parseQ('# EXAM: B1\n## Q1\nQ: q\nA) 1\nB) 2\nANS: A\n[BN]\nQ: প্র\nA) এক\nB) দুই\nC) তিন').errors[0].includes('বেশি'), 'more BN options than English rejected');
+{ const m = parseQ('# EXAM: B2\n## Q1\nQ: What?\nA) $x$\nB) two\nANS: B\nSOL: because\n--- বাংলা ---\nQ: কী?\nB) দুই\n\n## Q2\nQ: only english\nA) 1\nB) 2\nANS: A'), r = m.exams.B2.rows;
+  TT.ok(!m.errors.length && r[0].qb === 'কী?' && r[0].ob[0] === '' && r[0].ob[1] === 'দুই' && r[0].eb === '' && !r[1].qb, 'missing BN option allowed (falls back), "--- বাংলা ---" marker, mixed exam: ' + m.errors.join('|'));
+  const q = r[0], v = LQ(q, 'bn');
+  TT.eq([v.q, v.o, v.e], ['কী?', ['$x$', 'দুই'], 'because'], 'LQ bn view: English fallback for empty option + solution');
+  TT.ok(LQ(q, 'en') === q && LQ(r[1], 'bn') === r[1], 'LQ en / no-bn question unchanged'); }
+TT.ok(isBi(parseQ(MD_SAMPLE).exams['PHY-CT1'] && {questions:parseQ(MD_SAMPLE).exams['PHY-CT1'].rows}) && !isBi({questions:[{q:'a', o:[]}]}), 'isBi detects bilingual exams');
 PASTE = MD_SAMPLE.replace('START:', 'START: 2026-01-01 08:00').replace('MAXATTEMPTS: 1', 'MAXATTEMPTS: 3'); doPreview(); TT.ok(vExams().includes('max 3 attempt'), 'preview shows rules'); await publishUp();
 TT.ok(upMsg.indexOf('Ready') >= 0, 'MD exam published: ' + upMsg);
 { const x = B.get({ action: 'exam', code: 'PHY-CT1' }); TT.ok(x.questions && x.questions.length === 2 && x.questions[0].q.includes('\\text{m/s}') && x.questions[1].a === 2, 'MD exam stored in backend with LaTeX'); }
+{ const x = B.get({ action: 'exam', code: 'PHY-CT1' }).questions; TT.ok(x[0].qb.startsWith('একটি বস্তু') && x[1].ob[3] === 'কোনোটিই নয়' && x[1].eb.includes('বাঁকা'), 'bilingual exam stored in backend'); }
+TT.ok(vExams() !== '' , 'exams view ok after bilingual publish');
+// student: language chosen once at start, quiz + review in that language
+{ const sv = SESS, sv2 = view; SESS = {sid:'LANGT', name:'Lang'}; await getExam('PHY-CT1');
+  startRun('PHY-CT1', 'full');
+  TT.ok(LANGASK && LANGASK.exam === 'PHY-CT1' && !RUN, 'bilingual exam asks language first');
+  view = 'home'; TT.ok(vLangAsk().includes('English') && vLangAsk().includes('বাংলা'), 'language popup rendered');
+  chooseLang('bn'); clearInterval(TM);
+  TT.ok(RUN && RUN.lang === 'bn' && view === 'quiz' && !LANGASK && LS.get('mq_lang') === 'bn', 'chose বাংলা -> run in bn');
+  const qz = vQuiz(); TT.ok(/স্থির অবস্থা|পোলার অণু/.test(qz) && !/A body starts|polar molecule\?/.test(qz), 'quiz shows Bengali text');
+  RUN = null; LS.del('mq_run'); view = 'result';
+  const r = {aid:'x', sid:'LANGT', name:'Lang', exam:'PHY-CT1', mode:'full', score:1, total:2, secs:9, d:[[0, 1, 1, 5], [1, 0, 0, 4]], lang:'bn'};
+  RVLANG = ''; let h = vResult(r);
+  TT.ok(h.includes('স্থির অবস্থা') && h.includes('বাঁকা') && h.includes("RVLANG='en'"), 'review in Bengali + language switch');
+  RVLANG = 'en'; h = vResult(r); TT.ok(h.includes('A body starts') && !h.includes('স্থির অবস্থা'), 'switch review to English');
+  RVLANG = ''; LS.set('mq_lang', 'en'); view = 'home'; startRun('PHY-CT1', 'full'); chooseLang('en'); clearInterval(TM);
+  TT.ok(RUN.lang === 'en' && vQuiz().includes('polar molecule') || vQuiz().includes('A body starts'), 'chose English -> English quiz');
+  RUN = null; LS.del('mq_run'); SESS = sv; view = sv2; }
+// editor keeps the Bengali version when an exam is edited + saved
+await openEditor('PHY-CT1');
+TT.ok(EDX.qs[1].ob[3] === 'কোনোটিই নয়' && vExamEditor().includes('বাংলা version'), 'editor loads Bengali fields');
+EDX.qs[0].eb = 'নতুন সমাধান'; await saveExam();
+{ const x = B.get({ action: 'exam', code: 'PHY-CT1' }).questions; TT.ok(/saved/.test(EDX.msg) && x[0].eb === 'নতুন সমাধান' && x[1].qb === 'নিচের কোনটি পোলার অণু?', 'editor save keeps/updates Bengali: ' + EDX.msg); }
+EDX = null;
 { const sc = B.get({ action: 'settings' }).cfg.exams['PHY-CT1'];
   TT.ok(sc && sc.maxAttempts === 3 && sc.guest === 'no' && sc.start === '2026-01-01T08:00' && sc.intro.includes('0.25'), 'rules saved to backend settings: ' + JSON.stringify(sc));
   TT.ok(exOv('PHY-CT1').maxAttempts === 3 && /exam rules-ও saved/.test(upMsg), 'rules active locally + message: ' + upMsg); }

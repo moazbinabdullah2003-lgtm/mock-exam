@@ -80,6 +80,25 @@ eq(B.get({ action: 'login', sid: '102', pin: 'zz' }).reason, 'blocked', 'blocked
 eq(B.get({ action: 'login', sid: '103', pin: '' }).reason, 'badlogin', 'empty password never works');
 eq(B.get({ action: 'login', sid: '0101', pin: 'abc' }).ok, true, 'leading zeros in id tolerated');
 
+
+// ---- bilingual (বাংলা) columns + migration of an old 14-column Questions sheet ----
+{ const B2 = createBackend();
+  B2.get({ action: 'exams', key: K });                       // seeds sheets
+  const qs = B2.sheets.find(x => x.getName() === 'Questions')._s;
+  qs.rows = [['CODE','TITLE','MINUTES','NEG','OPEN','Q','A','B','C','D','E','ANS','TOPIC','EXPLANATION'],
+             ['OLD1','Old exam','10','0','YES','old q','1','2','','','','B','T','ex']];   // old live sheet shape
+  eq(B2.get({ action: 'exam', code: 'OLD1' }).questions[0], { q: 'old q', o: ['1', '2'], a: 1, t: 'T', e: 'ex' }, 'old sheet still readable, no bn fields');
+  const bi = ['BI1','Bi','10','0','YES','English q','one','two','three','','','C','Topic','sol EN','বাংলা প্রশ্ন','এক','দুই','','','','সমাধান'];
+  eq(B2.post({ action: 'upload', code: 'BI1', key: K, rows: JSON.stringify([bi]) }), 'ok', 'bilingual upload ok');
+  eq(qs.rows[0].length, 21, 'header migrated to 21 columns');
+  eq(qs.rows[1].slice(0, 14).concat(qs.rows[1].slice(14).every(x => x === '')), ['OLD1','Old exam','10','0','YES','old q','1','2','','','','B','T','ex', true], 'old exam row kept, bn cols empty');
+  eq(B2.get({ action: 'exam', code: 'OLD1' }).questions[0].qb, undefined, 'old exam has no qb');
+  const q = B2.get({ action: 'exam', code: 'BI1' }).questions[0];
+  eq([q.q, q.o, q.a, q.e, q.qb, q.ob, q.eb], ['English q', ['one','two','three'], 2, 'sol EN', 'বাংলা প্রশ্ন', ['এক','দুই',''], 'সমাধান'], 'bn fields served, options aligned (missing bn option = "")');
+  B2.post({ action: 'setopen', code: 'BI1', open: 'NO', key: K });
+  eq(B2.get({ action: 'exam', code: 'BI1' }).questions[0].qb, 'বাংলা প্রশ্ন', 'setopen keeps bn columns');
+  eq(B2.get({ action: 'exam', code: 'BI1' }).open, false, 'setopen still works on new layout'); }
+
 // ---- change teacher password ----
 eq(B.post({ action: 'setpass', key: K, newpass: 'ab' }), 'short', 'short password rejected');
 eq(B.post({ action: 'setpass', key: K, newpass: 'newpass1' }), 'ok', 'password changed');

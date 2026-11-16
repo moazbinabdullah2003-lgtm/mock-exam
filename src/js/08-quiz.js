@@ -1,6 +1,6 @@
 /* ---------- Quiz ---------- */
 function vQuiz(){
-  const e = EXAMS[RUN.exam], p = RUN.cur, last = RUN.order.length - 1, qi = RUN.order[p], q = e.questions[qi], a = RUN.ans[p];
+  const e = EXAMS[RUN.exam], p = RUN.cur, last = RUN.order.length - 1, qi = RUN.order[p], q = LQ(e.questions[qi], RUN.lang), a = RUN.ans[p];
   const un = RUN.order.length - Object.keys(RUN.ans).length;
   const perm = (RUN.op && RUN.op[qi]) || q.o.map((_, i) => i);
   return `<div class="top"><div><b>${esc(e.title)}</b>${RUN.mode==='mistakes'?'<span class="tag">mistakes</span>':''}</div>${CFG.rules.timer ? '<div id="tm" class="tm"></div>' : ''}</div>
@@ -66,10 +66,11 @@ function finish(auto){
   const rec = {aid:newAid(), sid:RUN.sid, name:RUN.name, exam:RUN.exam, mode:RUN.mode,
     score:+(ok - wr * neg).toFixed(2), total:RUN.order.length,
     secs:Math.min(RUN.dur, Math.round((Date.now() - RUN.start) / 1000)), d};
+  if(isBi(e)) rec.lang = RUN.lang || 'en';
   const loc = LS.get('mq_local', []); loc.push(rec); LS.set('mq_local', loc);
   const ob = LS.get('mq_out', []); ob.push(rec); LS.set('mq_out', ob);
   LS.del('mq_run'); RUN = null; confirming = false;
-  LAST = rec; BACK = 'home'; view = 'result'; syncMsg = CAN_SYNC() ? 'Saving…' : '';
+  LAST = rec; RVLANG = ''; BACK = 'home'; view = 'result'; syncMsg = CAN_SYNC() ? 'Saving…' : '';
   render();
   if(CAN_SYNC()) flush().then(n => { syncMsg = n === 0 ? 'Saved ✓' : n > 0 ? 'Network নেই — পরে auto save হবে' : syncMsg; const el = $('#sync'); if(el) el.textContent = syncMsg; });
 }

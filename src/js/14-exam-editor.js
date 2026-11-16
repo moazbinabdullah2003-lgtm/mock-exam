@@ -13,18 +13,20 @@ async function openEditor(code){
   try{
     const r = await (await fetch(CONFIG.SCRIPT_URL + '?action=exam&code=' + encodeURIComponent(code) + '&t=' + Date.now())).json();
     if(!r || !r.questions) throw 0;
-    EDX = {code, title:r.title, minutes:r.minutes, neg:r.neg, open:r.open !== false, msg:'', qs:r.questions.map(q => ({q:q.q, o:q.o.slice(), a:q.a, t:q.t, e:q.e}))};
+    EDX = {code, title:r.title, minutes:r.minutes, neg:r.neg, open:r.open !== false, msg:'', qs:r.questions.map(q => ({q:q.q, o:q.o.slice(), a:q.a, t:q.t, e:q.e, qb:q.qb || '', ob:(q.ob || []).slice(), eb:q.eb || ''}))};
   }catch(e){ EDX = null; upMsg = 'Exam load হয়নি'; }
   render();
 }
-const blankQ = () => ({q:'', o:['', '', '', ''], a:0, t:'General', e:''});
+const blankQ = () => ({q:'', o:['', '', '', ''], a:0, t:'General', e:'', qb:'', ob:[], eb:''});
+function eoptb(i, n, v){ const q = EDX.qs[i]; q.ob = q.ob || []; while(q.ob.length <= n) q.ob.push(''); q.ob[n] = v; edPrev(i); markDirtyEd(); }
 function eset(i, k, v){ EDX.qs[i][k] = v; edPrev(i); markDirtyEd(); }
 function eopt(i, n, v){ EDX.qs[i].o[n] = v; edPrev(i); markDirtyEd(); }
 function markDirtyEd(){ EDX.dirty = true; const m = document.getElementById('edmsg'); if(m) m.textContent = '● unsaved'; }
 function edPrev(i){
   const q = EDX.qs[i], el = document.getElementById('pv' + i);
   if(!el) return;
-  el.innerHTML = `<div style="font-weight:600">${esc(q.q)}</div>` + q.o.map((o, n) => o ? `<div>${LET[n]}. ${esc(o)}${n === q.a ? ' ✅' : ''}</div>` : '').join('') + (q.e ? `<div class="exp" style="margin-top:6px">💡 ${esc(q.e)}</div>` : '');
+  el.innerHTML = `<div style="font-weight:600">${esc(q.q)}</div>` + q.o.map((o, n) => o ? `<div>${LET[n]}. ${esc(o)}${n === q.a ? ' ✅' : ''}</div>` : '').join('') + (q.e ? `<div class="exp" style="margin-top:6px">💡 ${esc(q.e)}</div>` : '') +
+    (String(q.qb || '').trim() ? (b => `<div style="border-top:1px dashed var(--b);margin-top:8px;padding-top:6px"><small class="muted">🇧🇩 বাংলা</small><div style="font-weight:600">${esc(b.q)}</div>` + b.o.map((o, n) => o ? `<div>${LET[n]}. ${esc(o)}${n === q.a ? ' ✅' : ''}</div>` : '').join('') + (b.e ? `<div class="exp" style="margin-top:6px">💡 ${esc(b.e)}</div>` : '') + '</div>')(LQ(q, 'bn')) : '');
   mathify(el);
 }
 function edAdd(){ EDX.qs.push(blankQ()); markDirtyEd(); render(true); }
@@ -66,6 +68,10 @@ function vExamEditor(){
       <div class="row" style="margin:2px 0"><span><button class="btn sm ghost" onclick="edOpt(${i},true)">+ option</button> <button class="btn sm ghost" onclick="edOpt(${i},false)">− option</button></span><small class="muted">● = সঠিক উত্তর</small></div>
       <div class="g2"><input placeholder="Topic" value="${eA(q.t)}" oninput="eset(${i},'t',this.value)"></div>
       <textarea rows="3" placeholder="Explanation / solution (ঐচ্ছিক)" oninput="eset(${i},'e',this.value)">${escT(q.e)}</textarea>
+      <details class="bnx" ${String(q.qb || '').trim() ? 'open' : ''}><summary>🇧🇩 বাংলা version ${String(q.qb || '').trim() ? '✓' : '(নেই — ঐচ্ছিক)'}</summary>
+        <textarea rows="2" placeholder="বাংলা প্রশ্ন" oninput="eset(${i},'qb',this.value)">${escT(q.qb || '')}</textarea>
+        ${q.o.map((o, n) => `<div class="oe"><b>${LET[n]}</b><input type="text" value="${eA((q.ob || [])[n] || '')}" placeholder="বাংলা option ${LET[n]} (ফাঁকা = English-টাই দেখাবে)" oninput="eoptb(${i},${n},this.value)"></div>`).join('')}
+        <textarea rows="2" placeholder="বাংলা solution (ঐচ্ছিক)" oninput="eset(${i},'eb',this.value)">${escT(q.eb || '')}</textarea></details>
       <div class="pv" id="pv${i}"></div></div>`).join('');
   return head + qs + `<button class="btn ghost full" onclick="edAdd()">+ Add question</button>
     ${x.msg ? `<div class="warn">${esc(x.msg)}</div>` : ''}
@@ -78,7 +84,10 @@ async function saveExam(){
     if(!String(q.q).trim()) errs.push('Q' + (i + 1) + ': question লেখা নেই');
     else if(o.length < 2 || o.some(s => !s)) errs.push('Q' + (i + 1) + ': অন্তত ২টা option লাগবে (মাঝে ফাঁকা নয়)');
     else if(q.a >= o.length) errs.push('Q' + (i + 1) + ': সঠিক উত্তর খালি option-এ');
-    return {q:String(q.q).trim(), o, a:q.a, t:String(q.t).trim() || 'General', e:String(q.e || '').trim()};
+    const row = {q:String(q.q).trim(), o, a:q.a, t:String(q.t).trim() || 'General', e:String(q.e || '').trim()};
+    const be = bnErr(q.qb, (q.ob || []).slice(0, o.length), q.eb, o.length, row);
+    if(be) errs.push('Q' + (i + 1) + ': ' + be);
+    return row;
   });
   if(errs.length){ x.msg = errs.slice(0, 8).join(' · '); return render(true); }
   const old = x.code, nc = String(x.newCode == null ? old : x.newCode).trim().toUpperCase();
