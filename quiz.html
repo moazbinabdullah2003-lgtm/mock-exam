@@ -254,6 +254,56 @@ function vNotice(){
   return b.notice ? `<div class="notice ${esc(b.noticeType)}">${esc(b.notice)}</div>` : '';
 }
 /* ============================================================
+   Network helper: timeout + আসল error-এর কারণ আলাদা করে বোঝা
+   ============================================================ */
+const INAPP = /FBAN|FBAV|FB_IAB|Messenger|Instagram|Line\/|MicroMessenger|Telegram|; wv\)/i;
+/* GET url -> parsed JSON. Throws {kind:'timeout'|'offline'|'http'|'badresp'|'blocked', detail} */
+async function jget(url, ms){
+  const ac = typeof AbortController === 'function' ? new AbortController() : null;
+  const tm = ac ? setTimeout(() => ac.abort(), ms || 20000) : null;
+  let res;
+  try{ res = await fetch(url, ac ? {signal: ac.signal} : undefined); }
+  catch(e){
+    if(tm) clearTimeout(tm);
+    if(e && e.name === 'AbortError') throw {kind:'timeout', detail:'no response in ' + Math.round((ms || 20000) / 1000) + 's'};
+    if(typeof navigator !== 'undefined' && navigator.onLine === false) throw {kind:'offline', detail:'navigator.onLine=false'};
+    throw {kind:'blocked', detail:String(e && e.message || e)};
+  }
+  if(tm) clearTimeout(tm);
+  if(!res.ok) throw {kind:'http', detail:'HTTP ' + res.status};
+  const txt = await res.text();
+  try{ return JSON.parse(txt); }
+  catch(e){ throw {kind:'badresp', detail:txt.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 80)}; }
+}
+function describeErr(e){
+  const k = e && e.kind, ua = typeof navigator !== 'undefined' ? navigator.userAgent : '';
+  const tail = '\n[' + (k || 'error') + ': ' + (e && e.detail || e && e.message || e) + ']';
+  if(k === 'offline') return 'Internet connection নেই। WiFi / mobile data চালু করে আবার try করো।' + tail;
+  if(k === 'timeout') return 'Server সাড়া দিচ্ছে না (অনেক ধীর internet বা block)। একটু পরে আবার try করো, অথবা WiFi ↔ mobile data বদলাও।' + tail;
+  if(k === 'http') return 'Server সমস্যা দিচ্ছে। একটু পরে আবার try করো।' + tail;
+  if(k === 'badresp') return 'Server ভুল response দিয়েছে (অস্থায়ী সমস্যা হতে পারে)। একটু পরে আবার try করো।' + tail;
+  return 'Server-এ পৌঁছানো যাচ্ছে না। ' + (INAPP.test(ua) ? 'তুমি Messenger/Facebook-এর ভেতরের browser-এ আছো — Chrome বা Safari-তে link খোলো। ' : 'WiFi ↔ mobile data বদলে দেখো; VPN / ad-blocker / Brave Shields বন্ধ করো।') + tail;
+}
+let NETERR = '', LASTERR = null, DIAG = '';
+function netFail(e, fn){ LASTERR = e; NETERR = fn; msg = describeErr(e); return render(true); }
+function errBox(){
+  return `<div class="err">${esc(msg)}</div>${NETERR ? `<button class="link" onclick="${NETERR}()">↻ Try again</button>` : ''}`;
+}
+async function diag(){
+  DIAG = 'Checking…'; render(true);
+  const L = [], ua = typeof navigator !== 'undefined' ? navigator.userAgent : '';
+  L.push('Online: ' + (typeof navigator !== 'undefined' ? navigator.onLine : '?'));
+  L.push('Browser: ' + ua.slice(0, 100));
+  if(INAPP.test(ua)) L.push('⚠ In-app browser — Chrome / Safari-তে খোলো');
+  let t0 = Date.now();
+  try{ await fetch(location.pathname + '?t=' + Date.now(), {cache:'no-store'}); L.push('এই site: OK (' + (Date.now() - t0) + 'ms)'); }catch(e){ L.push('এই site: FAIL'); }
+  t0 = Date.now();
+  try{ await jget(CONFIG.SCRIPT_URL + '?action=settings&t=' + Date.now(), 15000); L.push('Server (Google): OK (' + (Date.now() - t0) + 'ms)'); }
+  catch(e){ L.push('Server (Google): FAIL — ' + (e.kind || 'error') + ': ' + (e.detail || e.message || e)); }
+  DIAG = L.join('\n'); render(true);
+}
+
+/* ============================================================
    Google Form (write) + Published Sheet (read)
    ============================================================ */
 const FORM = (() => {
@@ -368,12 +418,12 @@ function render(keep){
   else if(view === 'quiz') h = vQuiz();
   else if(view === 'result') h = vResult(LAST);
   else if(view === 'teacher') h = vTeacher();
-  const cv = $('#code') ? $('#code').value : '';
+  const KEEP = ['#code', '#sid', '#pw', '#tid', '#tp', '#gcode'], kv = KEEP.map(k => $(k) ? $(k).value : '');
   if(CFG.brand.footer && view !== 'quiz') h += `<div class="foot">${esc(CFG.brand.footer)}</div>`;
   a.innerHTML = h;
   mathify(a);
   if(view === 'teacher' && EDX && !EDX.loading) EDX.qs.forEach((_, i) => edPrev(i));
-  if(cv && $('#code')) $('#code').value = cv;
+  KEEP.forEach((k, i) => { if(kv[i] && $(k)) $(k).value = kv[i]; });
   if(view === 'quiz') tick();
   if(!keep) window.scrollTo(0, 0);
 }
@@ -389,7 +439,7 @@ function banner(){
 }
 let LMODE = 'student';   // login tab: student | guest | teacher
 const gid = () => { let g = LS.get('mq_gid', ''); if(!g){ g = 'G-' + Math.random().toString(36).slice(2, 6).toUpperCase(); LS.set('mq_gid', g); } return g; };
-function setLM(m){ LMODE = m; msg = ''; render(); }
+function setLM(m){ LMODE = m; msg = ''; NETERR = ''; render(); }
 function vLogin(){
   const b = CFG.brand, A = CFG.access;
   const tabs = [['student', T('tabStudent')]].concat(A.guest ? [['guest', T('tabGuest')]] : []).concat([['teacher', T('tabTeacher')]]);
@@ -398,12 +448,13 @@ function vLogin(){
   let body;
   if(LMODE === 'guest') body = `<div class="muted" style="margin-bottom:6px">${esc(T('guestHint'))}</div>
       <input id="gcode" placeholder="${esc(T('codePh'))}" autocapitalize="characters" autocomplete="off" ${enter('doGuest')}>
-      <div class="err">${esc(msg)}</div><button class="btn full" onclick="doGuest()">${esc(T('guestBtn'))}</button>`;
+      ${errBox()}<button class="btn full" onclick="doGuest()">${esc(T('guestBtn'))}</button>`;
   else body = `<input id="${LMODE === 'teacher' ? 'tid' : 'sid'}" placeholder="${esc(T('idPh'))}" autocomplete="username" autocapitalize="off">
       <input id="${LMODE === 'teacher' ? 'tp' : 'pw'}" type="password" placeholder="${esc(T('passPh'))}" autocomplete="current-password" ${enter(LMODE === 'teacher' ? 'doTeacher' : 'doLogin')}>
-      <div class="err">${esc(msg)}</div><button class="btn full" onclick="${LMODE === 'teacher' ? 'doTeacher' : 'doLogin'}()">${esc(T('loginBtn'))}</button>`;
+      ${errBox()}<button class="btn full" onclick="${LMODE === 'teacher' ? 'doTeacher' : 'doLogin'}()">${esc(T('loginBtn'))}</button>`;
   return `<h1>${esc(b.emoji)} ${esc(b.title)}</h1>${banner()}${vNotice()}
-  <div class="card"><div class="tabs">${tabs.map(([k, l]) => `<button class="${LMODE === k ? 'on' : ''}" onclick="setLM('${k}')">${esc(l)}</button>`).join('')}</div>${body}</div>`;
+  <div class="card"><div class="tabs">${tabs.map(([k, l]) => `<button class="${LMODE === k ? 'on' : ''}" onclick="setLM('${k}')">${esc(l)}</button>`).join('')}</div>${body}</div>
+  <div style="text-align:center"><button class="link" onclick="diag()">🔧 Connection check</button></div>${DIAG ? `<div class="card"><small>${esc(DIAG)}</small></div>` : ''}`;
 }
 /* Student: ID + Password (server-side, roster) */
 async function doLogin(){
@@ -411,9 +462,9 @@ async function doLogin(){
   if(!sid || !pw){ msg = T('idPh') + ' + ' + T('passPh'); return render(true); }
   if(!CONFIG.SCRIPT_URL){ msg = 'Server set করা নেই'; return render(true); }
   msg = 'Checking…'; render(true);
-  let r;
-  try{ r = await (await fetch(CONFIG.SCRIPT_URL + '?action=login&sid=' + encodeURIComponent(sid) + '&pin=' + encodeURIComponent(pw) + '&t=' + Date.now())).json(); }
-  catch(e){ msg = 'Network নেই, আবার try করো'; return render(true); }
+  let r; NETERR = '';
+  try{ r = await jget(CONFIG.SCRIPT_URL + '?action=login&sid=' + encodeURIComponent(sid) + '&pin=' + encodeURIComponent(pw) + '&t=' + Date.now()); }
+  catch(e){ return netFail(e, 'doLogin'); }
   if(!r || Array.isArray(r) || !r.ok){ msg = r && r.reason === 'blocked' ? T('errBlocked') : T('errLogin'); return render(true); }
   SESS = {sid, name:r.name || sid, teacher:false}; LS.set('mq_sess', SESS); msg = ''; view = 'home'; render(); refresh();
 }
@@ -422,9 +473,10 @@ async function doGuest(){
   const c = $('#gcode').value.trim().toUpperCase();
   if(!c){ msg = T('codePh'); return render(true); }
   if(!CFG.access.guest){ msg = T('errGuestOff'); return render(true); }
-  msg = 'Loading…'; render(true);
+  NETERR = ''; msg = 'Loading…'; render(true);
   const e = await getExam(c);
-  if(e === 'offline'){ msg = 'Network নেই, আবার try করো'; return render(true); }
+  if(e === 'offline') return netFail(LASTERR, 'doGuest');
+  NETERR = '';
   if(!e){ msg = T('errCode'); return render(true); }
   if(e.open === false){ msg = T('errClosed'); return render(true); }
   if(exOv(c).guest === 'no'){ msg = T('errGuestExam'); return render(true); }
@@ -436,14 +488,15 @@ async function doGuest(){
 /* Teacher: ID + Password */
 async function doTeacher(){
   const id = ($('#tid').value || '').trim().toLowerCase(), pw = $('#tp').value;
-  msg = 'Checking…'; render(true);
+  NETERR = ''; msg = 'Checking…'; render(true);
   let ok = false;
   if(CONFIG.SCRIPT_URL){
     try{
       await loadCfg();
-      const r = await (await fetch(CONFIG.SCRIPT_URL + '?action=tlogin&key=' + encodeURIComponent(pw) + '&t=' + Date.now())).json();
+      const r = await jget(CONFIG.SCRIPT_URL + '?action=tlogin&key=' + encodeURIComponent(pw) + '&t=' + Date.now());
       ok = r && !Array.isArray(r) && typeof r === 'object' ? !!r.ok : pw === CONFIG.TEACHER_PASS;   // পুরোনো backend হলে fallback
-    }catch(e){ msg = 'Network নেই, আবার try করো'; return render(true); }
+      NETERR = '';
+    }catch(e){ return netFail(e, 'doTeacher'); }
   } else ok = pw === CONFIG.TEACHER_PASS;
   if(!ok || id !== String(CFG.access.teacherId || 'teacher').trim().toLowerCase()){ msg = T('errLogin'); return render(true); }
   SESS = {sid:'TEACHER', name:'Teacher', teacher:true, key:pw}; LS.set('mq_sess', SESS); msg = ''; view = 'teacher'; render(); refresh();
@@ -465,13 +518,13 @@ function vHome(){
     const e = EXAMS[s.code];
     return top + `<div class="card"><h2>${esc(e ? e.title : s.code)}</h2>
       <div class="muted">${esc(s.code)}${e ? ' · ' + e.questions.length + ' Q · ' + e.minutes + ' min' : ''}</div>
-      <div class="err">${esc(msg)}</div>
+      ${errBox()}
       <button class="btn full" onclick="startGuest()">${esc(T('startBtn'))}</button></div>${intro}`;
   }
   return top + `
   <div class="card"><h2>${esc(T('startTitle'))}</h2>
     <input id="code" placeholder="${esc(T('codePh'))}" autocapitalize="characters" autocomplete="off" onkeydown="if(event.key==='Enter')startCode()">
-    <div class="err">${esc(msg)}</div>
+    ${errBox()}
     <button class="btn full" onclick="startCode()">${esc(T('startBtn'))}</button>
   </div>
   ${CFG.rules.analytics ? vBoard(s.sid, false) : ''}${intro}`;
@@ -490,8 +543,8 @@ let introFor = '';
 async function getExam(code){
   if(CONFIG.SCRIPT_URL){
     let r;
-    try{ r = await (await fetch(CONFIG.SCRIPT_URL + '?action=exam&code=' + encodeURIComponent(code) + '&t=' + Date.now())).json(); }
-    catch(e){ return EXAMS[code] || 'offline'; }
+    try{ r = await jget(CONFIG.SCRIPT_URL + '?action=exam&code=' + encodeURIComponent(code) + '&t=' + Date.now()); }
+    catch(e){ LASTERR = e; return EXAMS[code] || 'offline'; }
     if(r && r.questions && r.questions.length){ applyOv(r, code); EXAMS[code] = r; LS.set('mq_exams', EXAMS); return r; }
     return null;
   }
@@ -505,9 +558,10 @@ async function ensureExams(){
 async function startCode(){
   const c = $('#code').value.trim().toUpperCase();
   if(!c){ msg = T('codePh'); return render(true); }
-  const er = document.querySelector('.err'); if(er) er.textContent = 'Loading…';
+  NETERR = ''; const er = document.querySelector('.err'); if(er) er.textContent = 'Loading…';
   const e = await getExam(c);
-  if(e === 'offline'){ msg = 'Network নেই, আবার try করো'; return render(true); }
+  if(e === 'offline') return netFail(LASTERR, 'startCode');
+  NETERR = '';
   if(!e){ msg = T('errCode'); return render(true); }
   if(e.open === false){ msg = T('errClosed'); return render(true); }
   const why = canStart(c);
