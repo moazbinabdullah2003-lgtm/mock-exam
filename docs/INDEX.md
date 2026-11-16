@@ -16,6 +16,7 @@ Build: `python3 build.py` concatenates `src/js/*.js` (**filename order**) into `
 | `07b-time-analytics.js` | **⏱ Time analytics block** `vTimeBlock(recs,id,{cmp,stu})` used on dashboard (`d_time`), exam page (`ea_time`), profile (`p_time`, vs class), student board (`b_time`), result (`r_time`): tiles, topic-wise time, question-wise time per exam (slowest first), student-wise time table; helpers `topicTime`, `stuTime`, `secS` | secS, topicTime, stuTime, vTimeBlock |
 | `08-quiz.js` | vQuiz (shuffled option view), pick/go/addTime, startTimer/tick, finish() (scoring + save record) | vQuiz:2, pick:17, addTime:22, go:27, startTimer:31, tick:32, finish:39 |
 | `09-result.js` | vResult(rec): score, topic-wise, per-question review honouring rules.review/showScore/passMark/explain | vResult:2 |
+| `09a-copy-ai.js` | **📋 Copy for AI**: `copyText` (clipboard + fallback), `aiQ` (one question as Markdown+LaTeX with my/correct answer + solution), `aiHead`, `copyRes(n)` (result page; obeys rules.review/explain for students), `copyExam(code,n)` (teacher exam page), `aiHint` card | copyText, aiQ, aiHead, copyRes, copyExam, aiHint |
 | `10-teacher-dashboard.js` | vTeacher: tab router (Dashboard content lives here: students table, topic accuracy, heatmap, hardest questions, CSV button); openStu | openStu:2, vTeacher:3 |
 | `10a-exam-analytics.js` | **Per-exam analytics** (`EXA` state, `openExA`, `vExamAnalytics`): tiles, student-wise ranking (best/1st/last/time, Review, → profile), folds: score distribution, topic-wise, question-wise (✔✘⏭, common wrong option, avg time, Hardest/Easy tags), student×question grid. Opened by tapping an exam in Exams tab | EXA, openExA, vExamAnalytics |
 | `11-teacher-exams.js` | Exam mgmt: tPost, loadExamList, parseQ (CSV validate), rowsOf, onFile/doPreview/verifyExam/publishUp, setOpen, delExam, vExams (list + CSV upload) | escT:2, sleep:3, tPost:4, loadExamList:8, parseQ:12, rowsOf:45, onFile:46, doPreview:47, verifyExam:48, publishUp:58, setOpen:71, delExam:76, vExams:82 |
@@ -46,6 +47,7 @@ Other source: `src/css/app.css` (theme variables `--p --bg --card --t --m --b --
 | Roster / student management UI | `13-teacher-settings.js` (`vStudents`, `r*` functions) + backend `saveroster`/`roster`/`login_` |
 | CSV question format / validation | `11-teacher-exams.js` `parseQ`,`rowsOf`; backend `admin_`,`getExam_`,`QHEAD`; `samples/questions_template.csv` |
 | In-app exam editor (incl. changing the exam code: `edCode`/`saveExam`; backend `rename` in `admin_`) | `14-exam-editor.js` |
+| Copy exam/question for AI | `09a-copy-ai.js`; buttons in `09-result.js` (review) and `10a-exam-analytics.js` |
 | One exam's analytics | `10a-exam-analytics.js` (button/row in `vExams`, `11`) |
 | Exam list actions (close/delete/…) | `11-teacher-exams.js` `vExams`,`setOpen`,`delExam`; backend `admin_` |
 | Network error messages / Connection check | `03-sync.js` (`jget`, `describeErr`, `netFail`, `diag`) |

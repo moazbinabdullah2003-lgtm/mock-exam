@@ -4,6 +4,14 @@ const csv = 'CODE,TITLE,MINUTES,NEG,OPEN,Q,A,B,C,D,E,ANS,TOPIC,EXPLANATION\n' +
   'CT1,,,,,"sin 30° = ?",1/2,√3/2,1,0,,A,Trigonometry,\n' +
   'CT1,,,,,"d/dx (x²) = ?",x,2x,x²,2,,B,Calculus,\n';
 
+// 0. Copy-for-AI text
+{ const qq = { q: '$x^2 = 4$, $x>0$ হলে x = ?', o: ['1', '2'], a: 1, t: 'Algebra', e: 'sol: $x=2$' };
+  const f = aiQ(qq, 3, 0, 'full', true);
+  TT.ok(f.includes('### Question 3 (Topic: Algebra)') && f.includes('$x^2 = 4$') && f.includes('B) 2') && f.includes('My answer: A) 1') && f.includes('Correct answer: B) 2') && f.includes("Teacher's solution: sol: $x=2$"), 'AI copy: full level has LaTeX, my answer, correct answer, solution');
+  const m = aiQ(qq, 1, 0, 'marks', true);
+  TT.ok(m.includes('❌ wrong') && !m.includes('Correct answer') && !m.includes('solution'), 'AI copy: marks level hides correct answer + solution');
+  TT.ok(!aiQ(qq, 1, 1, 'full', false).includes('solution') && aiQ(qq, 1, -1, 'full', true).includes('Skipped'), 'AI copy: explain off hides solution; skipped shown'); }
+
 // 1. CSV parsing
 let r = parseQ(csv);
 TT.eq(r.errors, [], 'valid CSV has no errors');

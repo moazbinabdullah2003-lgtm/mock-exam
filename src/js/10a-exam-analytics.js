@@ -11,6 +11,7 @@ function vExamAnalytics(code){
   let h = `<div class="top"><button class="link" onclick="EXA=null;render()">← Exams</button><button class="btn ghost sm" onclick="refresh()">${loading ? 'Syncing…' : '↻ Refresh'}</button></div>
     <div class="card"><div class="muted">${esc(code)}</div><h2 style="font-size:22px;margin:2px 0">${esc((e && e.title) || meta.title || code)}</h2>
     <small>${e ? e.questions.length + ' questions · ' + e.minutes + ' min' + (e.neg ? ' · negative ' + e.neg : '') : ''}${meta.open === false ? ' · closed' : ''}</small></div>`;
+  if(e) h += aiHint('সঠিক উত্তর আর আমাদের solution ') + `<button class="btn full" data-c="${esc(code)}" onclick="copyExam(this.dataset.c,-1,this)">📋 Copy full exam for AI</button><small class="muted">প্রতিটা question আলাদা copy: নিচে ❓ Question-wise খুলে 📋</small></div>`;
   if(!recs.length) return h + '<div class="card muted center">এই exam এখনো কেউ দেয়নি।</div>';
 
   const ps = recs.map(pct), bys = {};
@@ -47,7 +48,7 @@ function vExamAnalytics(code){
     const hardSet = new Set(byAcc.slice(0, 3).filter(o => o.ok / o.n < 0.6).map(o => o.i)), easySet = new Set(byAcc.slice(-3).filter(o => o.ok / o.n >= 0.9).map(o => o.i));
     h += sec('ea_q', '❓ Question-wise', seen.map(o => {
       const a = o.ok / o.n, top = Object.entries(o.pick).sort((x, y) => y[1] - x[1])[0];
-      return `<div class="hist" style="display:block"><div class="row" style="margin:0"><span><b>Q${o.i + 1}</b> <small>${esc(o.q.t || '')}</small>${hardSet.has(o.i) ? '<span class="tag" style="background:#fee2e2;color:#b91c1c">Hardest</span>' : ''}${easySet.has(o.i) ? '<span class="tag" style="background:#dcfce7;color:#15803d">Easy</span>' : ''}</span><b style="color:${pcol(a)}">${Math.round(a * 100)}%</b></div>
+      return `<div class="hist" style="display:block"><div class="row" style="margin:0"><span><b>Q${o.i + 1}</b> <small>${esc(o.q.t || '')}</small>${hardSet.has(o.i) ? '<span class="tag" style="background:#fee2e2;color:#b91c1c">Hardest</span>' : ''}${easySet.has(o.i) ? '<span class="tag" style="background:#dcfce7;color:#15803d">Easy</span>' : ''}</span><span style="white-space:nowrap"><button class="btn sm ghost" data-c="${esc(code)}" onclick="copyExam(this.dataset.c,${o.i},this)">📋</button> <b style="color:${pcol(a)}">${Math.round(a * 100)}%</b></span></div>
         <div>${esc(o.q.q)}</div>
         <div class="bar" style="display:flex;margin:6px 0"><i style="width:${a * 100}%;background:var(--g)"></i><i style="width:${o.wr / o.n * 100}%;background:var(--r)"></i><i style="width:${o.sk / o.n * 100}%;background:#9ca3af"></i></div>
         <small class="muted">✔${o.ok} ✘${o.wr} ⏭${o.sk} · সঠিক: ${LET[o.q.a]}${top ? ' · বেশি দেওয়া ভুল: ' + LET[top[0]] + ' (' + top[1] + ')' : ''}${o.sn ? ' · গড় ' + Math.round(o.secs / o.sn) + 's' : ''}</small></div>`;

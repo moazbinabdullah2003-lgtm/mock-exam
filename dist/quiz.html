@@ -1011,16 +1011,68 @@ function vResult(r){
   if(showScore) h += sec('r_topic', '📊 ' + esc(T('topicWise')), `${ts.map(t => `<div class="trow"><span>${esc(t.t)} <small>${t.ok}/${t.n}</small></span><div class="bar"><i style="width:${Math.round(t.p*100)}%;background:${t.p<0.5?'var(--r)':t.p<0.8?'#f59e0b':'var(--g)'}"></i></div><b>${Math.round(t.p*100)}%</b></div>`).join('')}`, ts.length + ' topic');
   h += vTimeBlock([r], 'r_time');
   if(rv === 'none') return h + `<div class="card muted">${esc(T('reviewLocked'))}</div>`;
+  const fullLv = rv === 'full';
+  h += aiHint(fullLv ? 'তোমার উত্তর, সঠিক উত্তর আর ' + (isT || R.explain ? 'solution ' : '') : 'তোমার উত্তর (✅/❌) ') + `<button class="btn full" onclick="copyRes(-1,this)">📋 Copy full exam for AI</button></div>`;
   let rvh = '';
   r.d.forEach(([qi, c, g, s], n) => {
     const q = qinfo(r.exam, qi);
     if(!q) return;
-    rvh += `<div style="margin-bottom:18px"><div class="muted">Q${n+1} · ${esc(q.t || '')} · ${s}s ${rv==='marks' ? (c < 0 ? '· —' : g ? '· ✅' : '· ❌') : ''}</div><div class="q" style="font-size:.95em">${esc(q.q)}</div>` +
+    rvh += `<div style="margin-bottom:18px"><div class="row" style="margin:0"><span class="muted">Q${n+1} · ${esc(q.t || '')} · ${s}s ${rv==='marks' ? (c < 0 ? '· —' : g ? '· ✅' : '· ❌') : ''}</span><button class="btn sm ghost" onclick="copyRes(${n},this)" title="এই question AI-এর জন্য copy">📋 Copy</button></div><div class="q" style="font-size:.95em">${esc(q.q)}</div>` +
       q.o.map((o, i) => `<div class="opt ${rv==='full' && i===q.a ? 'ok' : i===c ? (rv==='full' ? 'bad' : (g ? 'ok' : 'bad')) : ''}" style="margin:4px 0;padding:8px"><span class="L">${LET[i]}</span><span>${esc(o)}${i===c?' <small>' + esc(T('yourAnswer')) + '</small>':''}</span></div>`).join('') +
       (c < 0 ? `<small class="err">${esc(T('skipped'))}</small>` : '') + (rv === 'full' && R.explain && q.e ? `<div class="exp">💡 ${esc(q.e)}</div>` : '') + '</div>';
   });
   return h + sec('r_review', '📝 ' + esc(T('reviewTitle')), rvh, wrN + skN ? '❌ ' + (wrN + skN) : '✅');
 }
+/* ---------- 📋 Copy for AI: exam / one question as clean Markdown + LaTeX ($…$), with answers + our solution ----------
+   Student (result page): obeys rules.review — 'full' = correct answer (+ solution if rules.explain), 'marks' = only ✅/❌, 'none' = no copy.
+   Teacher: always full (exam page + result page). */
+function copyText(t, btn){
+  const done = ok => {
+    if(btn){ const o = btn.textContent; btn.textContent = ok ? '✅ Copied!' : '⚠ Copy হয়নি'; setTimeout(() => { btn.textContent = o; }, 1800); }
+  };
+  const fallback = () => {
+    try{ const ta = document.createElement('textarea'); ta.value = t; ta.style.position = 'fixed'; ta.style.opacity = '0'; document.body.appendChild(ta); ta.select(); const ok = document.execCommand('copy'); ta.remove(); done(ok); }catch(e){ done(false); }
+  };
+  try{ if(navigator.clipboard && window.isSecureContext) navigator.clipboard.writeText(t).then(() => done(true), fallback); else fallback(); }catch(e){ fallback(); }
+}
+/* one question block. c = student's chosen ORIGINAL index (-1 skipped, undefined = no student), lv = 'full'|'marks' */
+function aiQ(q, n, c, lv, withExp){
+  let s = `### Question ${n} (Topic: ${q.t || 'General'})\n${String(q.q).trim()}\n\n` + q.o.map((o, i) => `${LET[i]}) ${String(o).trim()}`).join('\n') + '\n';
+  if(c !== undefined) s += `\nMy answer: ${c < 0 ? 'Skipped (did not answer)' : LET[c] + ') ' + String(q.o[c]).trim()}` + (lv === 'marks' && c >= 0 ? (c === q.a ? ' — ✅ correct' : ' — ❌ wrong') : '') + '\n';
+  if(lv === 'full') s += `Correct answer: ${LET[q.a]}) ${String(q.o[q.a]).trim()}` + (c !== undefined && c >= 0 ? (c === q.a ? '  ✅ (I got it right)' : '  ❌ (I got it wrong)') : '') + '\n';
+  if(lv === 'full' && withExp && String(q.e || '').trim()) s += `Teacher's solution: ${String(q.e).trim()}\n`;
+  return s;
+}
+const AI_NOTE = 'Math is written in LaTeX between $…$ (e.g. $\\dfrac{1}{2}$). Options are labelled A, B, C, …';
+function aiHead(e, code, who){
+  return who === 'teacher'
+    ? `I am a teacher. Below is an MCQ exam I made, with the correct answers and my solutions. ${AI_NOTE}\nPlease check every question and solution for mistakes or ambiguity, suggest clearer wording or better distractors, and tell me which topics/skills it tests.\n\n# ${e.title || code} (${code}) — ${e.questions.length} questions\n\n`
+    : `I am a student. Below is an MCQ exam I took, with my answers${who === 'full' ? ', the correct answers and my teacher\'s solutions' : ''}. ${AI_NOTE}\nPlease explain step by step why the correct answer is right, why my wrong answers are wrong, what concept I am missing, and give me 2 similar practice questions for my weak areas. Answer in simple language (Bangla/English mix is fine).\n\n# ${e.title || code} (${code})\n\n`;
+}
+/* result page: n = -1 → whole attempt, else index in r.d */
+function copyRes(n, btn){
+  const r = LAST, e = r && EXAMS[r.exam]; if(!e) return;
+  const isT = SESS && SESS.teacher, lv = isT ? 'full' : CFG.rules.review, withExp = isT || CFG.rules.explain;
+  if(lv === 'none') return;
+  const one = ([qi, c], k) => { const q = qinfo(r.exam, qi); return q ? aiQ(q, k + 1, c, lv, withExp) : ''; };
+  let t;
+  if(n < 0){
+    const ok = r.d.filter(x => x[2]).length, wr = r.d.filter(x => !x[2] && x[1] >= 0).length;
+    t = aiHead(e, r.exam, lv === 'full' ? 'full' : 'marks') + `My score: ${r.score}/${r.total} (✅ ${ok} correct, ❌ ${wr} wrong, ${r.total - ok - wr} skipped)\n\n` + r.d.map(one).join('\n');
+  } else {
+    t = `I am a student. Help me understand this MCQ question from my exam "${e.title || r.exam}". ${AI_NOTE}\nExplain step by step, tell me the concept behind it, and if I got it wrong, explain my mistake. Then give 1 similar practice question.\n\n` + one(r.d[n], n);
+  }
+  copyText(t, btn);
+}
+/* teacher exam page: n = -1 → whole exam, else question index */
+function copyExam(code, n, btn){
+  const e = EXAMS[code]; if(!e) return;
+  const t = n < 0 ? aiHead(e, code, 'teacher') + e.questions.map((q, i) => aiQ(q, i + 1, undefined, 'full', true)).join('\n')
+    : `Here is one MCQ question from my exam "${e.title || code}" with the correct answer and my solution. ${AI_NOTE}\nPlease explain it step by step, check if my solution is correct and complete, and suggest how to make it clearer.\n\n` + aiQ(e.questions[n], n + 1, undefined, 'full', true);
+  copyText(t, btn);
+}
+const aiHint = full => `<div class="card" style="border-left:4px solid var(--p)"><b>🤖 AI দিয়ে বুঝে নাও</b>
+  <div class="muted" style="margin:4px 0 8px">📋 Copy চাপলে question, option, ${full}LaTeX ($…$) সহ সুন্দর করে copy হবে। তারপর ChatGPT / Claude / Gemini-তে paste করলেই AI বুঝিয়ে দেবে। পুরো exam একসাথে, অথবা নিচে প্রতিটা question-এর পাশের 📋 দিয়ে একটা একটা করে।</div>`;
 /* ---------- Teacher ---------- */
 function openStu(sid){ TSTU = sid; render(); }
 function vTeacher(){
@@ -1089,6 +1141,7 @@ function vExamAnalytics(code){
   let h = `<div class="top"><button class="link" onclick="EXA=null;render()">← Exams</button><button class="btn ghost sm" onclick="refresh()">${loading ? 'Syncing…' : '↻ Refresh'}</button></div>
     <div class="card"><div class="muted">${esc(code)}</div><h2 style="font-size:22px;margin:2px 0">${esc((e && e.title) || meta.title || code)}</h2>
     <small>${e ? e.questions.length + ' questions · ' + e.minutes + ' min' + (e.neg ? ' · negative ' + e.neg : '') : ''}${meta.open === false ? ' · closed' : ''}</small></div>`;
+  if(e) h += aiHint('সঠিক উত্তর আর আমাদের solution ') + `<button class="btn full" data-c="${esc(code)}" onclick="copyExam(this.dataset.c,-1,this)">📋 Copy full exam for AI</button><small class="muted">প্রতিটা question আলাদা copy: নিচে ❓ Question-wise খুলে 📋</small></div>`;
   if(!recs.length) return h + '<div class="card muted center">এই exam এখনো কেউ দেয়নি।</div>';
 
   const ps = recs.map(pct), bys = {};
@@ -1125,7 +1178,7 @@ function vExamAnalytics(code){
     const hardSet = new Set(byAcc.slice(0, 3).filter(o => o.ok / o.n < 0.6).map(o => o.i)), easySet = new Set(byAcc.slice(-3).filter(o => o.ok / o.n >= 0.9).map(o => o.i));
     h += sec('ea_q', '❓ Question-wise', seen.map(o => {
       const a = o.ok / o.n, top = Object.entries(o.pick).sort((x, y) => y[1] - x[1])[0];
-      return `<div class="hist" style="display:block"><div class="row" style="margin:0"><span><b>Q${o.i + 1}</b> <small>${esc(o.q.t || '')}</small>${hardSet.has(o.i) ? '<span class="tag" style="background:#fee2e2;color:#b91c1c">Hardest</span>' : ''}${easySet.has(o.i) ? '<span class="tag" style="background:#dcfce7;color:#15803d">Easy</span>' : ''}</span><b style="color:${pcol(a)}">${Math.round(a * 100)}%</b></div>
+      return `<div class="hist" style="display:block"><div class="row" style="margin:0"><span><b>Q${o.i + 1}</b> <small>${esc(o.q.t || '')}</small>${hardSet.has(o.i) ? '<span class="tag" style="background:#fee2e2;color:#b91c1c">Hardest</span>' : ''}${easySet.has(o.i) ? '<span class="tag" style="background:#dcfce7;color:#15803d">Easy</span>' : ''}</span><span style="white-space:nowrap"><button class="btn sm ghost" data-c="${esc(code)}" onclick="copyExam(this.dataset.c,${o.i},this)">📋</button> <b style="color:${pcol(a)}">${Math.round(a * 100)}%</b></span></div>
         <div>${esc(o.q.q)}</div>
         <div class="bar" style="display:flex;margin:6px 0"><i style="width:${a * 100}%;background:var(--g)"></i><i style="width:${o.wr / o.n * 100}%;background:var(--r)"></i><i style="width:${o.sk / o.n * 100}%;background:#9ca3af"></i></div>
         <small class="muted">✔${o.ok} ✘${o.wr} ⏭${o.sk} · সঠিক: ${LET[o.q.a]}${top ? ' · বেশি দেওয়া ভুল: ' + LET[top[0]] + ' (' + top[1] + ')' : ''}${o.sn ? ' · গড় ' + Math.round(o.secs / o.sn) + 's' : ''}</small></div>`;
