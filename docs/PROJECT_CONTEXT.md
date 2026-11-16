@@ -41,7 +41,7 @@ Everything the teacher controls is edited **in the web UI** — no code edits ne
 
 ### Live data right now
 - Exams: `DEMO1` (3 Q), **`MATH-B`** Beginner (17 Q, 20 min), **`MATH-I`** Intermediate (17 Q, 25 min), **`MATH-A`** Advanced (16 Q, 30 min); negative mark 0.25 on the three MATH exams. Source: `samples/math_3levels.csv` ← `samples/math_questions_with_solutions.md` (50 Higher-Math questions with step-by-step solutions, KaTeX).
-- Roster: 3 students — `0001` zaheen, `0002` rakin, and the **test student `9999` / `test1234`** (for Claude's post-update end-to-end checks; never delete real students). Attempts: 6 rows (as of backup `2026-11-16_143035`: 4 exams, 53 questions, 3 students, 6 attempts).
+- Roster: 3 students — `0001` zaheen, `0002` rakin, and the **test student `9999` / `test1234`** (for Claude's post-update end-to-end checks; never delete real students). Attempts: **0** — the teacher deliberately deleted all attempt logs with ✏ Edit logs on 2026-11-16 evening (the 11 old rows are still in backup `2026-11-16_180207` if ever needed; latest backup `2026-11-16_193010` = 5 exams, 103 questions, 3 students, 0 attempts).
 - Settings saved by the teacher: theme preset `rose`; brand = "Muaz's Classroom" 📚 + tagline (set by Claude on 2026-11-16); everything else default. The teacher may pick a new theme from the gallery any time. (The saved settings still contain obsolete keys `access.mode/needPin` — harmless, ignored.)
 
 ---------------------------------------------------------------------------------------------------
