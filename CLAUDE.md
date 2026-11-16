@@ -3,7 +3,7 @@
 The user **cannot read or write code**; they work only through Claude. So: keep this folder the single, complete, well-indexed source of truth, and do the work + deploy + backup yourself.
 
 ## Reading order (token-cheap)
-1. `docs/PROJECT_CONTEXT.md` (architecture, live IDs, status, pitfalls) → 2. `docs/INDEX.md` (module map + "Task → where to edit") → open only the modules the task needs. Never open `dist/quiz.html` whole. Protocol/data model: `docs/ARCHITECTURE.md`. Ops: `docs/DEPLOY.md`, `docs/BACKUP.md`.
+1. `docs/PROJECT_CONTEXT.md` (architecture, live IDs, status, pitfalls) → 2. `docs/INDEX.md` (module map + "Task → where to edit") → open only the modules the task needs. Never open `dist/quiz.html` whole. Protocol/data model: `docs/ARCHITECTURE.md`. Ops: `docs/DEPLOY.md`, `docs/BACKUP.md`. **Something broken? `python3 tools/health.py` then `docs/TROUBLESHOOTING.md`.**
 
 ## How to talk to the user
 Bengali/Banglish, technical terms in English, **short**. Manual steps for the user: one step at a time, wait for "done". User has Claude Pro only — **no API/paid server**. Use they/them. Never type passwords; never put credentials in chat or in the public GitHub repo.
@@ -15,7 +15,7 @@ Bengali/Banglish, technical terms in English, **short**. Manual steps for the us
 1. Edit `src/` (frontend) and/or `backend/Code.gs`. Never edit `dist/` or `quiz.html` by hand.
 2. `python3 build.py`; `node tests/backend.test.js && node tests/run_tests.js` (add scenarios for new behaviour). UI/visual checks: browser pane per `docs/DEPLOY.md` §C.
 3. Deploy: backend `./deploy-backend.sh "msg"` (only if Code.gs changed, do it first); frontend `./deploy.sh "msg"`. Both run the tests first and stop on failure. /exec URL never changes. **Never use "New deployment".**
-4. Verify: live `quiz.html` sha256 == `dist/quiz.html`; read-only GET on the backend; then an end-to-end check as the **test student** (ID `9999`, password `test1234`: login → take exam → result saved). Its attempts show in the teacher dashboard as "Test Student".
+4. Verify: `python3 tools/health.py` (live hash == dist, backend, teacher key, test student login, backup age); then an end-to-end check as the **test student** (ID `9999`, password `test1234`: login → take exam → result saved). Its attempts show in the teacher dashboard as "Test Student".
 5. Update docs (`INDEX.md` if structure changed, `PROJECT_CONTEXT.md` §12 status, `DEPLOY.md`/`BACKUP.md` if the process changed). Keep this folder current — it must always describe the real system.
 
 ## Backups (see `docs/BACKUP.md`) — do NOT run one after every small edit (wastes tokens)

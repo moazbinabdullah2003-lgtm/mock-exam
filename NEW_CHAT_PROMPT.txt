@@ -1,6 +1,0 @@
-এটা আমার "Quiz Server" (MCQ Mock Exam) প্রজেক্ট। Folder: /Users/mac/claude code/quiz-server
-আগে CLAUDE.md পড়ো (workflow, deploy, backup নিয়ম সব ওখানে), তারপর docs/PROJECT_CONTEXT.md আর docs/INDEX.md।
-আমি code পারি না — তুমি edit, test, deploy, verify, docs update সব করবে। বাংলায় (Banglish ঠিক আছে), ছোট উত্তর।
-কাজের ব্যাচ শেষ হলে একবার জিজ্ঞেস করো backup নেবে কি না।
-
-আমার কাজ:

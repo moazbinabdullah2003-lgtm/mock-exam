@@ -77,14 +77,14 @@ quiz-server/
 ├─ dist/quiz.html            GENERATED. This is what gets uploaded to GitHub
 ├─ backend/Code.gs           Google Apps Script (pasted into the Apps Script editor)
 ├─ samples/                  questions_template.csv, math_3levels.csv, math_questions_with_solutions.md
-├─ tools/                    backup.py, restore.py, md2csv.py (md→CSV), symbols.py, browser_fake_backend.js (UI test harness), make_patch.py (obsolete)
+├─ tools/                    health.py (read-only live check), backup.py, restore.py, md2csv.py (md→CSV), symbols.py, browser_fake_backend.js (UI test harness)
 ├─ tests/                    backend.test.js + gas_harness.js (real Code.gs under node), run_tests.js + scenarios.js (frontend vs real backend)
 ├─ deploy.sh, deploy-backend.sh, backup.sh   one-command frontend deploy / backend deploy / full backup
 ├─ .github/workflows/pages.yml  CI: test + build + publish
 ├─ CLAUDE.md                 master instructions (workflow, backup rules, hard rules) — auto-read by Claude
 ├─ backups/  .local/         LOCAL ONLY (gitignored): data backups; teacher key for scripts
-├─ docs/                     PROJECT_CONTEXT.md (this), INDEX.md (module map), ARCHITECTURE.md (protocol/data), DEPLOY.md (ship/test), BACKUP.md (backup/restore), BACKLOG.md
-├─ NEW_CHAT_PROMPT.txt, README_BN.md, .clasp.json (Apps Script link)
+├─ docs/                     PROJECT_CONTEXT.md (this), INDEX.md (module map), ARCHITECTURE.md (protocol/data), DEPLOY.md (ship/test), BACKUP.md (backup/restore), TROUBLESHOOTING.md (symptom→fix), BACKLOG.md
+├─ README_BN.md (user's Bengali guide), .clasp.json (Apps Script link)
 ```
 **Module load order matters** (concatenation order = filename order). `99-boot.js` MUST stay last — `boot()` calls `render()`, which touches variables declared in 13/14 with `let` (TDZ → blank page; this exact bug happened and was fixed).
 
@@ -193,20 +193,20 @@ UI/visual checks still use the built-in browser pane + `tools/browser_fake_backe
 
 ## 11. Pitfalls & lessons (things that already bit us)
 
-(Deploy through the browser editors — Monaco/GitHub CodeMirror/patches — is obsolete since 2026-11-16; those pitfalls are kept for history. Live deploys now use `deploy.sh` / `deploy-backend.sh`.)
-
 - **Script order / TDZ**: boot must be last (`99-boot.js`). New modules with top-level `let/const` used during `render()` must load before boot.
-- **`let` in the javascript_tool REPL**: variables declared with `let/const` in one call may not be visible as the same binding in later calls — use `window.x` for state shared across calls.
-- GitHub pages (`github.com`) block `fetch` to localhost and to other origins (CSP) → can't pull files from a local server into the editor; use the patch/chunk method. Verify deployments by `fetch(location.pathname)` from a **github.io** tab, not from github.com.
-- Browser pane tab ids change after navigation to local files; `tabs_context` first. A tab showing a local file may refuse page tools — use the localhost server instead.
-- Apps Script "Manage deployments → Version" dropdown: clicking "New version" fails; focus the list and press `Up` then `Return` (sometimes twice; confirm "New version" shows in the field) before pressing Deploy.
 - POST no-cors: never rely on response; poll with GET.
-- UTF-16 offsets: patch offsets for the GitHub editor must be UTF-16 code units (JS strings); `make_patch.py` handles it. Bengali/emoji are common in the source.
 - Roster field is named `pin` in storage/API for backward compatibility but is the **Password** everywhere in the UI.
 - Option shuffle: stored answer indexes are ORIGINAL indexes — keep it that way, otherwise analytics and "retake mistakes" break.
 - `esc()` converts `\n` → `<br>` (good for text) but is **not** attribute-safe for quotes in all cases → use `eA()` (13) or `data-*` for attribute values.
 - Roster/cfg are stored as JSON strings in a sheet cell (≈50 k chars limit).
 - Google may return an HTML error page (quota/maintenance) with HTTP 200 → shows as `badresp`.
+
+---------------------------------------------------------------------------------------------------
+- Student IDs are numbers only (user confirmed). Some letter IDs got a Google error page from the live backend (cause unknown) — keep IDs numeric.
+- Never use Apps Script "New deployment" (changes the /exec URL). `deploy-backend.sh` moves the existing deployment to a new version.
+- Symptom→fix table: `docs/TROUBLESHOOTING.md`.
+
+---------------------------------------------------------------------------------------------------
 
 ---------------------------------------------------------------------------------------------------
 

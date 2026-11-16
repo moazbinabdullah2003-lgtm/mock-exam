@@ -55,10 +55,11 @@ Regenerate the symbol list: `python3 tools/symbols.py`.
 | `CLAUDE.md` | master rules + workflow + backup policy (read first) |
 | `deploy.sh` / `deploy-backend.sh` | test → deploy frontend (git push → Actions → Pages) / backend (clasp push + move /exec deployment) |
 | `backup.sh` → `tools/backup.py` | full live-data + project backup into `backups/<time>/` |
+| `tools/health.py` | read-only live health check (page hash, backend, teacher key, test student, backup age) |
 | `tools/restore.py` | restore a backup (dry run by default, `--yes` to write) |
 | `tests/gas_harness.js` | runs the real `Code.gs` under node with in-memory Sheet fakes |
 | `tests/backend.test.js` | 46 backend logic tests |
 | `tests/run_tests.js` + `tests/scenarios.js` | frontend flow tests against the real backend (add scenarios at the bottom; assertions are `TT.ok/TT.eq`) |
 | `.github/workflows/pages.yml` | CI: tests → build → publish to Pages |
 | `.clasp.json` | Apps Script project link (rootDir `backend`) |
-| `docs/DEPLOY.md`, `docs/BACKUP.md` | how shipping and backups work |
+| `docs/DEPLOY.md`, `docs/BACKUP.md`, `docs/TROUBLESHOOTING.md` | shipping, backups/restore, symptom→fix table |

@@ -41,4 +41,4 @@ See the table in `PROJECT_CONTEXT.md` §4 (authoritative list of GET/POST action
 `PREFILLED_LINK` / `SHEET_CSV_URL` (Google Form + published-CSV path in `03-sync.js`) are superseded by `SCRIPT_URL`; kept as fallback, safe to delete.
 
 ## Known limitations
-Answers visible in page/network (client-side grading); student passwords plain text in the sheet; `login` unthrottled; no images in questions; tests/ stale; Apps Script latency ~2 s; Apps Script daily quota applies.
+Answers visible in page/network (client-side grading); student passwords plain text in the sheet; `login` unthrottled; no images in questions; Apps Script latency ~2 s; Apps Script daily quota applies.

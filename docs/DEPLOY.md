@@ -4,11 +4,11 @@ Backups: see `docs/BACKUP.md` (take one after a batch of work, with the user's O
 
 Order: **backend first** (`backend/Code.gs`, only if it changed), then **frontend** (`dist/quiz.html`). The frontend is written to degrade gracefully with an older backend, but new features need the new backend.
 
-Prerequisite: the user is signed in to **Google** (script.google.com / docs.google.com) and **GitHub** in the built-in browser pane (Claude cannot type passwords). First visit to a site may ask the user to allow it. Check with `tabs_context`; open the Apps Script / GitHub URL; if a login page appears, ask the user to sign in in the pane and say "done".
+Prerequisites (one-time, already done): GitHub push token in the macOS Keychain; `clasp` logged in; Apps Script API switched on. If either expires see `docs/TROUBLESHOOTING.md`. Claude never types passwords.
 
 Constants:
 - Apps Script editor: `https://script.google.com/home/projects/1y8kV5WPEO9-HJtnVhwdu0nnxV0a-xC6ug-J61AUgqMr7QJ6SOnFTdH-T/edit`
-- GitHub editor: `https://github.com/moazbinabdullah2003-lgtm/mock-exam/edit/main/quiz.html`
+- GitHub Actions runs: `https://github.com/moazbinabdullah2003-lgtm/mock-exam/actions`
 - Live page: `https://moazbinabdullah2003-lgtm.github.io/mock-exam/quiz.html`
 - Spreadsheet: `https://docs.google.com/spreadsheets/d/1sU8tzNalkI30mmx8aAOQwz8lA_8jX4atM0m4fsnK3og`
 

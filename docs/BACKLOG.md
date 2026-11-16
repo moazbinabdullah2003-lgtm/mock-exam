@@ -1,9 +1,8 @@
-# BACKLOG (ideas only — NOT decided; ask the user)
-- DONE 2026-11-15: KaTeX math, option shuffle, per-exam rules, roster/PIN login, theme/text/feature control panel, in-app exam editor, CSV export.
-- Option shuffle (store permutation per question in RUN) ; image questions.
-- Hide answers: server-side grading (Code.gs) so answers aren't in page/network; per-student PIN; teacher password out of client.
-- Exam window (start/end time), attempt limit per student, hide results until teacher releases.
-- Teacher: export CSV, per-exam trend, per-question time analytics (secs already stored in `d`), edit single question in UI.
-- Stable question IDs (instead of row index) so questions can be edited/reordered safely.
-- PWA/offline, nicer charts, Bengali digits/UI toggle.
-- Cleanup: remove legacy Google-Form/CSV path from 03-sync.js.
+# BACKLOG (ideas only — NOT decided; ask the user before doing any)
+- Done so far: KaTeX math, always-on option shuffle, per-exam rules (window, attempt limit, intro), roster login, teacher control panel (theme/texts/rules/students), in-app exam editor, CSV export, error diagnostics, auto-deploy, tests, backup/restore, health check.
+- Security: server-side grading (answers are currently visible in the page/network); hashed passwords + login rate-limit; teacher password out of the client.
+- Exams: hide results until teacher releases; question images; stable question IDs (instead of row index) so questions can be edited/reordered safely.
+- Analytics: per-exam trend, per-question time (secs already stored), leaderboard.
+- UX: PWA/offline, nicer charts, Bengali digits/UI toggle, student self-registration, bulk delete attempts.
+- Cleanup: remove the legacy Google-Form/CSV path from `03-sync.js`.
+- Open question to the user: should the review screen show options in the order the student saw (shuffled) instead of A-B-C-D?
