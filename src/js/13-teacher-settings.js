@@ -85,8 +85,8 @@ function vSettings(){
   const cur = CD.theme.preset;
   const card = ([k, p]) => { const pr = Math.min(p.radius || 14, 16), mo = p.motif && p.motif !== 'none' ? motifURL(p.motif, p.motifInk === 'text' ? p.text : p.primary) : '';
     return `<button class="thm ${cur === k ? 'on' : ''}" onclick="applyPreset('${k}')">
-      <div class="thp${mo ? ' mo' : ''}" style="background:${p.bg};border-radius:${pr}px">${mo ? `<i style="position:absolute;inset:0;background-image:${mo.replace(/"/g, "'")};background-size:150px;opacity:${Math.min(.6, (p.motifOp || 12) * 3 / 100)}"></i>` : ''}<div style="background:${p.card};color:${p.text};border-radius:${pr - 4}px;${p.shadow === 'none' ? 'border:1px solid ' + p.text + '22' : 'box-shadow:0 2px 6px rgba(0,0,0,.12)'}"><b style="font-family:${FONTS[p.family] || FONTS.system}">Aa</b><span style="background:${p.primary};border-radius:${p.btnShape === 'pill' ? '99px' : p.btnShape === 'square' ? '2px' : '6px'}"></span></div></div>
-      <b>${esc(p.n || k)}${cur === k ? ' ✓' : ''}</b><small>${esc(p.d || '')}</small></button>`; };
+      <div class="thp${mo ? ' mo' : ''}" style="background:${p.bg};border-radius:${pr}px">${mo ? `<i style="position:absolute;inset:0;background-image:${mo.replace(/"/g, "'")};background-size:150px;opacity:${Math.min(.6, (p.motifOp || 12) * 3 / 100)}"></i>` : ''}<div style="background:${p.boxStyle && p.boxStyle !== 'plain' ? `linear-gradient(150deg,color-mix(in srgb,${p.primary} 18%,${p.card}),${p.card} 75%)` : p.card};${p.boxStyle && p.boxStyle !== 'plain' ? 'border-top:3px solid ' + p.primary + ';' : ''}color:${p.text};border-radius:${pr - 4}px;${p.shadow === 'none' ? 'border:1px solid ' + p.text + '22' : 'box-shadow:0 2px 6px rgba(0,0,0,.12)'}"><b style="font-family:${FONTS[p.family] || FONTS.system}">Aa</b><span style="background:${p.primary};border-radius:${p.btnShape === 'pill' ? '99px' : p.btnShape === 'square' ? '2px' : '6px'}"></span></div></div>
+      ${p.c2 && p.boxStyle !== 'plain' ? `<div class="thd">${[p.primary, p.c2, p.c3, p.c4].map(x => `<i style="background:${x}"></i>`).join('')}</div>` : ''}<b>${esc(p.n || k)}${cur === k ? ' ✓' : ''}</b><small>${esc(p.d || '')}</small></button>`; };
   const all = Object.entries(PRESETS), sw = `<h3 class="thh">🔬 Science themes (symbol সহ)</h3><div class="thg">${all.filter(e => e[1].sci).map(card).join('')}</div>
     <h3 class="thh">🎨 Color themes</h3><div class="thg">${all.filter(e => !e[1].sci).map(card).join('')}</div>`;
   const theme = `<small class="muted">একটা theme-এ tap করো — সাথে সাথে পুরো app-এ preview হবে। পছন্দ হলে নিচে Save।</small>${sw}<h3>🎛 নিজের মতো বদলাও</h3>
@@ -107,6 +107,10 @@ function vSettings(){
     ${fS('theme.motifInk', 'Symbol color', [['primary','Main color'],['text','Text color (chalk look)']])}</div>
     ${fR('theme.motifOp', 'Symbol কতটা গাঢ় (%)', 3, 35)}${fR('theme.motifSize', 'Symbol size (%)', 60, 180)}
     ${fK('theme.motifQuiz', 'Exam চলার সময়ও symbol দেখাবে (off থাকলে exam page পরিষ্কার থাকে)')}${fK('theme.heroSym', 'Login page-এর title-এর পাশে বড় symbol')}
+    <h3>🧱 Box / card-এর look</h3>
+    ${fS('theme.boxStyle', 'Box style', [['plain','Plain (সাদামাটা)'],['tint','Tint — main color-এর হালকা আভা + উপরে রঙিন দাগ'],['rainbow','Rainbow — প্রতিটা box আলাদা রঙ'],['bold','Bold — রঙিন tile + রঙিন icon']])}
+    <div class="g2">${fC('theme.c2', 'Extra color 2')}${fC('theme.c3', 'Extra color 3')}${fC('theme.c4', 'Extra color 4')}</div>
+    ${fK('theme.boxSym', '🔬 Box-এর ভেতরেও symbol texture (কোণার দিকে; উপরের Symbol type লাগবে)')}${fR('theme.boxSymOp', 'Box-এর symbol কতটা গাঢ় (%)', 5, 80)}
     <button class="btn ghost sm" onclick="resetSec('theme')">↺ Reset theme</button>`;
   const brand = `${fT('brand.title', 'App / brand name')}${fT('brand.tagline', 'Tagline (login page-এ নামের নিচে)')}${fT('brand.emoji', 'Logo emoji')}
     ${fA('brand.notice', '📢 Notice / announcement (login + home page-এ দেখাবে)', 'যেমন: কাল CT, সবাই প্রস্তুত থাকো', 3)}

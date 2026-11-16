@@ -230,6 +230,7 @@ UI/visual checks still use the built-in browser pane + `tools/browser_fake_backe
 - Quiz: keyboard shortcuts (1–N, Enter, ← →), options numbered 1–N; per-question time saved.
 - UI redesign (§4b): brand Muaz's Classroom, hero login, big tiles, collapsible folds, animation, layout/style controls, **18 theme presets with a preview gallery**.
 - **🔬 Science themes (2026-11-16):** 9 new full-look presets (Chalkboard, Blueprint, Lab Notebook, Periodic Table, Quantum Dark, DNA Bio, Circuit Board, Graph Paper, Science Mix) with background symbol patterns drawn as SVG in code (`02b-motif.js`, no images). Settings → Theme: gallery split into Science / Color; controls for symbol type, color (main/text), intensity, size, show during exam (default off), big login-title symbol. Old full-look presets set `motif:'none'`; colour-only presets keep the current motif.
+- **🧱 Colorful boxes (2026-11-16):** box style Plain / Tint / Rainbow (each box a different palette color) / Bold (filled tiles + icons), 3 extra palette colors, symbol texture inside cards/tiles/choices (fades into a corner; hidden during the exam like the background). Science presets use them; old full-look presets reset to plain.
 - Verified: tests 58 backend + 61 frontend; `tools/health.py` ALL GOOD; each feature looked at in the browser pane with the fake backend. NOT yet done by Claude on the live site: a full test-student exam end-to-end after the redesign (do it at the start of the next session if asked).
 
 **Open / pending:**

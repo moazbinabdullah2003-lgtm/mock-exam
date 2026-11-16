@@ -136,8 +136,32 @@ html:not(.anim) *{animation:none!important;transition:none!important}
 .thg{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;margin:10px 0}
 .thm{display:block;text-align:left;background:var(--card);border:2px solid var(--b);border-radius:14px;padding:8px;cursor:pointer;color:var(--t);transition:transform .15s,border-color .15s}
 .thm:hover{transform:translateY(-2px)}.thm.on{border-color:var(--p);box-shadow:0 0 0 3px color-mix(in srgb,var(--p) 20%,transparent)}
-.thm b{display:block;font-size:14px;margin-top:6px}.thp{position:relative;overflow:hidden}.thp>div{position:relative}.thh{margin:14px 0 0;font-size:15px}.thm small{display:block;font-size:12px}
+.thm b{display:block;font-size:14px;margin-top:6px}.thp{position:relative;overflow:hidden}.thp>div{position:relative}.thh{margin:14px 0 0;font-size:15px}.thd{display:flex;gap:4px;margin-top:6px}.thd i{width:14px;height:14px;border-radius:50%;display:block}.thm small{display:block;font-size:12px}
 .thp{padding:10px}.thp>div{display:flex;align-items:center;justify-content:space-between;padding:10px}.thp>div b{margin:0;font-size:18px}.thp>div span{display:block;width:42px;height:16px}.thp.mo{padding:30px 22px 10px}.thp.mo>div{padding:7px 10px}
+
+/* 🎨 Colorful boxes (theme.boxStyle) + symbol texture inside boxes (theme.boxSym). --cc = this box's color */
+:root{--c1:var(--p);--c2:#0ea5e9;--c3:#f59e0b;--c4:#ec4899;--bop:.3}
+:is(.card,.tile,.choice,details.sec){--cc:var(--c1)}
+body.box-rainbow :is(.tile,.choice):nth-child(4n+2),body.box-rainbow :is(.card,details.sec):nth-of-type(4n+2){--cc:var(--c2)}
+body.box-rainbow :is(.tile,.choice):nth-child(4n+3),body.box-rainbow :is(.card,details.sec):nth-of-type(4n+3){--cc:var(--c3)}
+body.box-rainbow :is(.tile,.choice):nth-child(4n+4),body.box-rainbow :is(.card,details.sec):nth-of-type(4n+4){--cc:var(--c4)}
+body:is(.box-tint,.box-rainbow,.box-bold) :is(.card,.tile,.choice,details.sec){background:linear-gradient(150deg,color-mix(in srgb,var(--cc) 15%,var(--card)) 0,var(--card) 75%);border-color:color-mix(in srgb,var(--cc) 32%,var(--b));border-top:3px solid var(--cc)}
+body:is(.box-tint,.box-rainbow) .tile b{color:var(--cc)}
+body:is(.box-tint,.box-rainbow,.box-bold) .choice .ic{background:color-mix(in srgb,var(--cc) 22%,var(--card))}
+body:is(.box-tint,.box-rainbow,.box-bold) .choice:hover{border-color:var(--cc)}
+body:is(.box-tint,.box-rainbow,.box-bold) .hero .logo{background:radial-gradient(circle at 30% 25%,color-mix(in srgb,var(--c2) 30%,var(--card)),var(--card) 70%);box-shadow:0 0 0 4px color-mix(in srgb,var(--p) 35%,transparent),var(--sh)}
+body:is(.box-tint,.box-rainbow,.box-bold) .tabs button.on{background:linear-gradient(135deg,var(--c1),var(--c2))}
+body:is(.box-tint,.box-rainbow,.box-bold) .L{background:color-mix(in srgb,var(--c2) 18%,var(--card));color:var(--c2)}
+/* bold = tile আর choice-এর icon পুরো রঙিন (lekha card-এর রঙে: light theme-এ সাদা, dark theme-এ গাঢ়) */
+body.box-bold :is(.tile,.choice):nth-child(4n+2){--cc:var(--c2)}body.box-bold :is(.tile,.choice):nth-child(4n+3){--cc:var(--c3)}body.box-bold :is(.tile,.choice):nth-child(4n+4){--cc:var(--c4)}
+body.box-bold .tiles>.tile{background:linear-gradient(140deg,var(--cc),color-mix(in srgb,var(--cc) 72%,#000));border-color:transparent}
+body.box-bold .tiles>.tile :is(b,small){color:var(--card)!important}
+body.box-bold .choice .ic{background:linear-gradient(140deg,var(--cc),color-mix(in srgb,var(--cc) 72%,#000))}
+/* box-এর ভেতরে symbol (কোণার দিকে, লেখার জায়গা পরিষ্কার) */
+body.box-sym :is(.card,.tile,.choice,details.sec){position:relative;isolation:isolate}
+body.box-sym :is(.card,.tile,.choice,details.sec)::before{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;border-radius:inherit;background-image:var(--motif);background-size:calc(var(--msz) * .7) calc(var(--msz) * .7);opacity:var(--bop);-webkit-mask-image:linear-gradient(125deg,transparent 30%,#000 95%);mask-image:linear-gradient(125deg,transparent 30%,#000 95%)}
+body.box-bold.box-sym .tile::before{filter:brightness(0) invert(1);opacity:calc(var(--bop) * .8)}
+body.box-sym.in-quiz:not(.motif-quiz) :is(.card,.tile,.choice,details.sec)::before{display:none}
 </style>
 </head>
 <body>
@@ -223,26 +247,26 @@ if(typeof addEventListener === 'function') addEventListener('load', () => mathif
 /* Theme presets — শুধু রং দিলে style (shadow/shape ইত্যাদি) আগেরটা থাকে; পুরো "look" দিলে সব বদলায়.
    n = গ্যালারিতে নাম, d = ছোট বর্ণনা */
 const PRESETS = {
-  classic:  {n:'Classic Blue', d:'পরিষ্কার, professional', primary:'#2563eb', bg:'#f5f7fb', card:'#ffffff', text:'#0f172a', ok:'#16a34a', bad:'#dc2626', bgStyle:'gradient', shadow:'soft', radius:16, btnShape:'rounded', family:'system', motif:'none'},
-  mint:     {n:'Mint Fresh', d:'হালকা সবুজ, চোখে আরাম', primary:'#0d9488', bg:'#f0fdfa', card:'#ffffff', text:'#0f2a27', ok:'#16a34a', bad:'#e11d48', bgStyle:'gradient', shadow:'soft', radius:18, btnShape:'rounded', family:'system', motif:'none'},
-  lavender: {n:'Lavender', d:'নরম বেগুনি, modern', primary:'#7c3aed', bg:'#f7f5ff', card:'#ffffff', text:'#1e1633', ok:'#16a34a', bad:'#e11d48', bgStyle:'gradient', shadow:'soft', radius:20, btnShape:'pill', family:'round', motif:'none'},
-  coral:    {n:'Coral', d:'উষ্ণ, বন্ধুত্বপূর্ণ', primary:'#f43f5e', bg:'#fff6f5', card:'#ffffff', text:'#2b1517', ok:'#16a34a', bad:'#b91c1c', bgStyle:'gradient', shadow:'soft', radius:18, btnShape:'rounded', family:'round', motif:'none'},
-  sky:      {n:'Sky Pill', d:'উজ্জ্বল নীল, গোল button', primary:'#0ea5e9', bg:'#f0f9ff', card:'#ffffff', text:'#0c1e2e', ok:'#10b981', bad:'#ef4444', bgStyle:'dots', shadow:'soft', radius:22, btnShape:'pill', family:'system', motif:'none'},
-  notebook: {n:'Notebook', d:'খাতার মতো, পড়তে আরাম', primary:'#1d4ed8', bg:'#fbfaf5', card:'#fffefa', text:'#1f2937', ok:'#15803d', bad:'#b91c1c', bgStyle:'dots', shadow:'none', radius:10, btnShape:'square', family:'serif', motif:'none'},
-  minimal:  {n:'Minimal', d:'সাদা-কালো, একদম simple', primary:'#111827', bg:'#fafafa', card:'#ffffff', text:'#111827', ok:'#16a34a', bad:'#dc2626', bgStyle:'plain', shadow:'none', radius:12, btnShape:'rounded', family:'system', motif:'none'},
-  emerald:  {n:'Emerald', d:'গাঢ় সবুজ, শান্ত', primary:'#059669', bg:'#f2f8f5', card:'#ffffff', text:'#0f241b', ok:'#16a34a', bad:'#dc2626', bgStyle:'plain', shadow:'strong', radius:16, btnShape:'rounded', family:'system', motif:'none'},
-  night:    {n:'Night Blue', d:'Dark mode, রাতে পড়তে', primary:'#60a5fa', bg:'#0b1220', card:'#131c2e', text:'#e2e8f0', ok:'#34d399', bad:'#f87171', bgStyle:'gradient', shadow:'none', radius:16, btnShape:'rounded', family:'system', motif:'none'},
-  grape:    {n:'Dark Grape', d:'Dark + বেগুনি', primary:'#a78bfa', bg:'#110f17', card:'#1c1826', text:'#ede9fe', ok:'#4ade80', bad:'#fb7185', bgStyle:'dots', shadow:'none', radius:18, btnShape:'pill', family:'round', motif:'none'},
+  classic:  {n:'Classic Blue', d:'পরিষ্কার, professional', primary:'#2563eb', bg:'#f5f7fb', card:'#ffffff', text:'#0f172a', ok:'#16a34a', bad:'#dc2626', bgStyle:'gradient', shadow:'soft', radius:16, btnShape:'rounded', family:'system', motif:'none', boxStyle:'plain', boxSym:false},
+  mint:     {n:'Mint Fresh', d:'হালকা সবুজ, চোখে আরাম', primary:'#0d9488', bg:'#f0fdfa', card:'#ffffff', text:'#0f2a27', ok:'#16a34a', bad:'#e11d48', bgStyle:'gradient', shadow:'soft', radius:18, btnShape:'rounded', family:'system', motif:'none', boxStyle:'plain', boxSym:false},
+  lavender: {n:'Lavender', d:'নরম বেগুনি, modern', primary:'#7c3aed', bg:'#f7f5ff', card:'#ffffff', text:'#1e1633', ok:'#16a34a', bad:'#e11d48', bgStyle:'gradient', shadow:'soft', radius:20, btnShape:'pill', family:'round', motif:'none', boxStyle:'plain', boxSym:false},
+  coral:    {n:'Coral', d:'উষ্ণ, বন্ধুত্বপূর্ণ', primary:'#f43f5e', bg:'#fff6f5', card:'#ffffff', text:'#2b1517', ok:'#16a34a', bad:'#b91c1c', bgStyle:'gradient', shadow:'soft', radius:18, btnShape:'rounded', family:'round', motif:'none', boxStyle:'plain', boxSym:false},
+  sky:      {n:'Sky Pill', d:'উজ্জ্বল নীল, গোল button', primary:'#0ea5e9', bg:'#f0f9ff', card:'#ffffff', text:'#0c1e2e', ok:'#10b981', bad:'#ef4444', bgStyle:'dots', shadow:'soft', radius:22, btnShape:'pill', family:'system', motif:'none', boxStyle:'plain', boxSym:false},
+  notebook: {n:'Notebook', d:'খাতার মতো, পড়তে আরাম', primary:'#1d4ed8', bg:'#fbfaf5', card:'#fffefa', text:'#1f2937', ok:'#15803d', bad:'#b91c1c', bgStyle:'dots', shadow:'none', radius:10, btnShape:'square', family:'serif', motif:'none', boxStyle:'plain', boxSym:false},
+  minimal:  {n:'Minimal', d:'সাদা-কালো, একদম simple', primary:'#111827', bg:'#fafafa', card:'#ffffff', text:'#111827', ok:'#16a34a', bad:'#dc2626', bgStyle:'plain', shadow:'none', radius:12, btnShape:'rounded', family:'system', motif:'none', boxStyle:'plain', boxSym:false},
+  emerald:  {n:'Emerald', d:'গাঢ় সবুজ, শান্ত', primary:'#059669', bg:'#f2f8f5', card:'#ffffff', text:'#0f241b', ok:'#16a34a', bad:'#dc2626', bgStyle:'plain', shadow:'strong', radius:16, btnShape:'rounded', family:'system', motif:'none', boxStyle:'plain', boxSym:false},
+  night:    {n:'Night Blue', d:'Dark mode, রাতে পড়তে', primary:'#60a5fa', bg:'#0b1220', card:'#131c2e', text:'#e2e8f0', ok:'#34d399', bad:'#f87171', bgStyle:'gradient', shadow:'none', radius:16, btnShape:'rounded', family:'system', motif:'none', boxStyle:'plain', boxSym:false},
+  grape:    {n:'Dark Grape', d:'Dark + বেগুনি', primary:'#a78bfa', bg:'#110f17', card:'#1c1826', text:'#ede9fe', ok:'#4ade80', bad:'#fb7185', bgStyle:'dots', shadow:'none', radius:18, btnShape:'pill', family:'round', motif:'none', boxStyle:'plain', boxSym:false},
   // 🔬 Science look (রং + style + background-এ বিজ্ঞানের symbol)
-  chalk:    {n:'Chalkboard', d:'সবুজ বোর্ডে chalk-এর formula', sci:1, primary:'#facc15', bg:'#1f3a2e', card:'#26463a', text:'#f1f5ee', ok:'#86efac', bad:'#fca5a5', bgStyle:'plain', shadow:'none', radius:10, btnShape:'rounded', family:'round', motif:'math', motifInk:'text', motifOp:13, motifSize:100},
-  blueprint:{n:'Blueprint', d:'নীল নকশা, grid + formula', sci:1, primary:'#7dd3fc', bg:'#0b3a6e', card:'#104680', text:'#e6f1ff', ok:'#6ee7b7', bad:'#fda4af', bgStyle:'plain', shadow:'none', radius:6, btnShape:'square', family:'mono', motif:'blueprint', motifInk:'text', motifOp:10, motifSize:100},
-  labnote:  {n:'Lab Notebook', d:'খাতার পাতায় molecule', sci:1, primary:'#0f766e', bg:'#fbfaf3', card:'#fffef8', text:'#1f2937', ok:'#15803d', bad:'#b91c1c', bgStyle:'plain', shadow:'none', radius:10, btnShape:'rounded', family:'serif', motif:'chemistry', motifInk:'primary', motifOp:12, motifSize:100},
-  periodic: {n:'Periodic Table', d:'Element-এর ছোট tile', sci:1, primary:'#7c3aed', bg:'#f5f4fc', card:'#ffffff', text:'#1b1636', ok:'#16a34a', bad:'#dc2626', bgStyle:'plain', shadow:'soft', radius:14, btnShape:'rounded', family:'system', motif:'periodic', motifInk:'primary', motifOp:10, motifSize:100},
-  quantum:  {n:'Quantum Dark', d:'Dark, ψ আর atom orbit', sci:1, primary:'#22d3ee', bg:'#090b1a', card:'#13162c', text:'#e0e7ff', ok:'#4ade80', bad:'#fb7185', bgStyle:'gradient', shadow:'none', radius:18, btnShape:'pill', family:'system', motif:'physics', motifInk:'primary', motifOp:14, motifSize:110},
-  dna:      {n:'DNA Bio', d:'সবুজ, DNA helix আর cell', sci:1, primary:'#059669', bg:'#f1faf5', card:'#ffffff', text:'#0f2a1e', ok:'#16a34a', bad:'#e11d48', bgStyle:'gradient', shadow:'soft', radius:18, btnShape:'pill', family:'round', motif:'biology', motifInk:'primary', motifOp:12, motifSize:110},
-  circuit:  {n:'Circuit Board', d:'Dark সবুজ PCB, trace আর chip', sci:1, primary:'#34d399', bg:'#05261b', card:'#0b3628', text:'#d1fae5', ok:'#a3e635', bad:'#f87171', bgStyle:'plain', shadow:'none', radius:8, btnShape:'square', family:'mono', motif:'circuit', motifInk:'primary', motifOp:14, motifSize:100},
-  graphpad: {n:'Graph Paper', d:'Math-এর graph খাতা', sci:1, primary:'#2563eb', bg:'#fdfdfa', card:'#ffffff', text:'#1e293b', ok:'#16a34a', bad:'#dc2626', bgStyle:'plain', shadow:'soft', radius:12, btnShape:'rounded', family:'serif', motif:'graph', motifInk:'primary', motifOp:9, motifSize:100},
-  scimix:   {n:'Science Mix', d:'হালকা, সব subject-এর symbol', sci:1, primary:'#4f46e5', bg:'#f5f5ff', card:'#ffffff', text:'#15173a', ok:'#16a34a', bad:'#dc2626', bgStyle:'gradient', shadow:'soft', radius:16, btnShape:'rounded', family:'system', motif:'mix', motifInk:'primary', motifOp:11, motifSize:100},
+  chalk:    {n:'Chalkboard', d:'সবুজ বোর্ডে chalk-এর formula', sci:1, primary:'#facc15', bg:'#1f3a2e', card:'#26463a', text:'#f1f5ee', ok:'#86efac', bad:'#fca5a5', bgStyle:'plain', shadow:'none', radius:10, btnShape:'rounded', family:'round', motif:'math', motifInk:'text', motifOp:13, motifSize:100, boxStyle:'rainbow', c2:'#7dd3fc', c3:'#f9a8d4', c4:'#bef264', boxSym:true, boxSymOp:35},
+  blueprint:{n:'Blueprint', d:'নীল নকশা, grid + formula', sci:1, primary:'#7dd3fc', bg:'#0b3a6e', card:'#104680', text:'#e6f1ff', ok:'#6ee7b7', bad:'#fda4af', bgStyle:'plain', shadow:'none', radius:6, btnShape:'square', family:'mono', motif:'blueprint', motifInk:'text', motifOp:10, motifSize:100, boxStyle:'tint', c2:'#fde68a', c3:'#a5b4fc', c4:'#5eead4', boxSym:true, boxSymOp:40},
+  labnote:  {n:'Lab Notebook', d:'খাতার পাতায় molecule', sci:1, primary:'#0f766e', bg:'#fbfaf3', card:'#fffef8', text:'#1f2937', ok:'#15803d', bad:'#b91c1c', bgStyle:'plain', shadow:'none', radius:10, btnShape:'rounded', family:'serif', motif:'chemistry', motifInk:'primary', motifOp:12, motifSize:100, boxStyle:'rainbow', c2:'#7c3aed', c3:'#ea580c', c4:'#0284c7', boxSym:true, boxSymOp:35},
+  periodic: {n:'Periodic Table', d:'Element-এর ছোট tile', sci:1, primary:'#7c3aed', bg:'#f5f4fc', card:'#ffffff', text:'#1b1636', ok:'#16a34a', bad:'#dc2626', bgStyle:'plain', shadow:'soft', radius:14, btnShape:'rounded', family:'system', motif:'periodic', motifInk:'primary', motifOp:10, motifSize:100, boxStyle:'bold', c2:'#0891b2', c3:'#ea580c', c4:'#16a34a', boxSym:true, boxSymOp:30},
+  quantum:  {n:'Quantum Dark', d:'Dark, ψ আর atom orbit', sci:1, primary:'#22d3ee', bg:'#090b1a', card:'#13162c', text:'#e0e7ff', ok:'#4ade80', bad:'#fb7185', bgStyle:'gradient', shadow:'none', radius:18, btnShape:'pill', family:'system', motif:'physics', motifInk:'primary', motifOp:14, motifSize:110, boxStyle:'rainbow', c2:'#a78bfa', c3:'#f472b6', c4:'#facc15', boxSym:true, boxSymOp:40},
+  dna:      {n:'DNA Bio', d:'সবুজ, DNA helix আর cell', sci:1, primary:'#059669', bg:'#f1faf5', card:'#ffffff', text:'#0f2a1e', ok:'#16a34a', bad:'#e11d48', bgStyle:'gradient', shadow:'soft', radius:18, btnShape:'pill', family:'round', motif:'biology', motifInk:'primary', motifOp:12, motifSize:110, boxStyle:'bold', c2:'#db2777', c3:'#7c3aed', c4:'#0891b2', boxSym:true, boxSymOp:30},
+  circuit:  {n:'Circuit Board', d:'Dark সবুজ PCB, trace আর chip', sci:1, primary:'#34d399', bg:'#05261b', card:'#0b3628', text:'#d1fae5', ok:'#a3e635', bad:'#f87171', bgStyle:'plain', shadow:'none', radius:8, btnShape:'square', family:'mono', motif:'circuit', motifInk:'primary', motifOp:14, motifSize:100, boxStyle:'tint', c2:'#facc15', c3:'#22d3ee', c4:'#f472b6', boxSym:true, boxSymOp:40},
+  graphpad: {n:'Graph Paper', d:'Math-এর graph খাতা', sci:1, primary:'#2563eb', bg:'#fdfdfa', card:'#ffffff', text:'#1e293b', ok:'#16a34a', bad:'#dc2626', bgStyle:'plain', shadow:'soft', radius:12, btnShape:'rounded', family:'serif', motif:'graph', motifInk:'primary', motifOp:9, motifSize:100, boxStyle:'rainbow', c2:'#dc2626', c3:'#059669', c4:'#d97706', boxSym:true, boxSymOp:28},
+  scimix:   {n:'Science Mix', d:'হালকা, সব subject-এর symbol', sci:1, primary:'#4f46e5', bg:'#f5f5ff', card:'#ffffff', text:'#15173a', ok:'#16a34a', bad:'#dc2626', bgStyle:'gradient', shadow:'soft', radius:16, btnShape:'rounded', family:'system', motif:'mix', motifInk:'primary', motifOp:11, motifSize:100, boxStyle:'bold', c2:'#0891b2', c3:'#d97706', c4:'#db2777', boxSym:true, boxSymOp:32},
   // পুরোনো preset (শুধু রং)
   indigo:   {n:'Indigo', d:'আগের default', primary:'#4f46e5', bg:'#f3f4f6', card:'#ffffff', text:'#111827'},
   ocean:    {n:'Ocean', d:'নীল', primary:'#0284c7', bg:'#eef6fb', card:'#ffffff', text:'#0f172a'},
@@ -262,7 +286,8 @@ const FONTS = {
 const DEF_CFG = {
   theme:  {preset:'indigo', primary:'#4f46e5', bg:'#f3f4f6', card:'#ffffff', text:'#111827', ok:'#16a34a', bad:'#dc2626', radius:16, font:16, family:'system',
            bgStyle:'gradient', shadow:'soft', density:'normal', width:'normal', btnShape:'rounded', hero:34, align:'center', anim:true,
-           motif:'none', motifOp:12, motifSize:100, motifInk:'primary', motifQuiz:false, heroSym:true},
+           motif:'none', motifOp:12, motifSize:100, motifInk:'primary', motifQuiz:false, heroSym:true,
+           boxStyle:'plain', c2:'#0ea5e9', c3:'#f59e0b', c4:'#ec4899', boxSym:false, boxSymOp:30},
   brand:  {title:"Muaz's Classroom", tagline:'Practice smart, score high ✨', emoji:'📚', notice:'', noticeType:'info', intro:'', footer:''},
   text:   {},
   access: {guest:true, teacherId:'teacher'},
@@ -304,6 +329,7 @@ function applyTheme(c){
     --pl:color-mix(in srgb,${t.primary} 13%,${t.card});--gl:color-mix(in srgb,${t.ok} 16%,${t.card});--rl:color-mix(in srgb,${t.bad} 14%,${t.card});
     --m:color-mix(in srgb,${t.text} 58%,${t.card});--b:color-mix(in srgb,${t.text} 14%,${t.card})}
     --pad:${{compact:'12px', normal:'18px', roomy:'24px'}[t.density] || '18px'};--w:${{narrow:'620px', normal:'760px', wide:'1000px'}[t.width] || '760px'};
+    --c2:${t.c2 || '#0ea5e9'};--c3:${t.c3 || '#f59e0b'};--c4:${t.c4 || '#ec4899'};--bop:${Math.max(5, Math.min(80, +t.boxSymOp || 30)) / 100};
     --btnr:${{pill:'999px', square:'4px'}[t.btnShape] || Math.min(t.radius, 14) + 'px'};--hero:${t.hero || 34}px;
     --sh:${{none:'none', strong:'0 2px 4px rgba(0,0,0,.06),0 10px 30px rgba(0,0,0,.14)'}[t.shadow] || '0 1px 2px rgba(0,0,0,.04),0 4px 16px rgba(0,0,0,.06)'}}
     body{font-size:${t.font}px;font-family:${FONTS[t.family] || FONTS.system}}${typeof motifCSS === 'function' ? motifCSS(t) : ''}`;
@@ -314,7 +340,8 @@ function applyTheme(c){
     document.documentElement.classList.toggle('anim', t.anim !== false);
     if(document.body){ document.body.classList.remove('bg-gradient', 'bg-dots'); if(t.bgStyle === 'gradient' || t.bgStyle === 'dots') document.body.classList.add('bg-' + t.bgStyle);
       const mo = t.motif && t.motif !== 'none' && typeof MOTIFS !== 'undefined' && MOTIFS[t.motif];
-      document.body.classList.toggle('has-motif', !!mo); document.body.classList.toggle('motif-quiz', !!mo && !!t.motifQuiz); document.body.classList.toggle('hero-sym', !!mo && t.heroSym !== false); }
+      document.body.classList.toggle('has-motif', !!mo); document.body.classList.toggle('motif-quiz', !!mo && !!t.motifQuiz); document.body.classList.toggle('hero-sym', !!mo && t.heroSym !== false);
+      ['tint', 'rainbow', 'bold'].forEach(b => document.body.classList.toggle('box-' + b, t.boxStyle === b)); document.body.classList.toggle('box-sym', !!mo && !!t.boxSym); }
   }catch(e){}
   try{ document.title = (c.brand.emoji ? c.brand.emoji + ' ' : '') + c.brand.title; }catch(e){}
 }
@@ -1510,8 +1537,8 @@ function vSettings(){
   const cur = CD.theme.preset;
   const card = ([k, p]) => { const pr = Math.min(p.radius || 14, 16), mo = p.motif && p.motif !== 'none' ? motifURL(p.motif, p.motifInk === 'text' ? p.text : p.primary) : '';
     return `<button class="thm ${cur === k ? 'on' : ''}" onclick="applyPreset('${k}')">
-      <div class="thp${mo ? ' mo' : ''}" style="background:${p.bg};border-radius:${pr}px">${mo ? `<i style="position:absolute;inset:0;background-image:${mo.replace(/"/g, "'")};background-size:150px;opacity:${Math.min(.6, (p.motifOp || 12) * 3 / 100)}"></i>` : ''}<div style="background:${p.card};color:${p.text};border-radius:${pr - 4}px;${p.shadow === 'none' ? 'border:1px solid ' + p.text + '22' : 'box-shadow:0 2px 6px rgba(0,0,0,.12)'}"><b style="font-family:${FONTS[p.family] || FONTS.system}">Aa</b><span style="background:${p.primary};border-radius:${p.btnShape === 'pill' ? '99px' : p.btnShape === 'square' ? '2px' : '6px'}"></span></div></div>
-      <b>${esc(p.n || k)}${cur === k ? ' ✓' : ''}</b><small>${esc(p.d || '')}</small></button>`; };
+      <div class="thp${mo ? ' mo' : ''}" style="background:${p.bg};border-radius:${pr}px">${mo ? `<i style="position:absolute;inset:0;background-image:${mo.replace(/"/g, "'")};background-size:150px;opacity:${Math.min(.6, (p.motifOp || 12) * 3 / 100)}"></i>` : ''}<div style="background:${p.boxStyle && p.boxStyle !== 'plain' ? `linear-gradient(150deg,color-mix(in srgb,${p.primary} 18%,${p.card}),${p.card} 75%)` : p.card};${p.boxStyle && p.boxStyle !== 'plain' ? 'border-top:3px solid ' + p.primary + ';' : ''}color:${p.text};border-radius:${pr - 4}px;${p.shadow === 'none' ? 'border:1px solid ' + p.text + '22' : 'box-shadow:0 2px 6px rgba(0,0,0,.12)'}"><b style="font-family:${FONTS[p.family] || FONTS.system}">Aa</b><span style="background:${p.primary};border-radius:${p.btnShape === 'pill' ? '99px' : p.btnShape === 'square' ? '2px' : '6px'}"></span></div></div>
+      ${p.c2 && p.boxStyle !== 'plain' ? `<div class="thd">${[p.primary, p.c2, p.c3, p.c4].map(x => `<i style="background:${x}"></i>`).join('')}</div>` : ''}<b>${esc(p.n || k)}${cur === k ? ' ✓' : ''}</b><small>${esc(p.d || '')}</small></button>`; };
   const all = Object.entries(PRESETS), sw = `<h3 class="thh">🔬 Science themes (symbol সহ)</h3><div class="thg">${all.filter(e => e[1].sci).map(card).join('')}</div>
     <h3 class="thh">🎨 Color themes</h3><div class="thg">${all.filter(e => !e[1].sci).map(card).join('')}</div>`;
   const theme = `<small class="muted">একটা theme-এ tap করো — সাথে সাথে পুরো app-এ preview হবে। পছন্দ হলে নিচে Save।</small>${sw}<h3>🎛 নিজের মতো বদলাও</h3>
@@ -1532,6 +1559,10 @@ function vSettings(){
     ${fS('theme.motifInk', 'Symbol color', [['primary','Main color'],['text','Text color (chalk look)']])}</div>
     ${fR('theme.motifOp', 'Symbol কতটা গাঢ় (%)', 3, 35)}${fR('theme.motifSize', 'Symbol size (%)', 60, 180)}
     ${fK('theme.motifQuiz', 'Exam চলার সময়ও symbol দেখাবে (off থাকলে exam page পরিষ্কার থাকে)')}${fK('theme.heroSym', 'Login page-এর title-এর পাশে বড় symbol')}
+    <h3>🧱 Box / card-এর look</h3>
+    ${fS('theme.boxStyle', 'Box style', [['plain','Plain (সাদামাটা)'],['tint','Tint — main color-এর হালকা আভা + উপরে রঙিন দাগ'],['rainbow','Rainbow — প্রতিটা box আলাদা রঙ'],['bold','Bold — রঙিন tile + রঙিন icon']])}
+    <div class="g2">${fC('theme.c2', 'Extra color 2')}${fC('theme.c3', 'Extra color 3')}${fC('theme.c4', 'Extra color 4')}</div>
+    ${fK('theme.boxSym', '🔬 Box-এর ভেতরেও symbol texture (কোণার দিকে; উপরের Symbol type লাগবে)')}${fR('theme.boxSymOp', 'Box-এর symbol কতটা গাঢ় (%)', 5, 80)}
     <button class="btn ghost sm" onclick="resetSec('theme')">↺ Reset theme</button>`;
   const brand = `${fT('brand.title', 'App / brand name')}${fT('brand.tagline', 'Tagline (login page-এ নামের নিচে)')}${fT('brand.emoji', 'Logo emoji')}
     ${fA('brand.notice', '📢 Notice / announcement (login + home page-এ দেখাবে)', 'যেমন: কাল CT, সবাই প্রস্তুত থাকো', 3)}

@@ -33,6 +33,7 @@ Other source: `src/css/app.css` (theme variables `--p --bg --card --t --m --b --
 | Overall look / folds / tiles / animation | `src/css/app.css`; `sec()` (`13`), `tile()` (`07`), `vHero()` (`06`); teacher-editable style keys in `DEF_CFG.theme` + `applyTheme` (`02a`) + fields in `vSettings` (`13`) |
 | Colors / layout / mobile look (defaults) | `src/css/app.css` (+ markup strings in the view module). Teacher-editable look: `PRESETS`/`DEF_CFG.theme`/`applyTheme` in `02a-cfg.js` |
 | Science background symbols / new science theme | add symbols/shapes to `MOTIFS` / `MOTIF_SHAPES` in `02b-motif.js`; a full science preset = PRESETS entry with `sci:1` + `motif`,`motifInk`,`motifOp`,`motifSize` (`02a`); controls in `vSettings` (`13`) |
+| Colorful boxes / symbols inside boxes | theme keys `boxStyle` (plain/tint/rainbow/bold), `c2 c3 c4` (palette), `boxSym`, `boxSymOp` (`02a` DEF_CFG + applyTheme body classes `box-*`); CSS block "Colorful boxes" at the end of `app.css` (`--cc` = each box's color, cycles by nth-child) |
 | **Add a teacher-editable setting** | default in `DEF_CFG` (`02a`) → field in `vSettings()` (`13`) → use `CFG.x.y` where needed. No backend change |
 | **Change a button/label text** | add to `TX` (`02a`), use `T('key')`; it becomes editable in Settings → Texts automatically |
 | Quiz keyboard shortcuts / option numbers | `08-quiz.js` `onQuizKey`, `vQuiz` (+ `.kbhint` in css) |

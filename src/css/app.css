@@ -126,5 +126,29 @@ html:not(.anim) *{animation:none!important;transition:none!important}
 .thg{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;margin:10px 0}
 .thm{display:block;text-align:left;background:var(--card);border:2px solid var(--b);border-radius:14px;padding:8px;cursor:pointer;color:var(--t);transition:transform .15s,border-color .15s}
 .thm:hover{transform:translateY(-2px)}.thm.on{border-color:var(--p);box-shadow:0 0 0 3px color-mix(in srgb,var(--p) 20%,transparent)}
-.thm b{display:block;font-size:14px;margin-top:6px}.thp{position:relative;overflow:hidden}.thp>div{position:relative}.thh{margin:14px 0 0;font-size:15px}.thm small{display:block;font-size:12px}
+.thm b{display:block;font-size:14px;margin-top:6px}.thp{position:relative;overflow:hidden}.thp>div{position:relative}.thh{margin:14px 0 0;font-size:15px}.thd{display:flex;gap:4px;margin-top:6px}.thd i{width:14px;height:14px;border-radius:50%;display:block}.thm small{display:block;font-size:12px}
 .thp{padding:10px}.thp>div{display:flex;align-items:center;justify-content:space-between;padding:10px}.thp>div b{margin:0;font-size:18px}.thp>div span{display:block;width:42px;height:16px}.thp.mo{padding:30px 22px 10px}.thp.mo>div{padding:7px 10px}
+
+/* 🎨 Colorful boxes (theme.boxStyle) + symbol texture inside boxes (theme.boxSym). --cc = this box's color */
+:root{--c1:var(--p);--c2:#0ea5e9;--c3:#f59e0b;--c4:#ec4899;--bop:.3}
+:is(.card,.tile,.choice,details.sec){--cc:var(--c1)}
+body.box-rainbow :is(.tile,.choice):nth-child(4n+2),body.box-rainbow :is(.card,details.sec):nth-of-type(4n+2){--cc:var(--c2)}
+body.box-rainbow :is(.tile,.choice):nth-child(4n+3),body.box-rainbow :is(.card,details.sec):nth-of-type(4n+3){--cc:var(--c3)}
+body.box-rainbow :is(.tile,.choice):nth-child(4n+4),body.box-rainbow :is(.card,details.sec):nth-of-type(4n+4){--cc:var(--c4)}
+body:is(.box-tint,.box-rainbow,.box-bold) :is(.card,.tile,.choice,details.sec){background:linear-gradient(150deg,color-mix(in srgb,var(--cc) 15%,var(--card)) 0,var(--card) 75%);border-color:color-mix(in srgb,var(--cc) 32%,var(--b));border-top:3px solid var(--cc)}
+body:is(.box-tint,.box-rainbow) .tile b{color:var(--cc)}
+body:is(.box-tint,.box-rainbow,.box-bold) .choice .ic{background:color-mix(in srgb,var(--cc) 22%,var(--card))}
+body:is(.box-tint,.box-rainbow,.box-bold) .choice:hover{border-color:var(--cc)}
+body:is(.box-tint,.box-rainbow,.box-bold) .hero .logo{background:radial-gradient(circle at 30% 25%,color-mix(in srgb,var(--c2) 30%,var(--card)),var(--card) 70%);box-shadow:0 0 0 4px color-mix(in srgb,var(--p) 35%,transparent),var(--sh)}
+body:is(.box-tint,.box-rainbow,.box-bold) .tabs button.on{background:linear-gradient(135deg,var(--c1),var(--c2))}
+body:is(.box-tint,.box-rainbow,.box-bold) .L{background:color-mix(in srgb,var(--c2) 18%,var(--card));color:var(--c2)}
+/* bold = tile আর choice-এর icon পুরো রঙিন (lekha card-এর রঙে: light theme-এ সাদা, dark theme-এ গাঢ়) */
+body.box-bold :is(.tile,.choice):nth-child(4n+2){--cc:var(--c2)}body.box-bold :is(.tile,.choice):nth-child(4n+3){--cc:var(--c3)}body.box-bold :is(.tile,.choice):nth-child(4n+4){--cc:var(--c4)}
+body.box-bold .tiles>.tile{background:linear-gradient(140deg,var(--cc),color-mix(in srgb,var(--cc) 72%,#000));border-color:transparent}
+body.box-bold .tiles>.tile :is(b,small){color:var(--card)!important}
+body.box-bold .choice .ic{background:linear-gradient(140deg,var(--cc),color-mix(in srgb,var(--cc) 72%,#000))}
+/* box-এর ভেতরে symbol (কোণার দিকে, লেখার জায়গা পরিষ্কার) */
+body.box-sym :is(.card,.tile,.choice,details.sec){position:relative;isolation:isolate}
+body.box-sym :is(.card,.tile,.choice,details.sec)::before{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;border-radius:inherit;background-image:var(--motif);background-size:calc(var(--msz) * .7) calc(var(--msz) * .7);opacity:var(--bop);-webkit-mask-image:linear-gradient(125deg,transparent 30%,#000 95%);mask-image:linear-gradient(125deg,transparent 30%,#000 95%)}
+body.box-bold.box-sym .tile::before{filter:brightness(0) invert(1);opacity:calc(var(--bop) * .8)}
+body.box-sym.in-quiz:not(.motif-quiz) :is(.card,.tile,.choice,details.sec)::before{display:none}

@@ -28,6 +28,9 @@ applyPreset('classic'); TT.eq(CD.theme.motif, 'none', 'old full-look preset clea
 applyPreset('quantum'); applyPreset('rose'); TT.eq(CD.theme.motif, 'physics', 'colour-only preset keeps motif');
 TT.eq(motifCSS({...CFG.theme, motif:'none'}), '', 'no motif -> no css');
 { const v = vSettings(); TT.ok(v.includes('Science themes') && v.includes('Chalkboard') && v.includes('Background symbols') && v.includes('Circuit board'), 'settings shows science gallery + motif controls'); }
+applyPreset('periodic'); TT.ok(CD.theme.boxStyle === 'bold' && CD.theme.boxSym === true && CD.theme.c2 === '#0891b2', 'science preset sets colorful box style + palette');
+applyPreset('night'); TT.ok(CD.theme.boxStyle === 'plain' && CD.theme.boxSym === false, 'old full-look preset resets box style');
+{ const v = vSettings(); TT.ok(v.includes('Box style') && v.includes('Extra color 2') && v.includes('thd'), 'settings shows box style controls + palette dots'); }
 CD = {theme:{primary:'#000000'}}; TT.eq(gp('theme.motifOp'), 12, 'gp falls back to default for keys missing in old saved settings');
 CD = null; DIRTY = false; CFG = deepMerge(DEF_CFG, {});
 
