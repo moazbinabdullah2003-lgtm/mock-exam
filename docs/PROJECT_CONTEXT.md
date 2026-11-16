@@ -37,12 +37,12 @@ Everything the teacher controls is edited **in the web UI** — no code edits ne
 | Web app `/exec` URL | in `src/js/01-config.js` → `CONFIG.SCRIPT_URL` (`https://script.google.com/macros/s/AKfycbx2xuErMRJf9XPij0Yt28hqLXf79oAN3MnQva2ERw4rTJLQsFrkmQwO6qpFxTCG3IRPjw/exec`). **Never create a "New deployment"** — it changes the URL. Always *Manage deployments → edit → New version*. |
 | Spreadsheet "MCQ Mock Data" | id `1sU8tzNalkI30mmx8aAOQwz8lA_8jX4atM0m4fsnK3og` (also Script property `SSID`). Tabs: `Attempts`, `Questions`, `Settings`. |
 | Teacher login | ID `teacher`, password `teacher123` (defaults; password can be changed in Settings→Security which stores Script property `TPASS`; ID is `access.teacherId` in settings) |
-| Live `quiz.html` sha256 | starts `d97f5d482886…` (2026-11-16, login choose screen + guest name) = current `dist/quiz.html` |
+| Live `quiz.html` sha256 | starts `23834f46aae9…` (2026-11-16 end of session: UI redesign, themes, copy-for-AI) = current `dist/quiz.html`. `tools/health.py` checks this automatically. |
 
 ### Live data right now
 - Exams: `DEMO1` (3 Q), **`MATH-B`** Beginner (17 Q, 20 min), **`MATH-I`** Intermediate (17 Q, 25 min), **`MATH-A`** Advanced (16 Q, 30 min); negative mark 0.25 on the three MATH exams. Source: `samples/math_3levels.csv` ← `samples/math_questions_with_solutions.md` (50 Higher-Math questions with step-by-step solutions, KaTeX).
-- Roster: 3 students — `0001` zaheen, `0002` rakin, and the **test student `9999` / `test1234`** (for Claude's post-update end-to-end checks; never delete real students). Attempts: 2 rows (DEMO1 tests).
-- Settings saved by the teacher: theme preset `rose`; everything else default. (The saved settings still contain obsolete keys `access.mode/needPin` — harmless, ignored.)
+- Roster: 3 students — `0001` zaheen, `0002` rakin, and the **test student `9999` / `test1234`** (for Claude's post-update end-to-end checks; never delete real students). Attempts: 6 rows (as of backup `2026-11-16_143035`: 4 exams, 53 questions, 3 students, 6 attempts).
+- Settings saved by the teacher: theme preset `rose`; brand = "Muaz's Classroom" 📚 + tagline (set by Claude on 2026-11-16); everything else default. The teacher may pick a new theme from the gallery any time. (The saved settings still contain obsolete keys `access.mode/needPin` — harmless, ignored.)
 
 ---------------------------------------------------------------------------------------------------
 
@@ -224,13 +224,19 @@ UI/visual checks still use the built-in browser pane + `tools/browser_fake_backe
 
 ## 12. Status, open items, backlog (2026-11-16)
 
-**Working & deployed:** everything in §1–§9 (Backend v4, frontend hash `a511f2325f4d…`). Verified on the live site (read-only): login rejections, teacher login, guest home, Connection check; verified in-browser with a fake backend: all error kinds, shuffle (no repeated order over 30 attempts, pinned "None of these"), attempt limit, time window, intro popup, exam editor save, roster login (unknown/blocked/wrong/right), guest flow.
+**Working & deployed (2026-11-16, backend Version 6):** everything in §1–§9 plus this session's work:
+- Login choose screen (Student / Guest / Teacher); guest = name + exam code.
+- Teacher-side: full **student profile** (`07a`), **🎓 Test student** one-click switch (`asTestStudent`), **exam code rename** (backend `rename`, history kept), **per-exam analytics** (`10a`), **⏱ time analytics** everywhere (`07b`), **📋 Copy for AI** (`09a`).
+- Quiz: keyboard shortcuts (1–N, Enter, ← →), options numbered 1–N; per-question time saved.
+- UI redesign (§4b): brand Muaz's Classroom, hero login, big tiles, collapsible folds, animation, layout/style controls, **18 theme presets with a preview gallery**.
+- Verified: tests 58 backend + 61 frontend; `tools/health.py` ALL GOOD; each feature looked at in the browser pane with the fake backend. NOT yet done by Claude on the live site: a full test-student exam end-to-end after the redesign (do it at the start of the next session if asked).
 
 **Open / pending:**
 1. **User reported "Network nei" when logging in on their device.** The server is healthy from our side. The new diagnostic UI was deployed to find the real cause; **waiting for the user to send the new message/`[kind: …]` tag or the Connection-check output**. Likely causes: ISP/WiFi blocking Google, Messenger/Facebook in-app browser, VPN/ad-blocker, stale cached old page (hard refresh).
 2. Review screen shows options in original A-B-C-D order, not the order the student saw — user was asked whether they want the exam-time order; no answer yet.
 3. Math question content decisions: Q21 (argument of −i) answer set to (c) −π/2 (principal value; (a),(d) are also valid arguments) — user may want to reword; Q49 assumes ω is the complex cube root (ω≠1); negative marking 0.25 assumed.
-4. (done 2026-11-16) tests: 58 backend + 61 frontend, run before every deploy and in CI.
+4. Theme: live is still `rose`; user said they will choose from the new gallery themselves.
+6. Animation note: in the hidden/background browser pane, screenshots can catch the page mid fade-in (looks blank) — wait and screenshot again; real browsers are fine.
 5. Obsolete keys `access.mode`, `access.needPin` remain in the saved cfg (harmless).
 
 **Backlog ideas (not decided — ask the user):** server-side grading so answers aren't in the page/network; hashed passwords + login rate-limit; exam window already exists per exam — add hide-results-until-released toggle; question images; PWA/offline; Bengali digits toggle; student self-registration; bulk delete attempts; cleaning legacy Google-Form/CSV path in `03-sync.js`; leaderboard.
@@ -239,4 +245,4 @@ UI/visual checks still use the built-in browser pane + `tools/browser_fake_backe
 
 ## 13. Quick start for a new chat
 
-1. Read `CLAUDE.md`, this file, then `docs/INDEX.md`. 2. Ask what to change. 3. Open only the modules from INDEX's task table. 4. Follow §10 (edit → test → deploy → verify → docs). 5. Bengali, short. 6. After the batch is done, ask once about `./backup.sh`.
+1. Read `CLAUDE.md`, this file, then `docs/INDEX.md`. 2. Ask what to change. 3. Open only the modules from INDEX's task table. 4. Follow §10 (edit → test → deploy → verify → docs). 5. Bengali, short. 6. After the batch is done, ask once about `./backup.sh`. 7. On "pack koro": `docs/PACKUP.md`.

@@ -6,7 +6,7 @@ The user **cannot read or write code**; they work only through Claude. So: keep 
 1. `docs/PROJECT_CONTEXT.md` (architecture, live IDs, status, pitfalls) → 2. `docs/INDEX.md` (module map + "Task → where to edit") → open only the modules the task needs. Never open `dist/quiz.html` whole. Protocol/data model: `docs/ARCHITECTURE.md`. Ops: `docs/DEPLOY.md`, `docs/BACKUP.md`. **Something broken? `python3 tools/health.py` then `docs/TROUBLESHOOTING.md`.**
 
 ## How to talk to the user
-Bengali/Banglish, technical terms in English, **short**. Manual steps for the user: one step at a time, wait for "done". User has Claude Pro only — **no API/paid server**. Use they/them. Never type passwords; never put credentials in chat or in the public GitHub repo.
+Bengali/Banglish, technical terms in English, **short**. Manual steps for the user: one step at a time, wait for "done". User has Claude Pro only — **no API/paid server**. Use they/them. **End every reply with the live link** https://moazbinabdullah2003-lgtm.github.io/mock-exam/quiz.html Never type passwords; never put credentials in chat or in the public GitHub repo.
 
 ## Environment (this Mac)
 `python3`, `git`, `node` + `clasp` (Homebrew: use `export PATH=/opt/homebrew/bin:$PATH` in Claude's shell). GitHub push token is in the macOS Keychain. clasp is logged in.
@@ -22,6 +22,9 @@ Bengali/Banglish, technical terms in English, **short**. Manual steps for the us
 - Work through the whole batch of requested changes first. When the batch is done, **ask the user once** ("backup নেব?") and only on yes run `./backup.sh`. Exception: before any risky/destructive step (restore, bulk delete, schema change, roster/exam overwrite) ask to back up first.
 - A backup is a script run (cheap): data (settings, roster, exams, attempts) + project tarball + manifest in `backups/<time>/`. It stays on the Mac and is gitignored (it contains student passwords). Report the counts from its last line. Restore: `python3 tools/restore.py backups/<stamp>` (dry run) then `--yes`, only after the user agrees.
 - Suggest a backup if the newest one in `backups/` is older than ~7 days or before a big change.
+
+## Pack-up ("pack koro" / fresh session)
+Follow `docs/PACKUP.md` step by step — every item, every time (cleanup → tests → deploy state → health → backup → docs → commit/push → short report + live link).
 
 ## Hard rules
 - Student IDs are numbers only. `saveroster` replaces the WHOLE roster: always read the current roster first and append; real students (0001 zaheen, 0002 rakin) must never be lost.
