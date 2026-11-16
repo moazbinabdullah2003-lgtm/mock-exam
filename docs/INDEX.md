@@ -40,7 +40,7 @@ Other source: `src/css/app.css` (theme variables `--p --bg --card --t --m --b --
 | Teacher → test student switch | `06-views-login-home.js` `asTestStudent`/`backToTeacher`, button in `10-teacher-dashboard.js` header |
 | Roster / student management UI | `13-teacher-settings.js` (`vStudents`, `r*` functions) + backend `saveroster`/`roster`/`login_` |
 | CSV question format / validation | `11-teacher-exams.js` `parseQ`,`rowsOf`; backend `admin_`,`getExam_`,`QHEAD`; `samples/questions_template.csv` |
-| In-app exam editor | `14-exam-editor.js` |
+| In-app exam editor (incl. changing the exam code: `edCode`/`saveExam`; backend `rename` in `admin_`) | `14-exam-editor.js` |
 | Exam list actions (close/delete/…) | `11-teacher-exams.js` `vExams`,`setOpen`,`delExam`; backend `admin_` |
 | Network error messages / Connection check | `03-sync.js` (`jget`, `describeErr`, `netFail`, `diag`) |
 | New backend endpoint | `backend/Code.gs` `doGet`/`doPost`/`admin_` + a client call (`jget` in `03`/`06`, `tPost` in `11`) — then deploy backend FIRST |
@@ -61,7 +61,7 @@ Regenerate the symbol list: `python3 tools/symbols.py`.
 | `tools/health.py` | read-only live health check (page hash, backend, teacher key, test student, backup age) |
 | `tools/restore.py` | restore a backup (dry run by default, `--yes` to write) |
 | `tests/gas_harness.js` | runs the real `Code.gs` under node with in-memory Sheet fakes |
-| `tests/backend.test.js` | 46 backend logic tests |
+| `tests/backend.test.js` | 58 backend logic tests |
 | `tests/run_tests.js` + `tests/scenarios.js` | frontend flow tests against the real backend (add scenarios at the bottom; assertions are `TT.ok/TT.eq`) |
 | `.github/workflows/pages.yml` | CI: tests → build → publish to Pages |
 | `.clasp.json` | Apps Script project link (rootDir `backend`) |

@@ -33,7 +33,7 @@ Everything the teacher controls is edited **in the web UI** — no code edits ne
 |---|---|
 | **Student URL** | https://moazbinabdullah2003-lgtm.github.io/mock-exam/quiz.html |
 | GitHub repo | `moazbinabdullah2003-lgtm/mock-exam`, branch `main` — now holds the **full project** (src, backend, docs, tests, tools). GitHub Actions (`.github/workflows/pages.yml`) runs the tests, builds `dist/quiz.html` and publishes it to Pages (Settings → Pages → Source = GitHub Actions). The repo is public: never commit secrets or backups. |
-| Apps Script project | id `1y8kV5WPEO9-HJtnVhwdu0nnxV0a-xC6ug-J61AUgqMr7QJ6SOnFTdH-T` (title "Untitled project"). Active Web-app deployment "Untitled" (Execute as Me, Access: Anyone) — **Version 5** (2026-11-16, deployed with clasp; versions bump on every `./deploy-backend.sh`). Archived: "Untitled", "mock test". |
+| Apps Script project | id `1y8kV5WPEO9-HJtnVhwdu0nnxV0a-xC6ug-J61AUgqMr7QJ6SOnFTdH-T` (title "Untitled project"). Active Web-app deployment "Untitled" (Execute as Me, Access: Anyone) — **Version 6** (2026-11-16, deployed with clasp; versions bump on every `./deploy-backend.sh`). Archived: "Untitled", "mock test". |
 | Web app `/exec` URL | in `src/js/01-config.js` → `CONFIG.SCRIPT_URL` (`https://script.google.com/macros/s/AKfycbx2xuErMRJf9XPij0Yt28hqLXf79oAN3MnQva2ERw4rTJLQsFrkmQwO6qpFxTCG3IRPjw/exec`). **Never create a "New deployment"** — it changes the URL. Always *Manage deployments → edit → New version*. |
 | Spreadsheet "MCQ Mock Data" | id `1sU8tzNalkI30mmx8aAOQwz8lA_8jX4atM0m4fsnK3og` (also Script property `SSID`). Tabs: `Attempts`, `Questions`, `Settings`. |
 | Teacher login | ID `teacher`, password `teacher123` (defaults; password can be changed in Settings→Security which stores Script property `TPASS`; ID is `access.teacherId` in settings) |
@@ -109,6 +109,7 @@ All via the one `/exec` URL.
 | POST | `sid,name,exam,aid,mode,score,total,secs,details` | none | append to `Attempts` (dup `aid` ignored) |
 | POST | `action=upload,key,code,rows(JSON, QHEAD order)` | teacher | replace all rows of CODE in `Questions` |
 | POST | `action=delete\|setopen,key,code[,open]` | teacher | delete / open-close exam |
+| POST | `action=rename,key,code,newcode` | teacher | change exam code: rewrites CODE in `Questions` **and** EXAM in `Attempts` (history kept). Refuses (`exists`/`badcode`/`notfound`/`same`); newcode `[A-Z0-9_-]{1,30}` |
 | POST | `action=savecfg,key,cfg(JSON string)` | teacher | store public settings (Settings sheet row `cfg`) |
 | POST | `action=saveroster,key,roster(JSON string)` | teacher | store roster (row `roster`, never exposed publicly) |
 | POST | `action=setpass,key,newpass` | teacher | Script property `TPASS` (min 4 chars) |
@@ -168,7 +169,7 @@ Math: questions/options/explanations may contain LaTeX in `$…$`; `mathify()` (
 ## 8. Teacher panel (13-teacher-settings.js, 14-exam-editor.js, 10, 11)
 
 Tabs: **📊 Dashboard · 📚 Exams · 👥 Students · ⚙ Settings**.
-- **Exams**: list with ✏ Edit / Close-Open / Delete; "+ New exam (UI)"; CSV upload with preview (`parseQ`, format in `samples/questions_template.csv`). **Exam editor** (`openEditor/saveExam`): title/minutes/negative/open, per-exam rules (max attempts, start/end, intro, guest access), question cards (text, options with correct-radio, topic, explanation, live KaTeX preview, ↑↓⎘🗑, add question). Save re-uploads the exam and verifies it.
+- **Exams**: list with ✏ Edit / Close-Open / Delete; "+ New exam (UI)"; CSV upload with preview (`parseQ`, format in `samples/questions_template.csv`). **Exam editor** (`openEditor/saveExam`): **Exam code (editable → `saveExam` calls backend `rename`, moves per-exam rules in cfg, checks the new code is free)**, title/minutes/negative/open, per-exam rules (max attempts, start/end, intro, guest access), question cards (text, options with correct-radio, topic, explanation, live KaTeX preview, ↑↓⎘🗑, add question). Save re-uploads the exam and verifies it.
 - **🎓 Test student button** (teacher header, all tabs): `asTestStudent()` (06) reads the roster with the teacher key, finds ID `9999`, does a REAL student login with its stored password (nothing typed, no password in code) → `SESS={…,back:<teacher session>}`; student home then shows **← Teacher-এ ফিরো** (`backToTeacher()`). Needs `9999` in the roster with a password (already there).
 - **Student profile** (tap a row in Dashboard, or 👤 Profile in Students tab): summary sentences, avg/best/lowest/latest/trend/pass count/active days/total time, answer split ✔✘⏭, score-trend chart, exam-wise table, topic-wise (Weak/Improve/Strong vs class avg), still-wrong questions, slowest questions, full activity log with Review. Code: `07a-view-profile.js`. Dashboard table also has a Trend column.
 - **Students**: Guest on/off; roster rows (ID, Password, Name optional, Block); bulk add lines `ID, Password, Name`; "🎲 generate missing passwords"; import from past attempts. Red border = password missing.
@@ -220,7 +221,7 @@ UI/visual checks still use the built-in browser pane + `tools/browser_fake_backe
 1. **User reported "Network nei" when logging in on their device.** The server is healthy from our side. The new diagnostic UI was deployed to find the real cause; **waiting for the user to send the new message/`[kind: …]` tag or the Connection-check output**. Likely causes: ISP/WiFi blocking Google, Messenger/Facebook in-app browser, VPN/ad-blocker, stale cached old page (hard refresh).
 2. Review screen shows options in original A-B-C-D order, not the order the student saw — user was asked whether they want the exam-time order; no answer yet.
 3. Math question content decisions: Q21 (argument of −i) answer set to (c) −π/2 (principal value; (a),(d) are also valid arguments) — user may want to reword; Q49 assumes ω is the complex cube root (ω≠1); negative marking 0.25 assumed.
-4. (done 2026-11-16) tests rewritten: 46 backend + 29 frontend, run before every deploy and in CI.
+4. (done 2026-11-16) tests: 58 backend + 43 frontend, run before every deploy and in CI.
 5. Obsolete keys `access.mode`, `access.needPin` remain in the saved cfg (harmless).
 
 **Backlog ideas (not decided — ask the user):** server-side grading so answers aren't in the page/network; hashed passwords + login rate-limit; exam window already exists per exam — add hide-results-until-released toggle; question images; PWA/offline; Bengali digits toggle; per-question time analytics UI (secs already stored); student self-registration; bulk delete attempts; cleaning legacy Google-Form/CSV path in `03-sync.js`; leaderboard.
