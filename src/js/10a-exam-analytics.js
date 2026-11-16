@@ -12,6 +12,7 @@ function vExamAnalytics(code){
     <div class="card"><div class="muted">${esc(code)}</div><h2 style="font-size:22px;margin:2px 0">${esc((e && e.title) || meta.title || code)}</h2>
     <small>${e ? e.questions.length + ' questions · ' + e.minutes + ' min' + (e.neg ? ' · negative ' + e.neg : '') : ''}${meta.open === false ? ' · closed' : ''}</small></div>`;
   if(e) h += aiHint('সঠিক উত্তর আর আমাদের solution ') + `<button class="btn full" data-c="${esc(code)}" onclick="copyExam(this.dataset.c,-1,this)">📋 Copy full exam for AI</button><small class="muted">প্রতিটা question আলাদা copy: নিচে ❓ Question-wise খুলে 📋</small></div>`;
+  h += vExitDash(code);
   if(!recs.length) return h + '<div class="card muted center">এই exam এখনো কেউ দেয়নি।</div>';
 
   const ps = recs.map(pct), bys = {};

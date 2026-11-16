@@ -119,9 +119,13 @@ async function loadRemote(){
     remoteMsg = '';
   }catch(e){ remoteMsg = 'Sheet load হয়নি (offline, বা Sheet publish করা হয়নি)'; }
 }
-function allRecs(){
+/* exit record (exam বাতিল করে বের হওয়া): mode 'exit' / 'exit-mistakes' — attempt নয়, শুধু teacher-এর exit report-এ */
+const isExit = r => /^exit/.test(String((r && r.mode) || ''));
+function allRaw(){
   const m = new Map();
   [...REMOTE, ...LS.get('mq_local', [])].forEach(r => { if(!m.has(r.aid)) m.set(r.aid, r); });
   return [...m.values()].sort((a,b) => aidTime(a.aid) - aidTime(b.aid));
 }
+const allRecs = () => allRaw().filter(r => !isExit(r));   // সব হিসাব (score, attempt limit, analytics) শুধু আসল attempt দিয়ে
+const allExits = () => allRaw().filter(isExit);
 

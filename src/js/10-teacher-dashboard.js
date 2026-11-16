@@ -6,7 +6,7 @@ function vTeacher(){
   if(TSTU) return `<div class="top"><button class="link" onclick="TSTU=null;render()">← All students</button></div>` + vProfile(TSTU);
   let recs = allRecs();
   if(TF) recs = recs.filter(r => r.exam === TF);
-  const exams = [...new Set(allRecs().map(r => r.exam))];
+  const exams = [...new Set(allRaw().map(r => r.exam))];
   const by = {};
   recs.forEach(r => { (by[norm(r.sid)] = by[norm(r.sid)] || []).push(r); });
   const rows = Object.entries(by).map(([sid, rs]) => {
@@ -31,12 +31,13 @@ function vTeacher(){
   <div class="row" style="margin:6px 0"><select id="tf" style="width:auto;flex:1;margin:0" onchange="TF=this.value;render(true)">
       <option value="">All exams</option>${exams.map(c => `<option ${c===TF?'selected':''} value="${esc(c)}">${esc(c)}</option>`).join('')}</select>
       <button class="btn ghost sm" onclick="refresh()">${loading ? 'Syncing…' : '↻ Refresh'}</button><button class="btn ghost sm" onclick="exportCSV()">⬇ CSV</button></div>
-  <div class="tiles">${tile(rows.length, 'Students')}${tile(recs.length, 'Attempts')}${tile(cAvg + '%', 'Class average')}${tile((EXL || []).length || exams.length, 'Exams')}</div>
+  <div class="tiles">${tile(rows.length, 'Students')}${tile(recs.length, 'Attempts')}${tile(cAvg + '%', 'Class average')}${tile((EXL || []).length || exams.length, 'Exams')}${tile(allExits().filter(r => !TF || r.exam === TF).length, '🚪 Exits', allExits().some(r => (!TF || r.exam === TF) && exitInfo(r).flags.length) ? 'var(--r)' : '')}</div>
+  ${vExitDash(TF)}
   ${!recs.length ? '<div class="card muted center">এখনো কোনো data নেই।</div>' : `
   ${need.length ? `<div class="card"><b>⚠ মনোযোগ দরকার</b>${need.map(r => `<div class="hist click" style="cursor:pointer" data-s="${esc(r.sid)}" onclick="openStu(this.dataset.s)"><span>${esc(r.name)} <small>${esc(r.sid)}</small></span><b style="color:var(--r)">${r.avg}% ›</b></div>`).join('')}</div>` : ''}
   ${sec('d_stu', '👥 Students (weakest first)', `<div class="scroll"><table>
-    <tr><th>ID</th><th>Name</th><th>Att.</th><th>Avg</th><th>Best</th><th>Last</th><th>Trend</th><th>Weak topic</th></tr>
-    ${rows.map(r => `<tr class="click" data-s="${esc(r.sid)}" onclick="openStu(this.dataset.s)"><td>${esc(r.sid)}</td><td>${esc(r.name)}</td><td>${r.n}</td><td class="h" style="background:${heat(r.avg/100)}">${r.avg}%</td><td>${r.best}%</td><td>${r.last}%</td><td>${trendTag(r.tr)}</td><td>${esc(r.weak)}</td></tr>`).join('')}
+    <tr><th>ID</th><th>Name</th><th>Att.</th><th>🚪</th><th>Avg</th><th>Best</th><th>Last</th><th>Trend</th><th>Weak topic</th></tr>
+    ${rows.map(r => `<tr class="click" data-s="${esc(r.sid)}" onclick="openStu(this.dataset.s)"><td>${esc(r.sid)}</td><td>${esc(r.name)}</td><td>${r.n}</td><td>${(n => n ? `<b style="color:var(--r)">${n}</b>` : '–')(allExits().filter(x => norm(x.sid) === r.sid && (!TF || x.exam === TF)).length)}</td><td class="h" style="background:${heat(r.avg/100)}">${r.avg}%</td><td>${r.best}%</td><td>${r.last}%</td><td>${trendTag(r.tr)}</td><td>${esc(r.weak)}</td></tr>`).join('')}
   </table></div><small>Row-এ tap করলে ওই student-এর full profile</small>`, rows.length + '')}
   ${sec('d_topic', '📊 Class topic accuracy', topics.map(t => `<div class="trow"><span>${esc(t.t)} <small>${t.ok}/${t.n}</small></span><div class="bar"><i style="width:${Math.round(t.p*100)}%;background:${t.p<0.5?'var(--r)':t.p<0.8?'#f59e0b':'var(--g)'}"></i></div><b>${Math.round(t.p*100)}%</b></div>`).join(''), topics.length + ' topic')}
   ${sec('d_heat', '🟩 Student × Topic heatmap', `<div class="scroll"><table>

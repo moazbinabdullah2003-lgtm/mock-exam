@@ -596,11 +596,15 @@ async function loadRemote(){
     remoteMsg = '';
   }catch(e){ remoteMsg = 'Sheet load হয়নি (offline, বা Sheet publish করা হয়নি)'; }
 }
-function allRecs(){
+/* exit record (exam বাতিল করে বের হওয়া): mode 'exit' / 'exit-mistakes' — attempt নয়, শুধু teacher-এর exit report-এ */
+const isExit = r => /^exit/.test(String((r && r.mode) || ''));
+function allRaw(){
   const m = new Map();
   [...REMOTE, ...LS.get('mq_local', [])].forEach(r => { if(!m.has(r.aid)) m.set(r.aid, r); });
   return [...m.values()].sort((a,b) => aidTime(a.aid) - aidTime(b.aid));
 }
+const allRecs = () => allRaw().filter(r => !isExit(r));   // সব হিসাব (score, attempt limit, analytics) শুধু আসল attempt দিয়ে
+const allExits = () => allRaw().filter(isExit);
 
 /* ============================================================
    Analytics
@@ -959,8 +963,9 @@ function vProfile(sid){
   const all = allRecs(), recs = all.filter(r => norm(r.sid) === norm(sid));
   let h = '';
   if(remoteMsg) h += `<div class="warn">${esc(remoteMsg)}</div>`;
-  const name = (recs[recs.length - 1] || {}).name || sid, guest = /^G-/i.test(String(sid));
+  const name = (recs[recs.length - 1] || allExits().filter(r => norm(r.sid) === norm(sid)).pop() || {}).name || sid, guest = /^G-/i.test(String(sid));
   h += `<div class="card"><div class="row" style="margin:0"><div><h2 style="margin:0">${esc(name)}</h2><small class="muted">${guest ? 'Guest' : 'ID: ' + esc(sid)}</small></div><button class="btn ghost sm" onclick="refresh()">${loading ? 'Syncing…' : '↻ Refresh'}</button></div></div>`;
+  h += vExitProfile(sid);
   if(!recs.length) return h + '<div class="card muted">এই student এখনো কোনো exam দেয়নি।</div>';
 
   const ps = recs.map(pct), n = recs.length;
@@ -994,6 +999,8 @@ function vProfile(sid){
   if(strongT.length) L.push(`💪 শক্তিশালী topic: <b>${strongT.map(t => esc(t.t)).join(', ')}</b>`);
   if(tot && sk / tot > 0.15) L.push(`⏭ ${Math.round(sk / tot * 100)}% question skip করে — time management/confidence দেখো।`);
   if(n >= 2 && ps[n - 1] < ps[n - 2] - 10) L.push('🔻 শেষ attempt আগেরটার চেয়ে অনেক কম।');
+  { const xs = allExits().filter(r => norm(r.sid) === norm(sid)), xf = xs.filter(r => exitInfo(r).flags.length).length;
+    if(xs.length) L.push(`🚪 <b>${xs.length}</b> বার exam বাতিল করে বের হয়েছে${xf ? ` — <b style="color:var(--r)">⚠ ${xf}টা সন্দেহজনক</b> (নিচে exit history দেখো)` : ''}.`); }
   h += `<div class="tiles">${tile(n, 'Attempts')}${tile(myAvg + '%', 'Average')}${tile(ps[n - 1] + '%', 'Latest', pcol(ps[n - 1] / 100))}${tile(trendTag(tr), 'Trend')}</div>`;
   h += `<div class="card"><h2>📝 Summary</h2>${L.map(x => `<div style="margin:5px 0">${x}</div>`).join('')}</div>`;
 
@@ -1320,19 +1327,29 @@ const vHomeBtn = () => { const n = vGet().items.length; return `<button class="c
 
 /* ---- ✕ exam exit ---- */
 function cancelRun(){
-  clearInterval(TM); LS.del('mq_run'); RUN = null; EXITING = false; confirming = false;
+  clearInterval(TM);
+  if(RUN){   // exit-এর record: কতটা উত্তর দিয়েছিল, কত সময় পরে বের হলো — teacher-এর report-এর জন্য backend-এ যায়
+    addTime();
+    const e = EXAMS[RUN.exam], neg = (e && e.neg) || 0; let ok = 0, wr = 0;
+    const d = RUN.order.map((qi, p) => { const q = e && e.questions[qi], c = RUN.ans[p] === undefined ? -1 : RUN.ans[p], g = q && c === q.a ? 1 : 0; if(c >= 0){ if(g) ok++; else wr++; } return [qi, c, g, Math.round(RUN.secs[p] || 0)]; });
+    const rec = {aid:newAid(), sid:RUN.sid, name:RUN.name, exam:RUN.exam, mode:RUN.mode === 'mistakes' ? 'exit-mistakes' : 'exit',
+      score:+(ok - wr * neg).toFixed(2), total:RUN.order.length, secs:Math.min(RUN.dur, Math.round((Date.now() - RUN.start) / 1000)), d};
+    const loc = LS.get('mq_local', []); loc.push(rec); LS.set('mq_local', loc);
+    const ob = LS.get('mq_out', []); ob.push(rec); LS.set('mq_out', ob);
+  }
+  LS.del('mq_run'); RUN = null; EXITING = false; confirming = false;
   view = 'home'; render(); refresh();
 }
 function vExitPopup(){
   if(!EXITING || !RUN) return '';
   if(EXITING === 'cancel') return `<div class="modal"><div class="card"><h2 style="margin-top:0">🗑 Exam বাতিল করবে?</h2>
-    <p>এই attempt-এর কোনো উত্তর save হবে না, result-ও হবে না। <b>Attempt গুনবে না</b> — পরে আবার নতুন করে দিতে পারবে।</p>
+    <p>এই attempt-এর কোনো result হবে না। <b>Attempt গুনবে না</b> — পরে আবার নতুন করে দিতে পারবে।</p><p class="muted" style="font-size:.92em">ℹ তবে exit-এর তথ্য (কখন, কতটা উত্তর দিয়েছিলে, কত সময় পরে বের হলে) teacher দেখতে পাবেন।</p>
     <div class="row"><button class="btn ghost" onclick="EXITING=true;render(true)">← না, ফিরে যাও</button><button class="btn red" onclick="cancelRun()">হ্যাঁ, বাতিল করো</button></div></div></div>`;
   const un = RUN.order.length - Object.keys(RUN.ans).length;
   return `<div class="modal"><div class="card"><h2 style="margin-top:0">✕ Exam থেকে বের হবে?</h2>
     <p class="muted">কোনো সমস্যা হলে (ভুল exam, network, অন্য কাজ) এখান থেকে বের হতে পারো।${un ? ' এখনো ' + un + 'টা question-এর উত্তর দাওনি।' : ''}</p>
     <button class="btn full" style="margin:6px 0" onclick="EXITING=false;finish(false)">✅ Submit করে বের হও <small>(result save হবে)</small></button>
-    <button class="btn full ghost red" style="margin:6px 0" onclick="EXITING='cancel';render(true)">🗑 বাতিল করে বের হও <small>(কিছু save হবে না)</small></button>
+    <button class="btn full ghost red" style="margin:6px 0" onclick="EXITING='cancel';render(true)">🗑 বাতিল করে বের হও <small>(result হবে না)</small></button>
     <button class="btn full ghost" style="margin:6px 0" onclick="EXITING=false;render(true)">↩ Exam-এ ফিরে যাও</button></div></div>`;
 }
 /* ---------- Result / review ---------- */
@@ -1426,7 +1443,7 @@ function vTeacher(){
   if(TSTU) return `<div class="top"><button class="link" onclick="TSTU=null;render()">← All students</button></div>` + vProfile(TSTU);
   let recs = allRecs();
   if(TF) recs = recs.filter(r => r.exam === TF);
-  const exams = [...new Set(allRecs().map(r => r.exam))];
+  const exams = [...new Set(allRaw().map(r => r.exam))];
   const by = {};
   recs.forEach(r => { (by[norm(r.sid)] = by[norm(r.sid)] || []).push(r); });
   const rows = Object.entries(by).map(([sid, rs]) => {
@@ -1451,12 +1468,13 @@ function vTeacher(){
   <div class="row" style="margin:6px 0"><select id="tf" style="width:auto;flex:1;margin:0" onchange="TF=this.value;render(true)">
       <option value="">All exams</option>${exams.map(c => `<option ${c===TF?'selected':''} value="${esc(c)}">${esc(c)}</option>`).join('')}</select>
       <button class="btn ghost sm" onclick="refresh()">${loading ? 'Syncing…' : '↻ Refresh'}</button><button class="btn ghost sm" onclick="exportCSV()">⬇ CSV</button></div>
-  <div class="tiles">${tile(rows.length, 'Students')}${tile(recs.length, 'Attempts')}${tile(cAvg + '%', 'Class average')}${tile((EXL || []).length || exams.length, 'Exams')}</div>
+  <div class="tiles">${tile(rows.length, 'Students')}${tile(recs.length, 'Attempts')}${tile(cAvg + '%', 'Class average')}${tile((EXL || []).length || exams.length, 'Exams')}${tile(allExits().filter(r => !TF || r.exam === TF).length, '🚪 Exits', allExits().some(r => (!TF || r.exam === TF) && exitInfo(r).flags.length) ? 'var(--r)' : '')}</div>
+  ${vExitDash(TF)}
   ${!recs.length ? '<div class="card muted center">এখনো কোনো data নেই।</div>' : `
   ${need.length ? `<div class="card"><b>⚠ মনোযোগ দরকার</b>${need.map(r => `<div class="hist click" style="cursor:pointer" data-s="${esc(r.sid)}" onclick="openStu(this.dataset.s)"><span>${esc(r.name)} <small>${esc(r.sid)}</small></span><b style="color:var(--r)">${r.avg}% ›</b></div>`).join('')}</div>` : ''}
   ${sec('d_stu', '👥 Students (weakest first)', `<div class="scroll"><table>
-    <tr><th>ID</th><th>Name</th><th>Att.</th><th>Avg</th><th>Best</th><th>Last</th><th>Trend</th><th>Weak topic</th></tr>
-    ${rows.map(r => `<tr class="click" data-s="${esc(r.sid)}" onclick="openStu(this.dataset.s)"><td>${esc(r.sid)}</td><td>${esc(r.name)}</td><td>${r.n}</td><td class="h" style="background:${heat(r.avg/100)}">${r.avg}%</td><td>${r.best}%</td><td>${r.last}%</td><td>${trendTag(r.tr)}</td><td>${esc(r.weak)}</td></tr>`).join('')}
+    <tr><th>ID</th><th>Name</th><th>Att.</th><th>🚪</th><th>Avg</th><th>Best</th><th>Last</th><th>Trend</th><th>Weak topic</th></tr>
+    ${rows.map(r => `<tr class="click" data-s="${esc(r.sid)}" onclick="openStu(this.dataset.s)"><td>${esc(r.sid)}</td><td>${esc(r.name)}</td><td>${r.n}</td><td>${(n => n ? `<b style="color:var(--r)">${n}</b>` : '–')(allExits().filter(x => norm(x.sid) === r.sid && (!TF || x.exam === TF)).length)}</td><td class="h" style="background:${heat(r.avg/100)}">${r.avg}%</td><td>${r.best}%</td><td>${r.last}%</td><td>${trendTag(r.tr)}</td><td>${esc(r.weak)}</td></tr>`).join('')}
   </table></div><small>Row-এ tap করলে ওই student-এর full profile</small>`, rows.length + '')}
   ${sec('d_topic', '📊 Class topic accuracy', topics.map(t => `<div class="trow"><span>${esc(t.t)} <small>${t.ok}/${t.n}</small></span><div class="bar"><i style="width:${Math.round(t.p*100)}%;background:${t.p<0.5?'var(--r)':t.p<0.8?'#f59e0b':'var(--g)'}"></i></div><b>${Math.round(t.p*100)}%</b></div>`).join(''), topics.length + ' topic')}
   ${sec('d_heat', '🟩 Student × Topic heatmap', `<div class="scroll"><table>
@@ -1487,6 +1505,7 @@ function vExamAnalytics(code){
     <div class="card"><div class="muted">${esc(code)}</div><h2 style="font-size:22px;margin:2px 0">${esc((e && e.title) || meta.title || code)}</h2>
     <small>${e ? e.questions.length + ' questions · ' + e.minutes + ' min' + (e.neg ? ' · negative ' + e.neg : '') : ''}${meta.open === false ? ' · closed' : ''}</small></div>`;
   if(e) h += aiHint('সঠিক উত্তর আর আমাদের solution ') + `<button class="btn full" data-c="${esc(code)}" onclick="copyExam(this.dataset.c,-1,this)">📋 Copy full exam for AI</button><small class="muted">প্রতিটা question আলাদা copy: নিচে ❓ Question-wise খুলে 📋</small></div>`;
+  h += vExitDash(code);
   if(!recs.length) return h + '<div class="card muted center">এই exam এখনো কেউ দেয়নি।</div>';
 
   const ps = recs.map(pct), bys = {};
@@ -1537,6 +1556,65 @@ function vExamAnalytics(code){
   }
   return h;
 }
+/* ============================================================
+   🚪 Exit report (teacher): student exam বাতিল করে বের হলে (mode 'exit') কখন, কতটা উত্তর দিয়েছিল, কত সময় পরে —
+   dashboard, exam analytics আর student profile-এ। ফাঁকি সন্দেহ হলে ⚠ flag।
+   ============================================================ */
+function exitInfo(r){
+  const d = r.d || [], ans = d.filter(x => x[1] >= 0), seen = d.filter(x => x[3] > 0 || x[1] >= 0);
+  const t = aidTime(r.aid);
+  // একই exam পরে submit করেছে কিনা (exit-এর পরে আসল attempt)
+  const later = allRecs().filter(x => norm(x.sid) === norm(r.sid) && x.exam === r.exam && aidTime(x.aid) > t);
+  const before = allExits().filter(x => norm(x.sid) === norm(r.sid) && x.exam === r.exam && aidTime(x.aid) <= t).length;   // এটা কত নম্বর exit (এই exam-এ)
+  const flags = [];
+  if(later.length) flags.push('exit-এর পরে একই exam submit করেছে' + (later[0] ? ' (' + pct(later[0]) + '%)' : ''));
+  if(before >= 2) flags.push('এই exam-এ ' + before + ' নম্বর exit');
+  if(d.length && seen.length >= Math.max(2, Math.ceil(d.length * 0.5))) flags.push(seen.length + '/' + d.length + 'টা question দেখে ফেলেছিল');
+  if(ans.length && ans.length >= Math.ceil(d.length * 0.5)) flags.push('অর্ধেকের বেশি উত্তর দিয়ে বের হয়েছে');
+  return {t, total:d.length || r.total, answered:ans.length, correct:ans.filter(x => x[2]).length, seen:seen.length, secs:r.secs,
+    reached:d.reduce((m, x, i) => x[3] > 0 || x[1] >= 0 ? i + 1 : m, 0), mistakes:r.mode === 'exit-mistakes', later:later.length, flags};
+}
+const exitWhen = t => new Date(t).toLocaleString(undefined, {day:'numeric', month:'short', hour:'numeric', minute:'2-digit'});
+/* টেবিল: who = student কলাম দেখাবে, ex = exam কলাম দেখাবে */
+function vExitTable(list, who, ex){
+  if(!list.length) return '<div class="muted">কোনো exit নেই 👍</div>';
+  return `<div class="scroll"><table>
+    <tr><th>কখন</th>${who ? '<th>Student</th>' : ''}${ex ? '<th>Exam</th>' : ''}<th>উত্তর দিয়েছিল</th><th>সঠিক</th><th>দেখেছিল</th><th>কত পরে exit</th><th>⚠</th></tr>
+    ${list.slice().sort((a, b) => aidTime(b.aid) - aidTime(a.aid)).map(r => { const x = exitInfo(r);
+      return `<tr ${who ? `class="click" data-s="${esc(norm(r.sid))}" onclick="openStu(this.dataset.s)"` : ''}><td>${esc(exitWhen(x.t))}</td>${who ? `<td><b>${esc(r.name)}</b> <small>${esc(r.sid)}</small></td>` : ''}${ex ? `<td>${esc(r.exam)}${x.mistakes ? ' <span class="tag">mistakes</span>' : ''}</td>` : ''}
+        <td><b>${x.answered}</b>/${x.total}</td><td>${x.correct}</td><td>${x.seen}/${x.total}</td><td>${fmt(x.secs)}</td>
+        <td style="min-width:210px">${x.flags.length ? `<span style="color:var(--r)" title="${esc(x.flags.join(' · '))}">⚠ ${x.flags.length}</span><br><small>${x.flags.map(esc).join('<br>')}</small>` : '<small class="muted">–</small>'}</td></tr>`; }).join('')}
+  </table></div>`;
+}
+/* student-wise summary: কে কতবার exit করেছে */
+function exitBySt(list){
+  const m = {};
+  list.forEach(r => { const k = norm(r.sid), o = m[k] = m[k] || {sid:k, name:r.name, n:0, exams:{}, flagged:0, last:0};
+    o.n++; o.exams[r.exam] = (o.exams[r.exam] || 0) + 1; o.name = r.name; o.last = Math.max(o.last, aidTime(r.aid)); if(exitInfo(r).flags.length) o.flagged++; });
+  return Object.values(m).sort((a, b) => b.flagged - a.flagged || b.n - a.n);
+}
+/* dashboard section */
+function vExitDash(exam){
+  const list = allExits().filter(r => !exam || r.exam === exam);
+  const st = exitBySt(list), fl = list.filter(r => exitInfo(r).flags.length).length;
+  const body = !list.length ? '<div class="muted">কেউ এখনো exam বাতিল করে বের হয়নি 👍</div>' :
+    `<small class="muted">Student exam-এর মাঝে "বাতিল করে বের হও" চাপলে এখানে আসে (attempt হিসেবে গোনা হয় না)। ⚠ = ফাঁকি দেওয়ার সন্দেহ: বের হয়ে আবার একই exam দিয়েছে, বারবার exit, বা অনেক question দেখে বের হয়েছে।</small>
+    <h3 style="margin:10px 0 4px">👤 কে কতবার</h3><div class="scroll"><table><tr><th>Student</th><th>Exit</th><th>⚠</th><th>কোন exam-এ</th><th>শেষ exit</th></tr>
+      ${st.map(o => `<tr class="click" data-s="${esc(o.sid)}" onclick="openStu(this.dataset.s)"><td><b>${esc(o.name)}</b> <small>${esc(o.sid)}</small></td><td><b>${o.n}</b></td><td>${o.flagged ? `<b style="color:var(--r)">${o.flagged}</b>` : '–'}</td><td><small>${Object.entries(o.exams).map(([c, n]) => esc(c) + (n > 1 ? ' ×' + n : '')).join(', ')}</small></td><td><small>${esc(exitWhen(o.last))}</small></td></tr>`).join('')}
+    </table></div>
+    <h3 style="margin:12px 0 4px">🧾 সব exit (নতুন আগে)</h3>${vExitTable(list, true, !exam)}`;
+  return sec(exam ? 'x_exit_' + exam : 'd_exit', '🚪 Exam exit report', body, list.length ? list.length + ' exit' + (fl ? ' · ⚠ ' + fl : '') : '0');
+}
+/* student profile section + summary line */
+function vExitProfile(sid){
+  const list = allExits().filter(r => norm(r.sid) === norm(sid));
+  if(!list.length) return '';
+  const fl = list.filter(r => exitInfo(r).flags.length).length, ex = [...new Set(list.map(r => r.exam))];
+  return `<div class="card" style="border-left:4px solid ${fl ? 'var(--r)' : '#f59e0b'}"><h2 style="margin-top:0">🚪 Exam exit history</h2>
+    <div style="margin-bottom:6px"><b>${list.length}</b> বার exam বাতিল করে বের হয়েছে (${ex.map(esc).join(', ')})${fl ? ` · <b style="color:var(--r)">⚠ ${fl}টা সন্দেহজনক</b>` : ''}</div>
+    ${vExitTable(list, false, true)}</div>`;
+}
+const exitCount = sid => allExits().filter(r => norm(r.sid) === norm(sid)).length;
 /* ---------- Teacher: exam upload / manage ---------- */
 const escT = s => String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;');
 const sleep = ms => new Promise(r => setTimeout(r, ms));
@@ -2110,8 +2188,8 @@ function vStudents(){
 /* ---------------- Export ---------------- */
 function exportCSV(){
   const q = s => '"' + String(s == null ? '' : s).replace(/"/g, '""') + '"';
-  const lines = ['Date,SID,Name,Exam,Mode,Score,Total,Percent,Seconds'].concat(allRecs().map(r =>
-    [new Date(aidTime(r.aid)).toLocaleString(), r.sid, r.name, r.exam, r.mode, r.score, r.total, pct(r), r.secs].map(q).join(',')));
+  const lines = ['Date,SID,Name,Exam,Mode,Score,Total,Percent,Seconds,Answered'].concat(allRaw().map(r =>
+    [new Date(aidTime(r.aid)).toLocaleString(), r.sid, r.name, r.exam, r.mode, r.score, r.total, pct(r), r.secs, r.d.filter(x => x[1] >= 0).length].map(q).join(',')));   // exit row-ও থাকে (Mode = exit)
   const a = document.createElement('a');
   a.href = URL.createObjectURL(new Blob(['﻿' + lines.join('\n')], {type:'text/csv;charset=utf-8'}));
   a.download = 'results.csv'; document.body.appendChild(a); a.click(); a.remove();

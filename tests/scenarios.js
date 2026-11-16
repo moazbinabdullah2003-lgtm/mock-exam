@@ -158,8 +158,11 @@ onQuizKey({ key: '1', target: { tagName: 'BODY' }, preventDefault(){} }); TT.eq(
 EXITING = 'cancel'; TT.ok(vExitPopup().includes('Attempt গুনবে না'), 'cancel asks for confirmation');
 pick(0); cancelRun(); await new Promise(r => _origSetTimeout(r, 20));
 TT.ok(!RUN && view === 'home' && !LS.get('mq_run', null) && !EXITING, 'cancel exit discards the run');
-TT.eq(B.get({ key: 'teacher123' }).length, 0, 'cancelled attempt NOT saved in backend');
-TT.eq(LS.get('mq_out', []).length + LS.get('mq_local', []).length, 0, 'cancelled attempt not in outbox/local');
+{ const b = B.get({ key: 'teacher123' }); TT.ok(b.length === 1 && b[0].mode === 'exit' && b[0].exam === 'CT1', 'cancelled exam recorded in backend as exit');
+  const d = JSON.parse(b[0].details); TT.ok(d.length === 3 && d.filter(x => x[1] >= 0).length === 1, 'exit record keeps answers given before exit (1/3)'); }
+TT.ok(allRecs().length === 0 && allExits().length === 1 && attemptsOf('7', 'CT1') === 0, 'exit is NOT an attempt (not in stats / attempt limit)');
+TT.eq(LS.get('mq_out', []).length, 0, 'exit record flushed from outbox');
+TT.ok(!vHome().includes('Exams given') || !vBoard('7', false).includes('>1<'), 'student home stats ignore exits');
 TT.ok(vHome().includes('Saved questions'), 'home shows vault button');
 saveQ('CT1', 0); TT.ok(VSAVE && vSavePopup().includes('General') && vSavePopup().includes('নতুন folder'), 'save popup with folders');
 VSAVE.nf = 'Physics'; doSaveQ(); await new Promise(r => _origSetTimeout(r, 20));
@@ -206,7 +209,7 @@ RUN.order.forEach((qi, p) => { RUN.cur = p; const q = ex.questions[qi];
   else if (q.t === 'Trigonometry') pick((q.a + 1) % q.o.length); });
 finish(false); await new Promise(r => _origSetTimeout(r, 20));
 TT.eq(LAST.score, 0.75, 'score = 1 correct - 0.25 wrong (skipped = 0)');
-const saved = B.get({ key: 'teacher123' });
+const saved = B.get({ key: 'teacher123' }).filter(a => a.mode !== 'exit');
 TT.eq(saved.length, 1, 'attempt saved in backend');
 TT.eq(saved[0].sid, '7', 'sid normalised on save');
 TT.eq(LS.get('mq_out', []).length, 0, 'outbox empty after flush');
@@ -233,6 +236,13 @@ TT.ok(!SESS, 'guest with bad code rejected');
 // 8. Teacher sees everyone, deletes exam (two-tap)
 SESS = { sid: 'TEACHER', name: 'Teacher', teacher: true, key: 'teacher123' }; view = 'teacher'; REMOTE = []; await loadRemote();
 TT.eq(allRecs().length, 1, 'teacher sees all attempts');
+// 8a. 🚪 exit report for the teacher
+{ const x = allExits(); TT.eq(x.length, 1, 'teacher sees the exit record');
+  const i = exitInfo(x[0]); TT.ok(i.answered === 1 && i.total === 3 && i.later === 1 && i.flags.some(f => f.includes('একই exam submit')), 'exit info: answered 1/3, later submitted same exam -> flagged: ' + i.flags.join('|'));
+  TT.ok(vTeacher().includes('🚪 Exam exit report') && vTeacher().includes('Rahim') && vTeacher().includes('🚪 Exits'), 'dashboard: exit report + tile');
+  const ph = vProfile('7'); TT.ok(ph.includes('Exam exit history') && ph.includes('1</b> বার exam বাতিল') && ph.includes('সন্দেহজনক'), 'student profile: exit history + summary flag');
+  TT.ok(vExamAnalytics('CT1').includes('🚪 Exam exit report'), 'exam analytics: exit report');
+  TT.ok(!vProfile('nobody').includes('Exam exit history'), 'no exits -> no exit section'); }
 { const ph = vProfile('7');
   TT.ok(ph.includes('Summary') && ph.includes('Topic-wise') && ph.includes('Exam-wise') && ph.includes('Activity'), 'profile renders all sections');
   TT.ok(/Attempts/.test(ph) && ph.includes('CT1'), 'profile shows attempts + exam');
@@ -257,7 +267,7 @@ EDX.newCode = ' ct-2 '; await saveExam();
 TT.ok(EDX.code === 'CT-2' && /saved/.test(EDX.msg), 'exam code changed in editor: ' + EDX.msg);
 TT.eq(B.get({ action: 'exam', code: 'CT1' }).error, 'notfound', 'old code gone after rename');
 TT.eq(B.get({ action: 'exam', code: 'CT-2' }).questions.length, 3, 'questions under new code');
-TT.eq(B.get({ key: 'teacher123' }).map(a => a.exam), ['CT-2'], 'old attempt moved to new code');
+TT.eq(B.get({ key: 'teacher123' }).map(a => a.exam), ['CT-2', 'CT-2'], 'old attempt + exit record moved to new code');
 EDX.newCode = 'CT-2'; await openEditor('CT-2'); EDX.newCode = 'ct1'; await saveExam();
 TT.eq(B.get({ action: 'exam', code: 'CT1' }).questions.length, 3, 'renamed back to CT1');
 EDX = null;

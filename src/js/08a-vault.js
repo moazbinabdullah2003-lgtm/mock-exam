@@ -133,18 +133,28 @@ const vHomeBtn = () => { const n = vGet().items.length; return `<button class="c
 
 /* ---- ✕ exam exit ---- */
 function cancelRun(){
-  clearInterval(TM); LS.del('mq_run'); RUN = null; EXITING = false; confirming = false;
+  clearInterval(TM);
+  if(RUN){   // exit-এর record: কতটা উত্তর দিয়েছিল, কত সময় পরে বের হলো — teacher-এর report-এর জন্য backend-এ যায়
+    addTime();
+    const e = EXAMS[RUN.exam], neg = (e && e.neg) || 0; let ok = 0, wr = 0;
+    const d = RUN.order.map((qi, p) => { const q = e && e.questions[qi], c = RUN.ans[p] === undefined ? -1 : RUN.ans[p], g = q && c === q.a ? 1 : 0; if(c >= 0){ if(g) ok++; else wr++; } return [qi, c, g, Math.round(RUN.secs[p] || 0)]; });
+    const rec = {aid:newAid(), sid:RUN.sid, name:RUN.name, exam:RUN.exam, mode:RUN.mode === 'mistakes' ? 'exit-mistakes' : 'exit',
+      score:+(ok - wr * neg).toFixed(2), total:RUN.order.length, secs:Math.min(RUN.dur, Math.round((Date.now() - RUN.start) / 1000)), d};
+    const loc = LS.get('mq_local', []); loc.push(rec); LS.set('mq_local', loc);
+    const ob = LS.get('mq_out', []); ob.push(rec); LS.set('mq_out', ob);
+  }
+  LS.del('mq_run'); RUN = null; EXITING = false; confirming = false;
   view = 'home'; render(); refresh();
 }
 function vExitPopup(){
   if(!EXITING || !RUN) return '';
   if(EXITING === 'cancel') return `<div class="modal"><div class="card"><h2 style="margin-top:0">🗑 Exam বাতিল করবে?</h2>
-    <p>এই attempt-এর কোনো উত্তর save হবে না, result-ও হবে না। <b>Attempt গুনবে না</b> — পরে আবার নতুন করে দিতে পারবে।</p>
+    <p>এই attempt-এর কোনো result হবে না। <b>Attempt গুনবে না</b> — পরে আবার নতুন করে দিতে পারবে।</p><p class="muted" style="font-size:.92em">ℹ তবে exit-এর তথ্য (কখন, কতটা উত্তর দিয়েছিলে, কত সময় পরে বের হলে) teacher দেখতে পাবেন।</p>
     <div class="row"><button class="btn ghost" onclick="EXITING=true;render(true)">← না, ফিরে যাও</button><button class="btn red" onclick="cancelRun()">হ্যাঁ, বাতিল করো</button></div></div></div>`;
   const un = RUN.order.length - Object.keys(RUN.ans).length;
   return `<div class="modal"><div class="card"><h2 style="margin-top:0">✕ Exam থেকে বের হবে?</h2>
     <p class="muted">কোনো সমস্যা হলে (ভুল exam, network, অন্য কাজ) এখান থেকে বের হতে পারো।${un ? ' এখনো ' + un + 'টা question-এর উত্তর দাওনি।' : ''}</p>
     <button class="btn full" style="margin:6px 0" onclick="EXITING=false;finish(false)">✅ Submit করে বের হও <small>(result save হবে)</small></button>
-    <button class="btn full ghost red" style="margin:6px 0" onclick="EXITING='cancel';render(true)">🗑 বাতিল করে বের হও <small>(কিছু save হবে না)</small></button>
+    <button class="btn full ghost red" style="margin:6px 0" onclick="EXITING='cancel';render(true)">🗑 বাতিল করে বের হও <small>(result হবে না)</small></button>
     <button class="btn full ghost" style="margin:6px 0" onclick="EXITING=false;render(true)">↩ Exam-এ ফিরে যাও</button></div></div>`;
 }

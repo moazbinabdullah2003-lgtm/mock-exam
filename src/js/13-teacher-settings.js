@@ -193,8 +193,8 @@ function vStudents(){
 /* ---------------- Export ---------------- */
 function exportCSV(){
   const q = s => '"' + String(s == null ? '' : s).replace(/"/g, '""') + '"';
-  const lines = ['Date,SID,Name,Exam,Mode,Score,Total,Percent,Seconds'].concat(allRecs().map(r =>
-    [new Date(aidTime(r.aid)).toLocaleString(), r.sid, r.name, r.exam, r.mode, r.score, r.total, pct(r), r.secs].map(q).join(',')));
+  const lines = ['Date,SID,Name,Exam,Mode,Score,Total,Percent,Seconds,Answered'].concat(allRaw().map(r =>
+    [new Date(aidTime(r.aid)).toLocaleString(), r.sid, r.name, r.exam, r.mode, r.score, r.total, pct(r), r.secs, r.d.filter(x => x[1] >= 0).length].map(q).join(',')));   // exit row-ও থাকে (Mode = exit)
   const a = document.createElement('a');
   a.href = URL.createObjectURL(new Blob(['﻿' + lines.join('\n')], {type:'text/csv;charset=utf-8'}));
   a.download = 'results.csv'; document.body.appendChild(a); a.click(); a.remove();
