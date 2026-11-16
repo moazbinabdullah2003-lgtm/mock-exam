@@ -12,18 +12,13 @@ Constants:
 
 ---------------------------------------------------------------------------------------------------
 
-## A. Backend deploy (Code.gs → Apps Script)
+## A. Backend deploy (Code.gs → Apps Script) — AUTOMATIC since 2026-11-16
 
-1. `shasum -a 256 backend/Code.gs` → note the hash. (`Code.gs` has no backticks and no `${`, so it can be put in a JS template literal `String.raw\`…\``.)
-2. Navigate a tab to the Apps Script editor URL. Wait ~2.5 s for Monaco.
-3. In `javascript_tool` (on script.google.com): put the new source in `const SRC = String.raw\`…\``, compute sha256 of `SRC` in the page and compare with step 1 (abort if different). For a big change send gzip+base64 instead (`gzip -9 -c Code.gs | base64 | tr -d '\n'` → `DecompressionStream('gzip')`). For a small change only replace the tail/function: `cur.slice(0, cur.indexOf('<marker>')) + NEWTAIL` and still verify the hash.
-4. Apply: `const ed=monaco.editor.getEditors()[0], model=ed.getModel(); ed.executeEdits('x',[{range:model.getFullModelRange(), text:SRC}]); ed.focus();` then `computer key cmd+s` and confirm "Saved to Drive".
-5. Deploy → **Manage deployments** (NOT "New deployment" — that changes the /exec URL):
-   `find "Deploy"` → click → click "Manage deployments" (≈(504,156) at 800 px width) → wait for list → click ✏ pencil (≈(692,130)) → click the Version dropdown (≈(500,208)) → press keys `Up Return` (the dropdown may need it twice; take a screenshot and confirm the field says **New version**) → click **Deploy** (≈(730,722)) → wait ~5 s → "Deployment successfully updated. Version N" → click Done (≈(710,722)).
-   Always take screenshots (scale 0.5) between steps; coordinates shift with window size.
-6. Verify with GETs from a github.io tab (read-only): `settings`, `tlogin&key=…`, `login&sid=1&pin=1` … compare with expectations (see docs/ARCHITECTURE.md).
+Node + clasp are installed (`brew install node`, `npm i -g @google/clasp`; clasp is logged in as the user's Google account; `.clasp.json` has scriptId and rootDir=backend). Run:
 
-Manual alternative for the user: script.google.com → project → paste code → Save → Deploy → Manage deployments → ✏ → Version: New version → Deploy.
+`./deploy-backend.sh "what changed"` — pushes `backend/Code.gs` and moves the existing /exec deployment (id inside the script) to a new version, so the URL never changes. Verify with a read-only GET `...exec?action=settings`.
+
+If clasp says not logged in: user runs `clasp login` once in Terminal (needs Apps Script API on at script.google.com/home/usersettings). The old browser-editor recipe is obsolete. Prefix `export PATH=/opt/homebrew/bin:$PATH` if `node`/`clasp` are not found in Claude's shell.
 
 ---------------------------------------------------------------------------------------------------
 
