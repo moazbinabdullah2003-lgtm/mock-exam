@@ -82,8 +82,9 @@ async function delExam(code){
 function vExams(){
   if(!CONFIG.SCRIPT_URL) return '';
   let h = '<div class="card"><h2>📚 Exams</h2><button class="btn sm full" style="margin:0 0 8px" onclick="openEditor()">+ New exam (UI থেকে বানাও)</button>';
-  h += EXL.length ? EXL.map(x => `<div class="hist"><div><b>${esc(x.code)}</b> <small>${esc(x.title)} · ${x.count}Q · ${x.minutes}min${x.neg ? ' · −' + x.neg : ''}</small>${x.open ? '' : '<span class="tag" style="background:#fee2e2;color:#dc2626">closed</span>'}</div>
-    <div style="white-space:nowrap"><button class="btn sm" data-c="${esc(x.code)}" onclick="openEditor(this.dataset.c)">✏ Edit</button> <button class="btn sm ghost" data-c="${esc(x.code)}" onclick="setOpen(this.dataset.c, ${!x.open})">${x.open ? 'Close' : 'Open'}</button>
+  const na = {}; allRecs().forEach(r => { na[r.exam] = (na[r.exam] || 0) + 1; });
+  h += EXL.length ? EXL.map(x => `<div class="hist"><div style="cursor:pointer" data-c="${esc(x.code)}" onclick="openExA(this.dataset.c)"><b>${esc(x.code)}</b> <small>${esc(x.title)} · ${x.count}Q · ${x.minutes}min${x.neg ? ' · −' + x.neg : ''}</small>${x.open ? '' : '<span class="tag" style="background:#fee2e2;color:#dc2626">closed</span>'}<br><small style="color:var(--p);font-weight:600">📊 Analytics · ${na[x.code] || 0} attempts ›</small></div>
+    <div style="white-space:nowrap"><button class="btn sm ghost" data-c="${esc(x.code)}" onclick="openExA(this.dataset.c)">📊</button> <button class="btn sm" data-c="${esc(x.code)}" onclick="openEditor(this.dataset.c)">✏ Edit</button> <button class="btn sm ghost" data-c="${esc(x.code)}" onclick="setOpen(this.dataset.c, ${!x.open})">${x.open ? 'Close' : 'Open'}</button>
     <button class="btn sm ${DELC === x.code ? 'red' : 'ghost'}" data-c="${esc(x.code)}" onclick="delExam(this.dataset.c)">${DELC === x.code ? 'Sure?' : 'Delete'}</button></div></div>`).join('')
     : '<div class="muted">এখনো কোনো exam নেই</div>';
   h += `<h3>⬆ নতুন exam upload (CSV)</h3>

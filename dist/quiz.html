@@ -48,7 +48,7 @@ input.bigin{font-size:22px;font-weight:700;text-align:center;letter-spacing:.06e
 
 /* big tiles */
 .tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(100px,1fr));gap:10px;margin:14px 0}
-.tiles:has(>:nth-child(4)){grid-template-columns:repeat(4,1fr)}@media (max-width:560px){.tiles:has(>:nth-child(4)){grid-template-columns:1fr 1fr}}
+.tiles:has(>:nth-child(4)){grid-template-columns:repeat(4,1fr)}.tiles:has(>:nth-child(5)){grid-template-columns:repeat(3,1fr)}@media (max-width:560px){.tiles:has(>:nth-child(4)){grid-template-columns:1fr 1fr}.tiles:has(>:nth-child(5)){grid-template-columns:1fr 1fr 1fr}}
 .tile{background:var(--card);border-radius:var(--rad);padding:14px 10px;text-align:center;box-shadow:var(--sh);border:1px solid color-mix(in srgb,var(--t) 6%,transparent)}
 .tile b{display:block;font-size:28px;font-weight:800;line-height:1.15;color:var(--p)}.tile small{display:block;margin-top:2px}
 .hello{font-size:22px;font-weight:800;margin:4px 0 0}
@@ -961,6 +961,7 @@ function vResult(r){
 function openStu(sid){ TSTU = sid; render(); }
 function vTeacher(){
   if(EDX) return vExamEditor();
+  if(EXA && !TSTU) return vExamAnalytics(EXA);
   if(TSTU) return `<div class="top"><button class="link" onclick="TSTU=null;render()">← All students</button></div>` + vProfile(TSTU);
   let recs = allRecs();
   if(TF) recs = recs.filter(r => r.exam === TF);
@@ -1021,6 +1022,68 @@ function vTimeCard(recs){
       return `<div class="hist" style="display:block"><div class="row" style="margin:0"><span class="muted">${esc(o.exam)} · Q${o.i + 1} · ${esc(q.t || '')}</span><b>${Math.round(o.avg)}s</b></div>
         <div>${esc(q.q)}</div><div class="tbar"><i style="width:${Math.round(o.avg / mx * 100)}%"></i></div>
         <small class="muted">${o.n} জন/বার · max ${Math.round(o.max)}s · ${Math.round(a * 100)}% সঠিক ${note ? '· ' + note : ''}</small></div>`; }).join('')}`, 'avg ' + Math.round(all) + 's');
+}
+/* ---------- Teacher: one exam's analytics (general + student-wise). Opened from Exams tab ---------- */
+let EXA = null;   // exam code being viewed
+async function openExA(code){
+  EXA = code; TSTU = null; render();
+  if(!EXAMS[code]){ await getExam(code); render(true); }
+}
+function vExamAnalytics(code){
+  const e = EXAMS[code], meta = (EXL || []).find(x => x.code === code) || {};
+  const all = allRecs().filter(r => r.exam === code), recs = all.filter(r => r.mode !== 'mistakes');
+  const PM = +CFG.rules.passMark || 0;
+  let h = `<div class="top"><button class="link" onclick="EXA=null;render()">← Exams</button><button class="btn ghost sm" onclick="refresh()">${loading ? 'Syncing…' : '↻ Refresh'}</button></div>
+    <div class="card"><div class="muted">${esc(code)}</div><h2 style="font-size:22px;margin:2px 0">${esc((e && e.title) || meta.title || code)}</h2>
+    <small>${e ? e.questions.length + ' questions · ' + e.minutes + ' min' + (e.neg ? ' · negative ' + e.neg : '') : ''}${meta.open === false ? ' · closed' : ''}</small></div>`;
+  if(!recs.length) return h + '<div class="card muted center">এই exam এখনো কেউ দেয়নি।</div>';
+
+  const ps = recs.map(pct), bys = {};
+  recs.forEach(r => { (bys[norm(r.sid)] = bys[norm(r.sid)] || []).push(r); });
+  const nStu = Object.keys(bys).length, avgSecs = Math.round(recs.reduce((a, r) => a + r.secs, 0) / recs.length);
+  h += `<div class="tiles">${tile(nStu, 'Students')}${tile(recs.length, 'Attempts')}${tile(avg(ps) + '%', 'Average')}${tile(Math.max(...ps) + '%', 'Highest', 'var(--g)')}${tile(Math.min(...ps) + '%', 'Lowest', 'var(--r)')}${PM ? tile(Math.round(ps.filter(p => p >= PM).length / ps.length * 100) + '%', 'Pass (≥' + PM + '%)') : tile(fmt(avgSecs), 'Avg time')}</div>`;
+
+  // ---- student-wise ranking (by best score)
+  const st = Object.entries(bys).map(([sid, rs]) => {
+    const p = rs.map(pct), bi = p.indexOf(Math.max(...p));
+    return {sid, name:rs[rs.length - 1].name, n:rs.length, first:p[0], best:p[bi], last:p[p.length - 1], bs:rs[bi].score, total:rs[bi].total, secs:rs[bi].secs, aid:rs[rs.length - 1].aid};
+  }).sort((a, b) => b.best - a.best || a.secs - b.secs);
+  const medal = i => ['🥇', '🥈', '🥉'][i] || (i + 1);
+  h += `<div class="card"><h2>👥 Student-wise (কে কেমন করল)</h2><div class="scroll"><table>
+    <tr><th>#</th><th>Name</th><th>Best</th><th>Score</th><th>1st try</th><th>Last</th><th>Att.</th><th>Time</th><th></th></tr>
+    ${st.map((s, i) => `<tr class="click" data-s="${esc(s.sid)}" onclick="openStu(this.dataset.s)"><td>${medal(i)}</td><td><b>${esc(s.name)}</b> <small>${esc(s.sid)}</small></td>
+      <td class="h" style="background:${heat(s.best / 100)}">${s.best}%</td><td>${s.bs}/${s.total}</td><td>${s.first}%</td><td>${s.last}%</td><td>${s.n}</td><td>${fmt(s.secs)}</td>
+      <td><button class="link" data-a="${esc(s.aid)}" onclick="event.stopPropagation();openRec(this.dataset.a)">Review</button></td></tr>`).join('')}
+  </table></div><small class="muted">Best score অনুযায়ী সাজানো (সমান হলে কম সময় আগে)। নামে tap করলে full profile।${all.length > recs.length ? ' "Retake mistakes" attempt এখানে গোনা হয়নি।' : ''}</small></div>`;
+
+  // ---- general analytics (folds)
+  const bk = [0, 0, 0, 0, 0]; ps.forEach(p => bk[Math.min(4, Math.floor(p / 20))]++);
+  const mx = Math.max(...bk) || 1, lab = ['0–19%', '20–39%', '40–59%', '60–79%', '80–100%'], col = ['var(--r)', '#f97316', '#f59e0b', '#84cc16', 'var(--g)'];
+  h += sec('ea_dist', '📊 Score distribution', bk.map((c, i) => `<div class="trow" style="grid-template-columns:70px 1fr 40px"><span>${lab[i]}</span><div class="bar"><i style="width:${c / mx * 100}%;background:${col[i]}"></i></div><b>${c}</b></div>`).join('') + '<small class="muted">কতগুলো attempt কোন range-এ</small>');
+
+  const ts = topicStats(recs);
+  h += sec('ea_topic', '🎯 Topic-wise', ts.map(t => `<div class="trow"><span>${esc(t.t)} <small>${t.ok}/${t.n}</small></span><div class="bar"><i style="width:${Math.round(t.p*100)}%;background:${pcol(t.p)}"></i></div><b>${Math.round(t.p*100)}%</b></div>`).join(''), ts.length + ' topic');
+
+  if(e){
+    const qs = e.questions.map((q, i) => ({i, q, n:0, ok:0, wr:0, sk:0, secs:0, sn:0, pick:{}}));
+    recs.forEach(r => r.d.forEach(([i, c, ok, s]) => { const o = qs[i]; if(!o) return; o.n++; if(c < 0) o.sk++; else if(ok) o.ok++; else { o.wr++; o.pick[c] = (o.pick[c] || 0) + 1; } if(s > 0){ o.secs += s; o.sn++; } }));
+    const seen = qs.filter(o => o.n), byAcc = seen.slice().sort((a, b) => a.ok / a.n - b.ok / b.n);
+    const hardSet = new Set(byAcc.slice(0, 3).filter(o => o.ok / o.n < 0.6).map(o => o.i)), easySet = new Set(byAcc.slice(-3).filter(o => o.ok / o.n >= 0.9).map(o => o.i));
+    h += sec('ea_q', '❓ Question-wise', seen.map(o => {
+      const a = o.ok / o.n, top = Object.entries(o.pick).sort((x, y) => y[1] - x[1])[0];
+      return `<div class="hist" style="display:block"><div class="row" style="margin:0"><span><b>Q${o.i + 1}</b> <small>${esc(o.q.t || '')}</small>${hardSet.has(o.i) ? '<span class="tag" style="background:#fee2e2;color:#b91c1c">Hardest</span>' : ''}${easySet.has(o.i) ? '<span class="tag" style="background:#dcfce7;color:#15803d">Easy</span>' : ''}</span><b style="color:${pcol(a)}">${Math.round(a * 100)}%</b></div>
+        <div>${esc(o.q.q)}</div>
+        <div class="bar" style="display:flex;margin:6px 0"><i style="width:${a * 100}%;background:var(--g)"></i><i style="width:${o.wr / o.n * 100}%;background:var(--r)"></i><i style="width:${o.sk / o.n * 100}%;background:#9ca3af"></i></div>
+        <small class="muted">✔${o.ok} ✘${o.wr} ⏭${o.sk} · সঠিক: ${LET[o.q.a]}${top ? ' · বেশি দেওয়া ভুল: ' + LET[top[0]] + ' (' + top[1] + ')' : ''}${o.sn ? ' · গড় ' + Math.round(o.secs / o.sn) + 's' : ''}</small></div>`;
+    }).join(''), seen.length + ' Q');
+
+    // student × question grid (latest full attempt of each student)
+    h += sec('ea_grid', '🟩 Student × Question', `<div class="scroll"><table><tr><th>Student</th>${e.questions.map((_, i) => `<th>Q${i + 1}</th>`).join('')}</tr>
+      ${st.map(s => { const r = bys[s.sid][bys[s.sid].length - 1], m = {}; r.d.forEach(([i, c, ok]) => { m[i] = c < 0 ? '–' : ok ? '✔' : '✘'; });
+        return `<tr><td>${esc(s.name)}</td>${e.questions.map((_, i) => `<td class="h" style="background:${m[i] === '✔' ? 'var(--gl)' : m[i] === '✘' ? 'var(--rl)' : 'transparent'}">${m[i] || ''}</td>`).join('')}</tr>`; }).join('')}
+    </table></div><small class="muted">প্রত্যেকের শেষ attempt · ✔ সঠিক ✘ ভুল – skip</small>`);
+  }
+  return h;
 }
 /* ---------- Teacher: exam upload / manage ---------- */
 const escT = s => String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;');
@@ -1106,8 +1169,9 @@ async function delExam(code){
 function vExams(){
   if(!CONFIG.SCRIPT_URL) return '';
   let h = '<div class="card"><h2>📚 Exams</h2><button class="btn sm full" style="margin:0 0 8px" onclick="openEditor()">+ New exam (UI থেকে বানাও)</button>';
-  h += EXL.length ? EXL.map(x => `<div class="hist"><div><b>${esc(x.code)}</b> <small>${esc(x.title)} · ${x.count}Q · ${x.minutes}min${x.neg ? ' · −' + x.neg : ''}</small>${x.open ? '' : '<span class="tag" style="background:#fee2e2;color:#dc2626">closed</span>'}</div>
-    <div style="white-space:nowrap"><button class="btn sm" data-c="${esc(x.code)}" onclick="openEditor(this.dataset.c)">✏ Edit</button> <button class="btn sm ghost" data-c="${esc(x.code)}" onclick="setOpen(this.dataset.c, ${!x.open})">${x.open ? 'Close' : 'Open'}</button>
+  const na = {}; allRecs().forEach(r => { na[r.exam] = (na[r.exam] || 0) + 1; });
+  h += EXL.length ? EXL.map(x => `<div class="hist"><div style="cursor:pointer" data-c="${esc(x.code)}" onclick="openExA(this.dataset.c)"><b>${esc(x.code)}</b> <small>${esc(x.title)} · ${x.count}Q · ${x.minutes}min${x.neg ? ' · −' + x.neg : ''}</small>${x.open ? '' : '<span class="tag" style="background:#fee2e2;color:#dc2626">closed</span>'}<br><small style="color:var(--p);font-weight:600">📊 Analytics · ${na[x.code] || 0} attempts ›</small></div>
+    <div style="white-space:nowrap"><button class="btn sm ghost" data-c="${esc(x.code)}" onclick="openExA(this.dataset.c)">📊</button> <button class="btn sm" data-c="${esc(x.code)}" onclick="openEditor(this.dataset.c)">✏ Edit</button> <button class="btn sm ghost" data-c="${esc(x.code)}" onclick="setOpen(this.dataset.c, ${!x.open})">${x.open ? 'Close' : 'Open'}</button>
     <button class="btn sm ${DELC === x.code ? 'red' : 'ghost'}" data-c="${esc(x.code)}" onclick="delExam(this.dataset.c)">${DELC === x.code ? 'Sure?' : 'Delete'}</button></div></div>`).join('')
     : '<div class="muted">এখনো কোনো exam নেই</div>';
   h += `<h3>⬆ নতুন exam upload (CSV)</h3>
@@ -1161,7 +1225,7 @@ function vTabs(){
   return `<div class="tabs">${t.map(([k, l]) => `<button class="${TTAB === k ? 'on' : ''}" onclick="gotoTab('${k}')">${l}</button>`).join('')}</div>`;
 }
 async function gotoTab(k){
-  TTAB = k; EDX = null; TSTU = null;
+  TTAB = k; EDX = null; TSTU = null; EXA = null;
   if(!DIRTY || !CD) CD = clone(CFG);
   render();
   if(k === 'stu' && !ROSTER_OK) await loadRoster();

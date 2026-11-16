@@ -28,7 +28,7 @@ function vTabs(){
   return `<div class="tabs">${t.map(([k, l]) => `<button class="${TTAB === k ? 'on' : ''}" onclick="gotoTab('${k}')">${l}</button>`).join('')}</div>`;
 }
 async function gotoTab(k){
-  TTAB = k; EDX = null; TSTU = null;
+  TTAB = k; EDX = null; TSTU = null; EXA = null;
   if(!DIRTY || !CD) CD = clone(CFG);
   render();
   if(k === 'stu' && !ROSTER_OK) await loadRoster();

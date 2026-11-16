@@ -98,6 +98,9 @@ TT.ok(SESS && SESS.sid === '9999' && !SESS.teacher && SESS.back && SESS.back.tea
 TT.ok(vHome().includes('backToTeacher'), 'student home shows back-to-teacher button');
 backToTeacher();
 TT.ok(SESS && SESS.teacher && SESS.key === 'teacher123' && view === 'teacher', 'back to teacher keeps session');
+{ const ea = vExamAnalytics('CT1');
+  TT.ok(ea.includes('Student-wise') && ea.includes('Score distribution') && ea.includes('Question-wise') && ea.includes('🥇'), 'exam analytics page renders general + student-wise');
+  TT.ok(vExamAnalytics('NOPE').includes('কেউ দেয়নি'), 'exam analytics with no attempts'); }
 await openEditor('CT1');
 EDX.newCode = 'ct 2!'; await saveExam();
 TT.ok(/শুধু A-Z/.test(EDX.msg) && B.get({ action: 'exam', code: 'CT1' }).questions, 'invalid new exam code refused, exam untouched');

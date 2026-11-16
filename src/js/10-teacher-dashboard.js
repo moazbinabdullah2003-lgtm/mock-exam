@@ -2,6 +2,7 @@
 function openStu(sid){ TSTU = sid; render(); }
 function vTeacher(){
   if(EDX) return vExamEditor();
+  if(EXA && !TSTU) return vExamAnalytics(EXA);
   if(TSTU) return `<div class="top"><button class="link" onclick="TSTU=null;render()">← All students</button></div>` + vProfile(TSTU);
   let recs = allRecs();
   if(TF) recs = recs.filter(r => r.exam === TF);
