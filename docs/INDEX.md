@@ -37,6 +37,7 @@ Other source: `src/css/app.css` (theme variables `--p --bg --card --t --m --b --
 | **Teacher's view of one student (profile)** | `07a-view-profile.js` `vProfile`; opened by `openStu(sid)` from the dashboard table or the 👤 Profile button in Students tab (`13`) |
 | Teacher analytics / tables / CSV export | `10-teacher-dashboard.js` (+ `04-analytics.js`), `exportCSV` in `13` |
 | **Login rules** (student ID+password, guest, teacher ID) | `06-views-login-home.js` (`vLogin`, `doLogin`, `doGuest`, `doTeacher`) + `login_()`/`tlogin` in `backend/Code.gs` |
+| Teacher → test student switch | `06-views-login-home.js` `asTestStudent`/`backToTeacher`, button in `10-teacher-dashboard.js` header |
 | Roster / student management UI | `13-teacher-settings.js` (`vStudents`, `r*` functions) + backend `saveroster`/`roster`/`login_` |
 | CSV question format / validation | `11-teacher-exams.js` `parseQ`,`rowsOf`; backend `admin_`,`getExam_`,`QHEAD`; `samples/questions_template.csv` |
 | In-app exam editor | `14-exam-editor.js` |
