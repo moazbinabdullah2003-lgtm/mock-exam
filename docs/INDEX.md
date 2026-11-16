@@ -12,6 +12,7 @@ Build: `python3 build.py` concatenates `src/js/*.js` (**filename order**) into `
 | `05-state-render.js` | Global state vars + render() router (view: login|home|quiz|result|teacher); keeps typed inputs (KEEP list); footer; mathify; editor previews | SESS:5, view:6, EXL:7, TTAB:8, msg:9, render:11 |
 | `06-views-login-home.js` | TKEY, banner, **login (3 tabs Student/Guest/Teacher)**: vLogin/doLogin/doGuest/doTeacher/logout/refresh; vHome (+guest home, intro popup), startGuest, getExam, ensureExams, startCode, startRun (**always shuffles Q+options**), retake | TKEY:4, banner:5, LMODE:10, gid:11, setLM:12, vLogin:13, doLogin:30, doGuest:42, doTeacher:59, logout:74, refresh:75, vHome:82, startGuest:102, introFor:111, getExam:113, ensureExams:123, startCode:128, RUNKEY:143, startRun:144, retake:167 |
 | `07-view-board.js` | vBoard(sid,isT) student/teacher-drilldown analytics; openRec(aid) | vBoard:2, openRec:35 |
+| `07a-view-profile.js` | **Teacher's student profile** (`vProfile(sid)`): auto summary, stats, trend chart, exam-wise, topic strong/weak vs class, still-wrong questions, slow questions, full activity log; `trendOf`, `trendTag` | pcol, trendOf, trendTag, vProfile |
 | `08-quiz.js` | vQuiz (shuffled option view), pick/go/addTime, startTimer/tick, finish() (scoring + save record) | vQuiz:2, pick:17, addTime:22, go:27, startTimer:31, tick:32, finish:39 |
 | `09-result.js` | vResult(rec): score, topic-wise, per-question review honouring rules.review/showScore/passMark/explain | vResult:2 |
 | `10-teacher-dashboard.js` | vTeacher: tab router (Dashboard content lives here: students table, topic accuracy, heatmap, hardest questions, CSV button); openStu | openStu:2, vTeacher:3 |
@@ -32,7 +33,8 @@ Other source: `src/css/app.css` (theme variables `--p --bg --card --t --m --b --
 | Shuffle logic / exam start checks / guest home | `06-views-login-home.js` (`startRun`, `startCode`, `startGuest`, `vHome`), `02a-cfg.js` (`canStart`, `applyOv`) |
 | Question screen (math/LaTeX, options) | `08-quiz.js` `vQuiz`, `09-result.js` review, `esc()`/`mathify()` in `02-helpers.js` |
 | Result/review rules | `09-result.js` + `rules.*` in `02a`/`13` |
-| Student analytics cards | compute in `04-analytics.js`, render in `07-view-board.js` |
+| Student analytics cards (student's own view) | compute in `04-analytics.js`, render in `07-view-board.js` |
+| **Teacher's view of one student (profile)** | `07a-view-profile.js` `vProfile`; opened by `openStu(sid)` from the dashboard table or the 👤 Profile button in Students tab (`13`) |
 | Teacher analytics / tables / CSV export | `10-teacher-dashboard.js` (+ `04-analytics.js`), `exportCSV` in `13` |
 | **Login rules** (student ID+password, guest, teacher ID) | `06-views-login-home.js` (`vLogin`, `doLogin`, `doGuest`, `doTeacher`) + `login_()`/`tlogin` in `backend/Code.gs` |
 | Roster / student management UI | `13-teacher-settings.js` (`vStudents`, `r*` functions) + backend `saveroster`/`roster`/`login_` |

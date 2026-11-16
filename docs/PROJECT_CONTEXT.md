@@ -169,6 +169,7 @@ Math: questions/options/explanations may contain LaTeX in `$…$`; `mathify()` (
 
 Tabs: **📊 Dashboard · 📚 Exams · 👥 Students · ⚙ Settings**.
 - **Exams**: list with ✏ Edit / Close-Open / Delete; "+ New exam (UI)"; CSV upload with preview (`parseQ`, format in `samples/questions_template.csv`). **Exam editor** (`openEditor/saveExam`): title/minutes/negative/open, per-exam rules (max attempts, start/end, intro, guest access), question cards (text, options with correct-radio, topic, explanation, live KaTeX preview, ↑↓⎘🗑, add question). Save re-uploads the exam and verifies it.
+- **Student profile** (tap a row in Dashboard, or 👤 Profile in Students tab): summary sentences, avg/best/lowest/latest/trend/pass count/active days/total time, answer split ✔✘⏭, score-trend chart, exam-wise table, topic-wise (Weak/Improve/Strong vs class avg), still-wrong questions, slowest questions, full activity log with Review. Code: `07a-view-profile.js`. Dashboard table also has a Trend column.
 - **Students**: Guest on/off; roster rows (ID, Password, Name optional, Block); bulk add lines `ID, Password, Name`; "🎲 generate missing passwords"; import from past attempts. Red border = password missing.
 - **Settings** sections: Theme & look · Branding/notice/instructions · Exam rules & features · All texts · Security (teacher ID, change password).
 - A sticky **Save all changes** bar saves settings + roster together.
