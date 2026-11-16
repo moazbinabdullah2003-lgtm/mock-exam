@@ -44,7 +44,21 @@ Other source: `src/css/app.css` (theme variables `--p --bg --card --t --m --b --
 | Start-up / session resume | `99-boot.js`, `05-state-render.js` |
 | Teacher password / teacher ID | UI: Settings → Security (`changePass` in `13`; stored as Script property `TPASS`; ID = `access.teacherId`). Default const `TEACHER_PASS` in `Code.gs` (+ legacy fallback in `01-config.js`) |
 
-After any edit: `python3 build.py`, test in the browser pane (`docs/DEPLOY.md` §C), deploy (§A/§B).
+After any edit: `python3 build.py`, run tests, deploy with `./deploy.sh` / `./deploy-backend.sh` (see `CLAUDE.md`).
 Backend functions (Code.gs): `pass_ ss_ sheet_ qsheet_ norm_ doPost doGet getExam_ json_ admin_ listExams_ kvSheet_ kvGet_ kvSet_ login_`.
 
 Regenerate the symbol list: `python3 tools/symbols.py`.
+
+## Operations files (not part of the app)
+| File | Purpose |
+|---|---|
+| `CLAUDE.md` | master rules + workflow + backup policy (read first) |
+| `deploy.sh` / `deploy-backend.sh` | test → deploy frontend (git push → Actions → Pages) / backend (clasp push + move /exec deployment) |
+| `backup.sh` → `tools/backup.py` | full live-data + project backup into `backups/<time>/` |
+| `tools/restore.py` | restore a backup (dry run by default, `--yes` to write) |
+| `tests/gas_harness.js` | runs the real `Code.gs` under node with in-memory Sheet fakes |
+| `tests/backend.test.js` | 46 backend logic tests |
+| `tests/run_tests.js` + `tests/scenarios.js` | frontend flow tests against the real backend (add scenarios at the bottom; assertions are `TT.ok/TT.eq`) |
+| `.github/workflows/pages.yml` | CI: tests → build → publish to Pages |
+| `.clasp.json` | Apps Script project link (rootDir `backend`) |
+| `docs/DEPLOY.md`, `docs/BACKUP.md` | how shipping and backups work |

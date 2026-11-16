@@ -4,7 +4,7 @@ Folder: `/Users/mac/claude code/quiz-server`
 
 নতুন chat-এ এই project-এ কাজ করতে:
 1. নতুন chat খুলে এই folder-টা select করো (Code tab → working directory = quiz-server)।
-2. `NEW_CHAT_PROMPT.txt`-এর লেখা paste করো, শেষে "আমার কাজ:"-এর পর কী করতে চাও লিখো।
+2. `NEW_CHAT_PROMPT.txt`-এর লেখা paste করো (বা শুধু বলো "CLAUDE.md পড়ো"), শেষে "আমার কাজ:"-এর পর কী করতে চাও লিখো।
 3. Claude শুধু `docs/PROJECT_CONTEXT.md` + `docs/INDEX.md` পড়বে, তারপর দরকারি ফাইল — তাই token কম লাগে।
 
 | ফোল্ডার/ফাইল | কাজ |
@@ -20,7 +20,11 @@ Folder: `/Users/mac/claude code/quiz-server`
 | `backend/Code.gs` | Google Apps Script কোড |
 | `samples/` | CSV template, ৫০টা Higher-Math question (solution সহ) |
 | `tools/` | md→CSV script, deploy patch script, browser test fake-backend |
-| `tests/` | পুরোনো test (node লাগে, এখন outdated) |
+| `tests/` | automatic test (node দিয়ে চলে, deploy-এর আগে নিজে থেকে চলে) |
+| `CLAUDE.md` | Claude-এর জন্য মূল নিয়ম (workflow, deploy, backup) — Claude এটা আগে পড়ে |
+| `docs/BACKUP.md` | backup/restore কীভাবে হয় |
+| `deploy.sh`, `deploy-backend.sh`, `backup.sh` | এক command-এ deploy / backup |
+| `backups/` | আপনার Mac-এ data-র backup (GitHub-এ যায় না, কারণ student password আছে) |
 
 Student link: https://moazbinabdullah2003-lgtm.github.io/mock-exam/quiz.html
 Teacher login: ID `teacher`, password `teacher123` (Settings → Security থেকে বদলানো যায়)

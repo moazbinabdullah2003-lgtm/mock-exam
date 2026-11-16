@@ -1,5 +1,7 @@
 # DEPLOY & TEST — exactly how to ship changes (proven recipes)
 
+Backups: see `docs/BACKUP.md` (take one after a batch of work, with the user's OK).
+
 Order: **backend first** (`backend/Code.gs`, only if it changed), then **frontend** (`dist/quiz.html`). The frontend is written to degrade gracefully with an older backend, but new features need the new backend.
 
 Prerequisite: the user is signed in to **Google** (script.google.com / docs.google.com) and **GitHub** in the built-in browser pane (Claude cannot type passwords). First visit to a site may ask the user to allow it. Check with `tabs_context`; open the Apps Script / GitHub URL; if a login page appears, ask the user to sign in in the pane and say "done".

@@ -32,8 +32,8 @@ Everything the teacher controls is edited **in the web UI** — no code edits ne
 | Thing | Value |
 |---|---|
 | **Student URL** | https://moazbinabdullah2003-lgtm.github.io/mock-exam/quiz.html |
-| GitHub repo | `moazbinabdullah2003-lgtm/mock-exam`, branch `main`, file `quiz.html` at repo root (GitHub Pages serves it). The GitHub repo only holds the built file, **not** this source tree. |
-| Apps Script project | id `1y8kV5WPEO9-HJtnVhwdu0nnxV0a-xC6ug-J61AUgqMr7QJ6SOnFTdH-T` (title "Untitled project"). Active Web-app deployment "Untitled" (Execute as Me, Access: Anyone) — **Version 4** (2026-11-15 19:35). Archived: "Untitled", "mock test". |
+| GitHub repo | `moazbinabdullah2003-lgtm/mock-exam`, branch `main` — now holds the **full project** (src, backend, docs, tests, tools). GitHub Actions (`.github/workflows/pages.yml`) runs the tests, builds `dist/quiz.html` and publishes it to Pages (Settings → Pages → Source = GitHub Actions). The repo is public: never commit secrets or backups. |
+| Apps Script project | id `1y8kV5WPEO9-HJtnVhwdu0nnxV0a-xC6ug-J61AUgqMr7QJ6SOnFTdH-T` (title "Untitled project"). Active Web-app deployment "Untitled" (Execute as Me, Access: Anyone) — **Version 5** (2026-11-16, deployed with clasp; versions bump on every `./deploy-backend.sh`). Archived: "Untitled", "mock test". |
 | Web app `/exec` URL | in `src/js/01-config.js` → `CONFIG.SCRIPT_URL` (`https://script.google.com/macros/s/AKfycbx2xuErMRJf9XPij0Yt28hqLXf79oAN3MnQva2ERw4rTJLQsFrkmQwO6qpFxTCG3IRPjw/exec`). **Never create a "New deployment"** — it changes the URL. Always *Manage deployments → edit → New version*. |
 | Spreadsheet "MCQ Mock Data" | id `1sU8tzNalkI30mmx8aAOQwz8lA_8jX4atM0m4fsnK3og` (also Script property `SSID`). Tabs: `Attempts`, `Questions`, `Settings`. |
 | Teacher login | ID `teacher`, password `teacher123` (defaults; password can be changed in Settings→Security which stores Script property `TPASS`; ID is `access.teacherId` in settings) |
@@ -41,7 +41,7 @@ Everything the teacher controls is edited **in the web UI** — no code edits ne
 
 ### Live data right now
 - Exams: `DEMO1` (3 Q), **`MATH-B`** Beginner (17 Q, 20 min), **`MATH-I`** Intermediate (17 Q, 25 min), **`MATH-A`** Advanced (16 Q, 30 min); negative mark 0.25 on the three MATH exams. Source: `samples/math_3levels.csv` ← `samples/math_questions_with_solutions.md` (50 Higher-Math questions with step-by-step solutions, KaTeX).
-- Roster: 2 students (`0001`, `0002`, passwords set). Attempts: 2 rows (DEMO1 tests).
+- Roster: 3 students — `0001` zaheen, `0002` rakin, and the **test student `9999` / `test1234`** (for Claude's post-update end-to-end checks; never delete real students). Attempts: 2 rows (DEMO1 tests).
 - Settings saved by the teacher: theme preset `rose`; everything else default. (The saved settings still contain obsolete keys `access.mode/needPin` — harmless, ignored.)
 
 ---------------------------------------------------------------------------------------------------
@@ -77,10 +77,14 @@ quiz-server/
 ├─ dist/quiz.html            GENERATED. This is what gets uploaded to GitHub
 ├─ backend/Code.gs           Google Apps Script (pasted into the Apps Script editor)
 ├─ samples/                  questions_template.csv, math_3levels.csv, math_questions_with_solutions.md
-├─ tools/                    md2csv.py (md→CSV), make_patch.py (deploy diff), browser_fake_backend.js (test harness)
-├─ tests/                    run_tests.js + scenarios.js  (⚠ OUTDATED, needs node, see §10)
-├─ docs/                     PROJECT_CONTEXT.md (this), INDEX.md (module map), ARCHITECTURE.md (protocol/data), DEPLOY.md (how to ship/test), BACKLOG.md
-├─ NEW_CHAT_PROMPT.txt, README_BN.md
+├─ tools/                    backup.py, restore.py, md2csv.py (md→CSV), symbols.py, browser_fake_backend.js (UI test harness), make_patch.py (obsolete)
+├─ tests/                    backend.test.js + gas_harness.js (real Code.gs under node), run_tests.js + scenarios.js (frontend vs real backend)
+├─ deploy.sh, deploy-backend.sh, backup.sh   one-command frontend deploy / backend deploy / full backup
+├─ .github/workflows/pages.yml  CI: test + build + publish
+├─ CLAUDE.md                 master instructions (workflow, backup rules, hard rules) — auto-read by Claude
+├─ backups/  .local/         LOCAL ONLY (gitignored): data backups; teacher key for scripts
+├─ docs/                     PROJECT_CONTEXT.md (this), INDEX.md (module map), ARCHITECTURE.md (protocol/data), DEPLOY.md (ship/test), BACKUP.md (backup/restore), BACKLOG.md
+├─ NEW_CHAT_PROMPT.txt, README_BN.md, .clasp.json (Apps Script link)
 ```
 **Module load order matters** (concatenation order = filename order). `99-boot.js` MUST stay last — `boot()` calls `render()`, which touches variables declared in 13/14 with `let` (TDZ → blank page; this exact bug happened and was fixed).
 
@@ -178,21 +182,18 @@ Used by: `doLogin`, `doGuest`, `doTeacher`, `getExam`/`startCode`. (Other fetche
 
 ---------------------------------------------------------------------------------------------------
 
-## 10. How to work (edit → build → test → deploy)
+## 10. How to work (edit → build → test → deploy → verify → docs)
 
-1. Edit `src/…` (never `dist/`). 2. `python3 build.py`. 3. Test (below). 4. Deploy (`docs/DEPLOY.md`: backend first if `Code.gs` changed, then `quiz.html`). 5. Update `docs/INDEX.md` / this file if structure or behaviour changed.
+Authoritative short version: **`CLAUDE.md`**. Details: `docs/DEPLOY.md`.
+1. Edit `src/` / `backend/Code.gs` (never `dist/`). 2. `python3 build.py` + `node tests/backend.test.js && node tests/run_tests.js` (PATH needs `/opt/homebrew/bin`). 3. `./deploy-backend.sh "msg"` (if Code.gs changed) then `./deploy.sh "msg"`; both run tests first. 4. Verify live hash + test-student end-to-end. 5. Update docs. 6. After the batch: ask the user, then `./backup.sh` (`docs/BACKUP.md`).
 
-**Environment facts** (this Mac): `python3` yes; **`node` NOT installed** → `tests/run_tests.js` can't run and is **outdated** (its fake backend doesn't know login/settings/roster actions; teacher login scenario needs rewrite). Testing is done in the **built-in browser pane** with an in-page fake backend instead:
-- Serve `dist/` locally: create `<primary working dir>/.claude/launch.json` with `python3 -m http.server 8765 --directory <abs path>/dist`, call `preview_start`, `navigate` to `http://localhost:8765/quiz.html`. (`file://` and `data:` tabs can't use localStorage / aren't scriptable after the first load.)
-- Paste `tools/browser_fake_backend.js` via `javascript_tool` → full login/guest/exam/settings flows run without touching the real Sheet. Call app functions directly (`doLogin()`, `startRun()`, `finish()`, `saveAll()`…).
-- **Never run write actions against the live backend for tests** unless cleaned up (teacher flows write to the real Sheet; student `finish()` creates real Attempts rows). Read-only GETs on the live backend are fine.
-- Stop the preview server and delete the temporary `.claude/launch.json` afterwards.
-
-**Deploying without the user**: see DEPLOY.md. Short version: user is signed in to Google + GitHub in the built-in browser pane; Code.gs goes through the Monaco editor with a sha256 check; `quiz.html` goes through the GitHub web editor using a small diff patch (`tools/make_patch.py`) with a sha256 check, then commit to `main`; verify by fetching the live file from the github.io origin and comparing the hash.
+UI/visual checks still use the built-in browser pane + `tools/browser_fake_backend.js` (DEPLOY.md §C). **Never run write actions against the live backend for tests** except as the test student `9999` (its attempts appear in the teacher dashboard). Read-only GETs on the live backend are fine. Stop preview servers and delete any temporary `.claude/launch.json` afterwards.
 
 ---------------------------------------------------------------------------------------------------
 
 ## 11. Pitfalls & lessons (things that already bit us)
+
+(Deploy through the browser editors — Monaco/GitHub CodeMirror/patches — is obsolete since 2026-11-16; those pitfalls are kept for history. Live deploys now use `deploy.sh` / `deploy-backend.sh`.)
 
 - **Script order / TDZ**: boot must be last (`99-boot.js`). New modules with top-level `let/const` used during `render()` must load before boot.
 - **`let` in the javascript_tool REPL**: variables declared with `let/const` in one call may not be visible as the same binding in later calls — use `window.x` for state shared across calls.
@@ -217,7 +218,7 @@ Used by: `doLogin`, `doGuest`, `doTeacher`, `getExam`/`startCode`. (Other fetche
 1. **User reported "Network nei" when logging in on their device.** The server is healthy from our side. The new diagnostic UI was deployed to find the real cause; **waiting for the user to send the new message/`[kind: …]` tag or the Connection-check output**. Likely causes: ISP/WiFi blocking Google, Messenger/Facebook in-app browser, VPN/ad-blocker, stale cached old page (hard refresh).
 2. Review screen shows options in original A-B-C-D order, not the order the student saw — user was asked whether they want the exam-time order; no answer yet.
 3. Math question content decisions: Q21 (argument of −i) answer set to (c) −π/2 (principal value; (a),(d) are also valid arguments) — user may want to reword; Q49 assumes ω is the complex cube root (ω≠1); negative marking 0.25 assumed.
-4. `tests/` suite is stale (see §10). Re-writing it for the browser-based harness (or installing node) is a worthwhile task.
+4. (done 2026-11-16) tests rewritten: 46 backend + 29 frontend, run before every deploy and in CI.
 5. Obsolete keys `access.mode`, `access.needPin` remain in the saved cfg (harmless).
 
 **Backlog ideas (not decided — ask the user):** server-side grading so answers aren't in the page/network; hashed passwords + login rate-limit; exam window already exists per exam — add hide-results-until-released toggle; question images; PWA/offline; Bengali digits toggle; per-question time analytics UI (secs already stored); student self-registration; bulk delete attempts; cleaning legacy Google-Form/CSV path in `03-sync.js`; leaderboard.
@@ -226,4 +227,4 @@ Used by: `doLogin`, `doGuest`, `doTeacher`, `getExam`/`startCode`. (Other fetche
 
 ## 13. Quick start for a new chat
 
-1. Read this file, then `docs/INDEX.md`. 2. Ask what to change. 3. Open only the module(s) from INDEX's task table. 4. Edit `src/`, `python3 build.py`, test in the browser pane with `tools/browser_fake_backend.js`. 5. Deploy per `docs/DEPLOY.md` (ask the user to sign in to Google/GitHub in the pane if not already). 6. Reply in Bengali, short, and update the docs.
+1. Read `CLAUDE.md`, this file, then `docs/INDEX.md`. 2. Ask what to change. 3. Open only the modules from INDEX's task table. 4. Follow §10 (edit → test → deploy → verify → docs). 5. Bengali, short. 6. After the batch is done, ask once about `./backup.sh`.
