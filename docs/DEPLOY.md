@@ -34,21 +34,13 @@ The old browser-editor patch method is obsolete. If the token expires, user crea
 
 ---------------------------------------------------------------------------------------------------
 
-## C. Testing (no node on this Mac)
+## C. Testing — AUTOMATIC (node installed 2026-11-16)
 
-`tests/run_tests.js` needs node and is **stale** (its fake backend predates login/settings/roster). Use the browser pane:
-
-1. Build, then create `<primary working dir>/.claude/launch.json`:
-   ```json
-   { "version":"0.0.1","configurations":[{"name":"quiz-dist","runtimeExecutable":"python3",
-     "runtimeArgs":["-m","http.server","8765","--directory","/Users/mac/claude code/quiz-server/dist"],"port":8765}] }
-   ```
-   `preview_start name=quiz-dist` → it opens a tab; `navigate http://localhost:8765/quiz.html` (localStorage works on localhost; `file://` does not).
-2. `javascript_tool`: paste `tools/browser_fake_backend.js` (in-memory copy of Code.gs), then drive the app: `doLogin()`, `doGuest()`, `doTeacher()`, `startRun('DEMO1','full')`, `finish(false)`, `gotoTab('set')`, `sp('theme.primary','#000')`, `saveAll()`, `openEditor('DEMO1')`, `diag()` …. Check `view`, `msg`, `DB.*`, DOM counts, and take screenshots (`scale 0.5`).
-3. Error simulation: wrap `window.fetch` to throw `TypeError('Failed to fetch')`, return HTTP 503, return HTML text, or hang until `AbortError`; flip with `window.__mode` (not `let`).
-4. `preview_stop` and delete the temporary `.claude/launch.json` when finished. Never leave test rows in the real sheet.
-
-Live read-only smoke test (safe): from a github.io tab, `fetch(CONFIG.SCRIPT_URL+'?action=settings')`, `…action=tlogin&key=teacher123`, `…action=login&sid=1&pin=1` (expect `badlogin`), `…action=exams&key=teacher123`.
+- `node tests/backend.test.js` runs the REAL `backend/Code.gs` under node with in-memory fakes of SpreadsheetApp/PropertiesService/LockService/ContentService (`tests/gas_harness.js`).
+- `node tests/run_tests.js` loads `dist/quiz.html` logic (build first) and talks to that real backend: teacher login/publish/close/delete, student login (wrong/blocked/ok), exam by code, scoring, save, read-back, mistakes retake, guest.
+- `deploy.sh` and `deploy-backend.sh` run them first and stop on any failure; GitHub Actions runs them too before publishing.
+- Add scenarios at the bottom of `tests/scenarios.js` (inside the app scope; the app already has `T()` for texts, so assertions are `TT.ok/TT.eq`). Add backend cases to `tests/backend.test.js`.
+- Visual/UI checks still use the browser pane: build, `preview_start` a python http.server on `dist/`, paste `tools/browser_fake_backend.js`, take screenshots. Never leave test rows in the real sheet.
 
 ---------------------------------------------------------------------------------------------------
 

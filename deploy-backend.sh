@@ -4,6 +4,7 @@
 set -e
 export PATH=/opt/homebrew/bin:$PATH
 cd "$(dirname "$0")"
+node tests/backend.test.js   # any failure stops the deploy
 DEPLOYMENT_ID="AKfycbx2xuErMRJf9XPij0Yt28hqLXf79oAN3MnQva2ERw4rTJLQsFrkmQwO6qpFxTCG3IRPjw"
 clasp push -f
 clasp deploy -i "$DEPLOYMENT_ID" -d "${1:-update}"
