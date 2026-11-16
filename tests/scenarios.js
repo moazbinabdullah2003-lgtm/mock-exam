@@ -63,9 +63,11 @@ TT.ok(RUN && RUN.mode === 'mistakes' && RUN.order.length === 2, 'mistake retake 
 RUN = null; LS.del('mq_run');
 
 // 7. Guest flow
-logout(); el('#gcode').value = 'ct1'; await doGuest();
-TT.ok(SESS && SESS.guest, 'guest enters with exam code');
-logout(); el('#gcode').value = 'NOPE'; await doGuest();
+logout(); setLM('guest'); el('#gcode').value = 'ct1'; await doGuest();
+TT.ok(!SESS, 'guest without name rejected');
+logout(); setLM('guest'); el('#gname').value = 'Rahim'; el('#gcode').value = 'ct1'; await doGuest();
+TT.ok(SESS && SESS.guest && SESS.name === 'Rahim (Guest)', 'guest enters with name + exam code');
+logout(); setLM('guest'); el('#gname').value = 'Rahim'; el('#gcode').value = 'NOPE'; await doGuest();
 TT.ok(!SESS, 'guest with bad code rejected');
 
 // 8. Teacher sees everyone, deletes exam (two-tap)

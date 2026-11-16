@@ -17,7 +17,7 @@ function render(keep){
   else if(view === 'quiz') h = vQuiz();
   else if(view === 'result') h = vResult(LAST);
   else if(view === 'teacher') h = vTeacher();
-  const KEEP = ['#code', '#sid', '#pw', '#tid', '#tp', '#gcode'], kv = KEEP.map(k => $(k) ? $(k).value : '');
+  const KEEP = ['#code', '#sid', '#pw', '#tid', '#tp', '#gcode', '#gname'], kv = KEEP.map(k => $(k) ? $(k).value : '');
   if(CFG.brand.footer && view !== 'quiz') h += `<div class="foot">${esc(CFG.brand.footer)}</div>`;
   a.innerHTML = h;
   mathify(a);

@@ -28,7 +28,7 @@ const DEF_CFG = {
 };
 /* UI label defaults (teacher "Texts" section-এ যেকোনোটা বদলানো যায়) */
 const TX = {
-  tabStudent:'Student', tabGuest:'Guest', tabTeacher:'Teacher', idPh:'ID', passPh:'Password', loginBtn:'Login', guestHint:'Exam code দিয়ে সরাসরি exam দাও', guestBtn:'Start exam ▶',
+  tabStudent:'Student', tabGuest:'Guest', tabTeacher:'Teacher', idPh:'ID', passPh:'Password', loginBtn:'Login', guestHint:'নাম আর exam code দিয়ে সরাসরি exam দাও', guestNamePh:'তোমার নাম', back:'← Back', guestBtn:'Start exam ▶',
   startTitle:'Start exam', codePh:'Exam code', startBtn:'Start ▶', logout:'Logout',
   prev:'← Prev', next:'Next →', clear:'Clear', submit:'Submit', submitTitle:'Submit করবে?', submitYes:'Yes, Submit', cancel:'Cancel',
   allAnswered:'সব answer দেওয়া হয়েছে।', unanswered:'টা question unanswered আছে।',
