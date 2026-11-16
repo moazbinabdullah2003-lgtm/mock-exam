@@ -118,3 +118,8 @@ html.anim #app.enter>*:nth-child(n+6){animation-delay:.25s}
 html:not(.anim) *{animation:none!important;transition:none!important}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 @media (max-width:480px){.hero{padding-top:16px}.tile b{font-size:24px}.big{font-size:44px}}
+.thg{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;margin:10px 0}
+.thm{display:block;text-align:left;background:var(--card);border:2px solid var(--b);border-radius:14px;padding:8px;cursor:pointer;color:var(--t);transition:transform .15s,border-color .15s}
+.thm:hover{transform:translateY(-2px)}.thm.on{border-color:var(--p);box-shadow:0 0 0 3px color-mix(in srgb,var(--p) 20%,transparent)}
+.thm b{display:block;font-size:14px;margin-top:6px}.thm small{display:block;font-size:12px}
+.thp{padding:10px}.thp>div{display:flex;align-items:center;justify-content:space-between;padding:10px}.thp>div b{margin:0;font-size:18px}.thp>div span{display:block;width:42px;height:16px}

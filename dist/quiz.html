@@ -128,6 +128,11 @@ html.anim #app.enter>*:nth-child(n+6){animation-delay:.25s}
 html:not(.anim) *{animation:none!important;transition:none!important}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 @media (max-width:480px){.hero{padding-top:16px}.tile b{font-size:24px}.big{font-size:44px}}
+.thg{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;margin:10px 0}
+.thm{display:block;text-align:left;background:var(--card);border:2px solid var(--b);border-radius:14px;padding:8px;cursor:pointer;color:var(--t);transition:transform .15s,border-color .15s}
+.thm:hover{transform:translateY(-2px)}.thm.on{border-color:var(--p);box-shadow:0 0 0 3px color-mix(in srgb,var(--p) 20%,transparent)}
+.thm b{display:block;font-size:14px;margin-top:6px}.thm small{display:block;font-size:12px}
+.thp{padding:10px}.thp>div{display:flex;align-items:center;justify-content:space-between;padding:10px}.thp>div b{margin:0;font-size:18px}.thp>div span{display:block;width:42px;height:16px}
 </style>
 </head>
 <body>
@@ -210,15 +215,28 @@ if(typeof addEventListener === 'function') addEventListener('load', () => mathif
 /* ============================================================
    Settings engine (CFG): teacher UI থেকে edit হয়, backend 'Settings' sheet-এ save হয়
    ============================================================ */
+/* Theme presets — শুধু রং দিলে style (shadow/shape ইত্যাদি) আগেরটা থাকে; পুরো "look" দিলে সব বদলায়.
+   n = গ্যালারিতে নাম, d = ছোট বর্ণনা */
 const PRESETS = {
-  indigo:   {primary:'#4f46e5', bg:'#f3f4f6', card:'#ffffff', text:'#111827'},
-  ocean:    {primary:'#0284c7', bg:'#eef6fb', card:'#ffffff', text:'#0f172a'},
-  forest:   {primary:'#15803d', bg:'#f0f7f1', card:'#ffffff', text:'#14231a'},
-  sunset:   {primary:'#ea580c', bg:'#fdf4ec', card:'#ffffff', text:'#2a1a10'},
-  rose:     {primary:'#e11d48', bg:'#fdf0f3', card:'#ffffff', text:'#2a1119'},
-  paper:    {primary:'#92400e', bg:'#f5efe0', card:'#fffaf0', text:'#2b2418'},
-  midnight: {primary:'#818cf8', bg:'#0f172a', card:'#1e293b', text:'#e5e7eb'},
-  black:    {primary:'#34d399', bg:'#000000', card:'#111111', text:'#f3f4f6'}
+  classic:  {n:'Classic Blue', d:'পরিষ্কার, professional', primary:'#2563eb', bg:'#f5f7fb', card:'#ffffff', text:'#0f172a', ok:'#16a34a', bad:'#dc2626', bgStyle:'gradient', shadow:'soft', radius:16, btnShape:'rounded', family:'system'},
+  mint:     {n:'Mint Fresh', d:'হালকা সবুজ, চোখে আরাম', primary:'#0d9488', bg:'#f0fdfa', card:'#ffffff', text:'#0f2a27', ok:'#16a34a', bad:'#e11d48', bgStyle:'gradient', shadow:'soft', radius:18, btnShape:'rounded', family:'system'},
+  lavender: {n:'Lavender', d:'নরম বেগুনি, modern', primary:'#7c3aed', bg:'#f7f5ff', card:'#ffffff', text:'#1e1633', ok:'#16a34a', bad:'#e11d48', bgStyle:'gradient', shadow:'soft', radius:20, btnShape:'pill', family:'round'},
+  coral:    {n:'Coral', d:'উষ্ণ, বন্ধুত্বপূর্ণ', primary:'#f43f5e', bg:'#fff6f5', card:'#ffffff', text:'#2b1517', ok:'#16a34a', bad:'#b91c1c', bgStyle:'gradient', shadow:'soft', radius:18, btnShape:'rounded', family:'round'},
+  sky:      {n:'Sky Pill', d:'উজ্জ্বল নীল, গোল button', primary:'#0ea5e9', bg:'#f0f9ff', card:'#ffffff', text:'#0c1e2e', ok:'#10b981', bad:'#ef4444', bgStyle:'dots', shadow:'soft', radius:22, btnShape:'pill', family:'system'},
+  notebook: {n:'Notebook', d:'খাতার মতো, পড়তে আরাম', primary:'#1d4ed8', bg:'#fbfaf5', card:'#fffefa', text:'#1f2937', ok:'#15803d', bad:'#b91c1c', bgStyle:'dots', shadow:'none', radius:10, btnShape:'square', family:'serif'},
+  minimal:  {n:'Minimal', d:'সাদা-কালো, একদম simple', primary:'#111827', bg:'#fafafa', card:'#ffffff', text:'#111827', ok:'#16a34a', bad:'#dc2626', bgStyle:'plain', shadow:'none', radius:12, btnShape:'rounded', family:'system'},
+  emerald:  {n:'Emerald', d:'গাঢ় সবুজ, শান্ত', primary:'#059669', bg:'#f2f8f5', card:'#ffffff', text:'#0f241b', ok:'#16a34a', bad:'#dc2626', bgStyle:'plain', shadow:'strong', radius:16, btnShape:'rounded', family:'system'},
+  night:    {n:'Night Blue', d:'Dark mode, রাতে পড়তে', primary:'#60a5fa', bg:'#0b1220', card:'#131c2e', text:'#e2e8f0', ok:'#34d399', bad:'#f87171', bgStyle:'gradient', shadow:'none', radius:16, btnShape:'rounded', family:'system'},
+  grape:    {n:'Dark Grape', d:'Dark + বেগুনি', primary:'#a78bfa', bg:'#110f17', card:'#1c1826', text:'#ede9fe', ok:'#4ade80', bad:'#fb7185', bgStyle:'dots', shadow:'none', radius:18, btnShape:'pill', family:'round'},
+  // পুরোনো preset (শুধু রং)
+  indigo:   {n:'Indigo', d:'আগের default', primary:'#4f46e5', bg:'#f3f4f6', card:'#ffffff', text:'#111827'},
+  ocean:    {n:'Ocean', d:'নীল', primary:'#0284c7', bg:'#eef6fb', card:'#ffffff', text:'#0f172a'},
+  forest:   {n:'Forest', d:'সবুজ', primary:'#15803d', bg:'#f0f7f1', card:'#ffffff', text:'#14231a'},
+  sunset:   {n:'Sunset', d:'কমলা', primary:'#ea580c', bg:'#fdf4ec', card:'#ffffff', text:'#2a1a10'},
+  rose:     {n:'Rose', d:'গোলাপি', primary:'#e11d48', bg:'#fdf0f3', card:'#ffffff', text:'#2a1119'},
+  paper:    {n:'Paper', d:'পুরোনো কাগজ', primary:'#92400e', bg:'#f5efe0', card:'#fffaf0', text:'#2b2418'},
+  midnight: {n:'Midnight', d:'Dark', primary:'#818cf8', bg:'#0f172a', card:'#1e293b', text:'#e5e7eb'},
+  black:    {n:'Black', d:'পুরো কালো', primary:'#34d399', bg:'#000000', card:'#111111', text:'#f3f4f6'}
 };
 const FONTS = {
   system: 'system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans Bengali",sans-serif',
@@ -1372,7 +1390,8 @@ async function saveAll(){
 
 /* ---------------- Settings tab ---------------- */
 function applyPreset(n){
-  CD.theme = {...CD.theme, ...PRESETS[n], preset:n}; DIRTY = true; saveMsg = '';
+  const {n:_n, d:_d, ...pv} = PRESETS[n];
+  CD.theme = {...CD.theme, ...pv, preset:n}; DIRTY = true; saveMsg = '';
   CFG = deepMerge(DEF_CFG, CD); applyTheme(); render(true);
 }
 function resetSec(k){
@@ -1384,8 +1403,11 @@ function resetSec(k){
 }
 function vSettings(){
   if(!CD) CD = clone(CFG);
-  const sw = Object.entries(PRESETS).map(([n, p]) => `<button style="background:${p.primary};${p.bg === '#000000' || p.bg === '#0f172a' ? 'outline:2px solid #888' : ''}" onclick="applyPreset('${n}')">${n}</button>`).join('');
-  const theme = `<div class="sw">${sw}</div>
+  const cur = CD.theme.preset;
+  const sw = Object.entries(PRESETS).map(([k, p]) => `<button class="thm ${cur === k ? 'on' : ''}" onclick="applyPreset('${k}')">
+      <div class="thp" style="background:${p.bg};border-radius:${Math.min(p.radius || 14, 16)}px"><div style="background:${p.card};color:${p.text};border-radius:${Math.min(p.radius || 14, 16) - 4}px;${p.shadow === 'none' ? 'border:1px solid ' + p.text + '22' : 'box-shadow:0 2px 6px rgba(0,0,0,.12)'}"><b style="font-family:${FONTS[p.family] || FONTS.system}">Aa</b><span style="background:${p.primary};border-radius:${p.btnShape === 'pill' ? '99px' : p.btnShape === 'square' ? '2px' : '6px'}"></span></div></div>
+      <b>${esc(p.n || k)}${cur === k ? ' ✓' : ''}</b><small>${esc(p.d || '')}</small></button>`).join('');
+  const theme = `<small class="muted">একটা theme-এ tap করো — সাথে সাথে পুরো app-এ preview হবে। পছন্দ হলে নিচে Save।</small><div class="thg">${sw}</div><h3>🎛 নিজের মতো বদলাও</h3>
     <div class="g2">${fC('theme.primary', 'Main color')}${fC('theme.bg', 'Page background')}${fC('theme.card', 'Card background')}${fC('theme.text', 'Text color')}${fC('theme.ok', 'Correct color')}${fC('theme.bad', 'Wrong color')}</div>
     ${fR('theme.radius', 'Corner roundness', 0, 28)}${fR('theme.font', 'Font size', 13, 20)}
     ${fS('theme.family', 'Font style', [['system','Default (clean)'],['serif','Serif (book)'],['mono','Monospace'],['round','Rounded']])}

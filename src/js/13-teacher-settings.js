@@ -68,7 +68,8 @@ async function saveAll(){
 
 /* ---------------- Settings tab ---------------- */
 function applyPreset(n){
-  CD.theme = {...CD.theme, ...PRESETS[n], preset:n}; DIRTY = true; saveMsg = '';
+  const {n:_n, d:_d, ...pv} = PRESETS[n];
+  CD.theme = {...CD.theme, ...pv, preset:n}; DIRTY = true; saveMsg = '';
   CFG = deepMerge(DEF_CFG, CD); applyTheme(); render(true);
 }
 function resetSec(k){
@@ -80,8 +81,11 @@ function resetSec(k){
 }
 function vSettings(){
   if(!CD) CD = clone(CFG);
-  const sw = Object.entries(PRESETS).map(([n, p]) => `<button style="background:${p.primary};${p.bg === '#000000' || p.bg === '#0f172a' ? 'outline:2px solid #888' : ''}" onclick="applyPreset('${n}')">${n}</button>`).join('');
-  const theme = `<div class="sw">${sw}</div>
+  const cur = CD.theme.preset;
+  const sw = Object.entries(PRESETS).map(([k, p]) => `<button class="thm ${cur === k ? 'on' : ''}" onclick="applyPreset('${k}')">
+      <div class="thp" style="background:${p.bg};border-radius:${Math.min(p.radius || 14, 16)}px"><div style="background:${p.card};color:${p.text};border-radius:${Math.min(p.radius || 14, 16) - 4}px;${p.shadow === 'none' ? 'border:1px solid ' + p.text + '22' : 'box-shadow:0 2px 6px rgba(0,0,0,.12)'}"><b style="font-family:${FONTS[p.family] || FONTS.system}">Aa</b><span style="background:${p.primary};border-radius:${p.btnShape === 'pill' ? '99px' : p.btnShape === 'square' ? '2px' : '6px'}"></span></div></div>
+      <b>${esc(p.n || k)}${cur === k ? ' ✓' : ''}</b><small>${esc(p.d || '')}</small></button>`).join('');
+  const theme = `<small class="muted">একটা theme-এ tap করো — সাথে সাথে পুরো app-এ preview হবে। পছন্দ হলে নিচে Save।</small><div class="thg">${sw}</div><h3>🎛 নিজের মতো বদলাও</h3>
     <div class="g2">${fC('theme.primary', 'Main color')}${fC('theme.bg', 'Page background')}${fC('theme.card', 'Card background')}${fC('theme.text', 'Text color')}${fC('theme.ok', 'Correct color')}${fC('theme.bad', 'Wrong color')}</div>
     ${fR('theme.radius', 'Corner roundness', 0, 28)}${fR('theme.font', 'Font size', 13, 20)}
     ${fS('theme.family', 'Font style', [['system','Default (clean)'],['serif','Serif (book)'],['mono','Monospace'],['round','Rounded']])}

@@ -131,7 +131,7 @@ One JSON object **CFG** = `deepMerge(DEF_CFG, remote)`. Teacher edits a draft `C
 CFG = {
   theme:  {preset, primary, bg, card, text, ok, bad, radius, font, family,
            bgStyle:plain|gradient|dots, shadow:none|soft|strong, density:compact|normal|roomy, width:narrow|normal|wide,
-           btnShape:rounded|pill|square, hero:22-48 (login title px), align:center|left, anim:bool}   // 8 presets in PRESETS; applyTheme sets CSS vars --pad --w --btnr --hero --sh
+           btnShape:rounded|pill|square, hero:22-48 (login title px), align:center|left, anim:bool}   // 18 presets in PRESETS (10 full "looks" with style keys: classic, mint, lavender, coral, sky, notebook, minimal, emerald, night, grape + 8 old colour-only); each has n (name) + d (desc) shown in the Settings theme gallery (.thg/.thm), applyPreset strips n/d; applyTheme sets CSS vars --pad --w --btnr --hero --sh
   brand:  {title, tagline, emoji, notice, noticeType:info|warn|good|bad, intro, footer}        // notice on login+home; intro = popup before every exam
   text:   {<key>:override}   // every UI label; defaults in TX, used via T('key')
   access: {guest:true, teacherId:'teacher'}
@@ -230,7 +230,7 @@ UI/visual checks still use the built-in browser pane + `tools/browser_fake_backe
 1. **User reported "Network nei" when logging in on their device.** The server is healthy from our side. The new diagnostic UI was deployed to find the real cause; **waiting for the user to send the new message/`[kind: …]` tag or the Connection-check output**. Likely causes: ISP/WiFi blocking Google, Messenger/Facebook in-app browser, VPN/ad-blocker, stale cached old page (hard refresh).
 2. Review screen shows options in original A-B-C-D order, not the order the student saw — user was asked whether they want the exam-time order; no answer yet.
 3. Math question content decisions: Q21 (argument of −i) answer set to (c) −π/2 (principal value; (a),(d) are also valid arguments) — user may want to reword; Q49 assumes ω is the complex cube root (ω≠1); negative marking 0.25 assumed.
-4. (done 2026-11-16) tests: 58 backend + 58 frontend, run before every deploy and in CI.
+4. (done 2026-11-16) tests: 58 backend + 61 frontend, run before every deploy and in CI.
 5. Obsolete keys `access.mode`, `access.needPin` remain in the saved cfg (harmless).
 
 **Backlog ideas (not decided — ask the user):** server-side grading so answers aren't in the page/network; hashed passwords + login rate-limit; exam window already exists per exam — add hide-results-until-released toggle; question images; PWA/offline; Bengali digits toggle; student self-registration; bulk delete attempts; cleaning legacy Google-Form/CSV path in `03-sync.js`; leaderboard.

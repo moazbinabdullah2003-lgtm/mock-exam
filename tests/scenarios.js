@@ -12,6 +12,13 @@ const csv = 'CODE,TITLE,MINUTES,NEG,OPEN,Q,A,B,C,D,E,ANS,TOPIC,EXPLANATION\n' +
   TT.ok(m.includes('❌ wrong') && !m.includes('Correct answer') && !m.includes('solution'), 'AI copy: marks level hides correct answer + solution');
   TT.ok(!aiQ(qq, 1, 1, 'full', false).includes('solution') && aiQ(qq, 1, -1, 'full', true).includes('Skipped'), 'AI copy: explain off hides solution; skipped shown'); }
 
+// 0b. Theme presets
+CD = clone(CFG); applyPreset('notebook');
+TT.ok(CD.theme.preset === 'notebook' && CD.theme.family === 'serif' && CD.theme.btnShape === 'square' && !('n' in CD.theme) && !('d' in CD.theme), 'full-look preset applies style keys, not name/desc');
+applyPreset('rose'); TT.ok(CD.theme.primary === '#e11d48' && CD.theme.family === 'serif', 'colour-only preset keeps style');
+TT.ok(vSettings().includes('Night Blue'), 'theme gallery lists new presets');
+CD = null; DIRTY = false; CFG = deepMerge(DEF_CFG, {});
+
 // 1. CSV parsing
 let r = parseQ(csv);
 TT.eq(r.errors, [], 'valid CSV has no errors');
