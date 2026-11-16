@@ -153,3 +153,9 @@ body.box-sym :is(.card,.tile,.choice,details.sec)::before{content:"";position:ab
 body.box-bold.box-sym .tile::before{filter:brightness(0) invert(1);opacity:calc(var(--bop) * .8)}
 body.box-sym.in-quiz:not(.motif-quiz) :is(.card,.tile,.choice,details.sec)::before{display:none}
 .bnx{margin:8px 0;border:1px dashed var(--b);border-radius:10px;padding:6px 10px}.bnx>summary{cursor:pointer;font-weight:600;font-size:14px;padding:4px 0}
+/* 🔖 vault */
+.vfs{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}
+.chip{border:1.5px solid var(--b);background:var(--card);color:var(--t);border-radius:999px;padding:6px 12px;font-size:14px;cursor:pointer;font-family:inherit}
+.chip small{color:var(--m);margin-left:2px}.chip.on{border-color:var(--p);background:var(--pl);font-weight:700}
+.btn.saved{border-color:var(--p);color:var(--p)}
+.btn.ghost.red{background:var(--rl);color:var(--r);border-color:color-mix(in srgb,var(--r) 40%,var(--b))}

@@ -49,6 +49,7 @@ const norm_ = s => String(s == null ? '' : s).trim().toUpperCase().replace(/^0+(
 // Student result save
 function doPost(e) {
   const p = (e && e.parameter) || {};
+  if (p.action === 'savevault') return ContentService.createTextOutput(saveVault_(p));
   if (p.action) return admin_(p);
   const lock = LockService.getScriptLock();
   lock.waitLock(20000);
@@ -79,6 +80,7 @@ function doGet(e) {
   if (p.action === 'tlogin') return json_({ ok: p.key === pass_() });
   if (p.action === 'roster') return json_(p.key === pass_() ? JSON.parse(kvGet_('roster') || '[]') : []);
   if (p.action === 'login') return json_(login_(p));
+  if (p.action === 'vault') return json_(getVault_(p));
   const sh = sheet_();
   const last = sh.getLastRow();
   let rows = last > 1 ? sh.getRange(2, 1, last - 1, 10).getValues() : [];
@@ -240,3 +242,57 @@ function login_(p) {
   if (r.blocked) return { ok: false, reason: 'blocked' };
   return { ok: true, name: r.name || String(r.id) };
 }
+
+// ---------- Student question vault (sheet 'Vault': SID | TS | DATA1..DATA20) ----------
+// এক student = এক row; JSON বড় হলে কয়েকটা cell-এ ভাগ (cell-এর সীমা 50,000 অক্ষর)
+const VAULT_CHUNK = 45000, VAULT_MAXC = 20;
+function vaultSheet_() {
+  const ss = ss_();
+  let sh = ss.getSheetByName('Vault');
+  if (!sh) {
+    sh = ss.insertSheet('Vault');
+    sh.getRange('A:V').setNumberFormat('@');
+    sh.appendRow(['SID', 'TS'].concat(Array.from({ length: VAULT_MAXC }, (_, i) => 'DATA' + (i + 1))));
+  }
+  return sh;
+}
+// নিজের vault: সঠিক ID + password, অথবা teacher key (test student)
+function vaultAuth_(p) {
+  if (p.key && p.key === pass_()) return !!String(p.sid || '').trim();
+  return login_(p).ok === true;
+}
+function getVault_(p) {
+  if (!vaultAuth_(p)) return { ok: false, reason: 'denied' };
+  const v = vaultSheet_().getDataRange().getValues();
+  for (let i = 1; i < v.length; i++) {
+    if (norm_(v[i][0]) === norm_(p.sid)) {
+      const txt = v[i].slice(2).map(x => String(x == null ? '' : x)).join('');
+      try { return { ok: true, ts: Number(v[i][1]) || 0, vault: txt ? JSON.parse(txt) : null }; } catch (e) { return { ok: true, ts: 0, vault: null }; }
+    }
+  }
+  return { ok: true, ts: 0, vault: null };
+}
+function saveVault_(p) {
+  if (!vaultAuth_(p)) return 'denied';
+  const txt = String(p.vault || '');
+  try { JSON.parse(txt); } catch (e) { return 'badjson'; }
+  const parts = [];
+  for (let i = 0; i < txt.length; i += VAULT_CHUNK) parts.push(txt.slice(i, i + VAULT_CHUNK));
+  if (parts.length > VAULT_MAXC) return 'toobig';
+  const lock = LockService.getScriptLock();
+  lock.waitLock(20000);
+  try {
+    const sh = vaultSheet_(), v = sh.getDataRange().getValues();
+    let row = -1;
+    for (let i = 1; i < v.length; i++) if (norm_(v[i][0]) === norm_(p.sid)) { row = i + 1; break; }
+    if (row < 0) row = Math.max(v.length, 1) + 1;
+    const line = [String(p.sid).trim(), String(Number(p.ts) || Date.now())].concat(Array.from({ length: VAULT_MAXC }, (_, i) => parts[i] || ''));
+    const rg = sh.getRange(row, 1, 1, line.length);
+    rg.setNumberFormat('@');
+    rg.setValues([line]);
+    return 'ok';
+  } finally {
+    lock.releaseLock();
+  }
+}
+

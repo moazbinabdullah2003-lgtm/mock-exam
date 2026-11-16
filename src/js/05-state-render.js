@@ -17,9 +17,12 @@ function render(keep){
   else if(view === 'quiz') h = vQuiz();
   else if(view === 'result') h = vResult(LAST);
   else if(view === 'teacher') h = vTeacher();
+  else if(view === 'vault') h = vVault();
   const KEEP = ['#code', '#sid', '#pw', '#tid', '#tp', '#gcode', '#gname'], kv = KEEP.map(k => $(k) ? $(k).value : '');
   if(CFG.brand.footer && view !== 'quiz') h += `<div class="foot">${esc(CFG.brand.footer)}</div>`;
-  if(LANGASK && view !== 'quiz') h += vLangAsk();   // ভাষা বাছাই popup (bilingual exam)
+  if(LANGASK && view !== 'quiz') h += vLangAsk();
+  if(VSAVE) h += vSavePopup();                        // 🔖 save popup (quiz / result / vault)
+  if(EXITING && view === 'quiz') h += vExitPopup();   // ✕ exam exit   // ভাষা বাছাই popup (bilingual exam)
   try{ document.body.classList.toggle('in-quiz', view === 'quiz'); }catch(e){}
   a.classList.toggle('enter', !keep);
   a.innerHTML = h;

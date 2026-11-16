@@ -149,6 +149,41 @@ TT.ok(!SESS, 'blocked student rejected');
 el('#sid').value = '007'; el('#pw').value = 'pw1'; await doLogin();
 TT.ok(SESS && !SESS.teacher && SESS.name === 'Rahim', 'student logged in');
 
+// 4b. ✕ Exit exam (cancel = nothing saved) + 🔖 vault (folders, sync)
+TT.eq(SESS.pin, 'pw1', 'student session keeps password for vault sync');
+el('#code').value = 'ct1'; await startCode(); clearInterval(TM);
+{ const qz = vQuiz(); TT.ok(qz.includes('✕ Exit') && qz.includes('🔖 Save'), 'quiz has Exit + Save buttons'); }
+EXITING = true; TT.ok(vExitPopup().includes('Submit করে বের হও') && vExitPopup().includes('বাতিল করে বের হও'), 'exit popup: submit / cancel');
+onQuizKey({ key: '1', target: { tagName: 'BODY' }, preventDefault(){} }); TT.eq(Object.keys(RUN.ans).length, 0, 'quiz keys ignored while exit popup open');
+EXITING = 'cancel'; TT.ok(vExitPopup().includes('Attempt গুনবে না'), 'cancel asks for confirmation');
+pick(0); cancelRun(); await new Promise(r => _origSetTimeout(r, 20));
+TT.ok(!RUN && view === 'home' && !LS.get('mq_run', null) && !EXITING, 'cancel exit discards the run');
+TT.eq(B.get({ key: 'teacher123' }).length, 0, 'cancelled attempt NOT saved in backend');
+TT.eq(LS.get('mq_out', []).length + LS.get('mq_local', []).length, 0, 'cancelled attempt not in outbox/local');
+TT.ok(vHome().includes('Saved questions'), 'home shows vault button');
+saveQ('CT1', 0); TT.ok(VSAVE && vSavePopup().includes('General') && vSavePopup().includes('নতুন folder'), 'save popup with folders');
+VSAVE.nf = 'Physics'; doSaveQ(); await new Promise(r => _origSetTimeout(r, 20));
+{ const v = vGet(); TT.ok(v.items.length === 1 && v.items[0].f === 'Physics' && v.folders.join() === 'General,Physics' && v.items[0].q.o.length === 4 && v.items[0].title === EXAMS.CT1.title, 'question saved to new folder with snapshot'); }
+saveQ('CT1', 1); VSAVE.f = 'physics'; doSaveQ();   // same folder, different case
+saveQ('CT1', 2); doSaveQ();                         // last used folder remembered
+{ const v = vGet(); TT.ok(v.items.length === 3 && v.folders.length === 2 && v.items.every(x => x.f === 'Physics'), 'folder names case-insensitive + last folder remembered'); }
+TT.ok(vSaveBtn('CT1', 0).includes('🔖 Saved'), 'save button shows saved state');
+await vPush();
+{ const r = B.get({ action: 'vault', sid: '7', pin: 'pw1' }); TT.ok(r.ok && r.vault.items.length === 3 && r.ts === vGet().ts, 'vault synced to backend'); TT.ok(/synced/.test(VSYNC), 'sync status: ' + VSYNC); }
+view = 'vault'; VF = ''; let vh = vVault();
+TT.ok(vh.includes('📁 Physics') && vh.includes('🔒') && !vh.includes('class="opt ok"'), 'vault page: folders, answers locked before submitting this exam');
+vMove('CT1#0', 'General'); TT.eq(vGet().items.find(x => x.id === 'CT1#0').f, 'General', 'move question to another folder');
+VF = 'Physics'; vh = vVault(); TT.ok((vh.match(/class="card vq"/g) || []).length === 2 && vh.includes('Rename'), 'folder filter + rename/delete buttons');
+global.prompt = () => 'Chem'; vRenameFolder(); TT.ok(vGet().folders.includes('Chem') && !vGet().folders.includes('Physics') && vGet().items.filter(x => x.f === 'Chem').length === 2 && VF === 'Chem', 'rename folder moves items');
+global.confirm = () => true; vDelFolder(); TT.ok(!vGet().folders.includes('Chem') && vGet().items.every(x => x.f === 'General'), 'delete folder -> items go to General');
+unsaveQ('CT1#2'); TT.eq(vGet().items.length, 2, 'remove from vault');
+await vPush();
+LS.del(vKey()); TT.eq(vGet().items.length, 0, 'other device: empty local vault');
+await vPull(); TT.eq(vGet().items.length, 2, 'other device: vault pulled from account');
+{ const sv = SESS; SESS = {...sv, pin:'wrong'}; LS.del(vKey()); await vPull(); TT.ok(vGet().items.length === 0 && /login/.test(VSYNC), 'wrong password: no pull, asks re-login'); SESS = sv; await vPull(); }
+{ const sv = SESS; SESS = {sid:sv.sid, name:sv.name, teacher:false}; TT.ok(/logout করে আবার login/.test(vSyncNote()), 'old session without password: local-only note'); SESS = sv; }
+view = 'home';
+
 // 5. Student takes exam by code, scoring, result saved to backend
 el('#code').value = 'ct1'; await startCode(); clearInterval(TM);
 TT.ok(view === 'quiz' && RUN && RUN.exam === 'CT1', 'quiz started from code');
@@ -175,6 +210,8 @@ const saved = B.get({ key: 'teacher123' });
 TT.eq(saved.length, 1, 'attempt saved in backend');
 TT.eq(saved[0].sid, '7', 'sid normalised on save');
 TT.eq(LS.get('mq_out', []).length, 0, 'outbox empty after flush');
+{ view = 'vault'; VF = ''; const vh = vVault(); TT.ok(!vh.includes('🔒') && vh.includes('class="opt ok"'), 'vault shows answers after the exam was submitted'); view = 'result'; }
+{ const rh = vResult(LAST); TT.ok(rh.includes('🔖 Saved') && rh.includes('🔖 Save'), 'result review has save buttons'); }
 
 // 6. Fresh device read-back, mistakes retake
 LS.del('mq_local'); REMOTE = []; await loadRemote();

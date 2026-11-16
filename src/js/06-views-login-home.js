@@ -48,7 +48,7 @@ async function doLogin(){
   try{ r = await jget(CONFIG.SCRIPT_URL + '?action=login&sid=' + encodeURIComponent(sid) + '&pin=' + encodeURIComponent(pw) + '&t=' + Date.now()); }
   catch(e){ return netFail(e, 'doLogin'); }
   if(!r || Array.isArray(r) || !r.ok){ msg = r && r.reason === 'blocked' ? T('errBlocked') : T('errLogin'); return render(true); }
-  SESS = {sid, name:r.name || sid, teacher:false}; LS.set('mq_sess', SESS); msg = ''; view = 'home'; render(); refresh();
+  SESS = {sid, name:r.name || sid, teacher:false, pin:pw}; LS.set('mq_sess', SESS);   // pin: vault sync-এর জন্য msg = ''; view = 'home'; render(); refresh();
 }
 /* Guest: শুধু নাম + exam code (ID/password লাগে না); ওই exam-ই দিতে পারবে */
 async function doGuest(){
@@ -108,6 +108,7 @@ async function refresh(){
   await loadCfg(); await loadRemote(); if(SESS && SESS.teacher) await loadExamList(); await ensureExams(); await flush();
   loading = false;
   if(view === 'home' || view === 'teacher') render(true);
+  if(SESS && !SESS.teacher) vPull();
 }
 
 function vHome(){
@@ -121,7 +122,7 @@ function vHome(){
     return top + hello + `<div class="card center"><div class="muted">${esc(s.code)}</div><h2 style="font-size:24px;margin:6px 0">${esc(e ? e.title : s.code)}</h2>
       ${e ? `<div class="muted">${e.questions.length} questions · ${e.minutes} min</div>` : ''}
       ${errBox()}
-      <button class="btn full lg" onclick="startGuest()">${esc(T('startBtn'))}</button></div>${intro}`;
+      <button class="btn full lg" onclick="startGuest()">${esc(T('startBtn'))}</button></div>${vHomeBtn()}${intro}`;
   }
   return top + hello + `
   <div class="card"><h2>${esc(T('startTitle'))}</h2>
@@ -129,6 +130,7 @@ function vHome(){
     ${errBox()}
     <button class="btn full lg" onclick="startCode()">${esc(T('startBtn'))}</button>
   </div>
+  ${vHomeBtn()}
   ${CFG.rules.analytics ? vBoard(s.sid, false) : ''}${intro}`;
 }
 function startGuest(){

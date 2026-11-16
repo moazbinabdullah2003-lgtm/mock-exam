@@ -99,6 +99,25 @@ eq(B.get({ action: 'login', sid: '0101', pin: 'abc' }).ok, true, 'leading zeros 
   eq(B2.get({ action: 'exam', code: 'BI1' }).questions[0].qb, 'বাংলা প্রশ্ন', 'setopen keeps bn columns');
   eq(B2.get({ action: 'exam', code: 'BI1' }).open, false, 'setopen still works on new layout'); }
 
+
+// ---- student vault (sync) ----
+{ const vt = { ts: 5, folders: ['General', 'Physics'], items: [{ id: 'a1', f: 'Physics', ex: 'CT1', qi: 0, q: { q: 'বাংলা ' + 'x'.repeat(100000), o: ['1', '2'], a: 0 } }] };
+  eq(B.get({ action: 'vault', sid: '101', pin: 'bad' }), { ok: false, reason: 'denied' }, 'vault read needs right password');
+  eq(B.get({ action: 'vault', sid: '101', pin: 'abc' }), { ok: true, ts: 0, vault: null }, 'empty vault');
+  eq(B.post({ action: 'savevault', sid: '101', pin: 'nope', ts: '5', vault: JSON.stringify(vt) }), 'denied', 'vault write needs right password');
+  eq(B.post({ action: 'savevault', sid: '102', pin: 'zz', ts: '5', vault: '{}' }), 'denied', 'blocked student cannot write vault');
+  eq(B.post({ action: 'savevault', sid: '101', pin: 'abc', ts: '5', vault: JSON.stringify(vt) }), 'ok', 'vault saved (big, chunked)');
+  let g = B.get({ action: 'vault', sid: ' 0101 ', pin: 'abc' });
+  eq([g.ok, g.ts, g.vault && g.vault.items[0].q.q.length, g.vault && g.vault.folders], [true, 5, vt.items[0].q.q.length, ['General', 'Physics']], 'vault read back intact (chunks joined, id normalised)');
+  const vs = B.sheets.find(x => x.getName() === 'Vault')._s;
+  ok(vs.rows[1].slice(2).filter(Boolean).length === 3, 'big vault split into 3 cells');
+  eq(B.post({ action: 'savevault', sid: '101', pin: 'abc', ts: '9', vault: JSON.stringify({ ts: 9, folders: ['General'], items: [] }) }), 'ok', 'vault overwritten smaller');
+  g = B.get({ action: 'vault', sid: '101', pin: 'abc' });
+  eq([g.ts, g.vault.items.length, vs.rows.length, vs.rows[1].slice(3).every(x => x === '')], [9, 0, 2, true], 'same row reused, old chunks cleared');
+  eq(B.get({ action: 'vault', sid: '101', key: K }).ts, 9, 'teacher key can read a student vault (test student)');
+  eq(B.post({ action: 'savevault', sid: '101', pin: 'abc', vault: '{bad' }), 'badjson', 'bad json rejected');
+  eq(B.post({ action: 'savevault', sid: '101', pin: 'abc', vault: JSON.stringify({ x: 'y'.repeat(45000 * 21) }) }), 'toobig', 'too big vault rejected'); }
+
 // ---- change teacher password ----
 eq(B.post({ action: 'setpass', key: K, newpass: 'ab' }), 'short', 'short password rejected');
 eq(B.post({ action: 'setpass', key: K, newpass: 'newpass1' }), 'ok', 'password changed');
