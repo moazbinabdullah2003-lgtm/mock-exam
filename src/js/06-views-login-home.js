@@ -15,22 +15,28 @@ function vLogin(){
   const opts = [['student', T('tabStudent'), '🎓']].concat(A.guest ? [['guest', T('tabGuest'), '👤']] : []).concat([['teacher', T('tabTeacher'), '🧑‍🏫']]);
   if(!opts.some(t => t[0] === LMODE)) LMODE = '';
   const enter = f => `onkeydown="if(event.key==='Enter')${f}()"`;
+  const desc = {student:T('chStudent'), guest:T('chGuest'), teacher:T('chTeacher')};
   let card;
-  if(!LMODE) card = `<div class="card"><div style="display:grid;gap:10px">${opts.map(([k, l, ic]) => `<button class="btn full" style="font-size:18px;padding:16px" onclick="setLM('${k}')">${ic} ${esc(l)}</button>`).join('')}</div></div>`;
+  if(!LMODE) card = `<div class="center muted" style="margin-top:14px">${esc(T('chooseTitle'))}</div><div class="choices">${opts.map(([k, l, ic]) => `<button class="choice" onclick="setLM('${k}')"><span class="ic">${ic}</span><span><b>${esc(l)}</b><small>${esc(desc[k])}</small></span></button>`).join('')}</div>`;
   else{
     let body;
     if(LMODE === 'guest') body = `<div class="muted" style="margin-bottom:6px">${esc(T('guestHint'))}</div>
       <input id="gname" placeholder="${esc(T('guestNamePh'))}" autocomplete="name" maxlength="40">
       <input id="gcode" placeholder="${esc(T('codePh'))}" autocapitalize="characters" autocomplete="off" ${enter('doGuest')}>
-      ${errBox()}<button class="btn full" onclick="doGuest()">${esc(T('guestBtn'))}</button>`;
+      ${errBox()}<button class="btn full lg" onclick="doGuest()">${esc(T('guestBtn'))}</button>`;
     else body = `<input id="${LMODE === 'teacher' ? 'tid' : 'sid'}" placeholder="${esc(T('idPh'))}" autocomplete="username" autocapitalize="off">
       <input id="${LMODE === 'teacher' ? 'tp' : 'pw'}" type="password" placeholder="${esc(T('passPh'))}" autocomplete="current-password" ${enter(LMODE === 'teacher' ? 'doTeacher' : 'doLogin')}>
-      ${errBox()}<button class="btn full" onclick="${LMODE === 'teacher' ? 'doTeacher' : 'doLogin'}()">${esc(T('loginBtn'))}</button>`;
-    card = `<div class="card"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><b>${esc(opts.find(o => o[0] === LMODE)[1])}</b><button class="link" onclick="setLM('')">${esc(T('back'))}</button></div>${body}</div>`;
+      ${errBox()}<button class="btn full lg" onclick="${LMODE === 'teacher' ? 'doTeacher' : 'doLogin'}()">${esc(T('loginBtn'))}</button>`;
+    const cur = opts.find(o => o[0] === LMODE);
+    card = `<div class="card"><div class="row" style="margin:0 0 10px"><b style="font-size:19px">${cur[2]} ${esc(cur[1])}</b><button class="link" onclick="setLM('')">${esc(T('back'))}</button></div>${body}</div>`;
   }
-  return `<h1>${esc(b.emoji)} ${esc(b.title)}</h1>${banner()}${vNotice()}
+  return `${vHero()}${banner()}${vNotice()}
   ${card}
-  <div style="text-align:center"><button class="link" onclick="diag()">🔧 Connection check</button></div>${DIAG ? `<div class="card"><small>${esc(DIAG)}</small></div>` : ''}`;
+  <div class="center"><button class="link" style="font-weight:500;color:var(--m)" onclick="diag()">🔧 Connection check</button></div>${DIAG ? `<div class="card"><small>${esc(DIAG)}</small></div>` : ''}`;
+}
+function vHero(){
+  const b = CFG.brand;
+  return `<div class="hero ${CFG.theme.align === 'left' ? 'left' : ''}">${b.emoji ? `<div class="logo">${esc(b.emoji)}</div>` : ''}<h1>${esc(b.title)}</h1>${b.tagline ? `<p>${esc(b.tagline)}</p>` : ''}</div>`;
 }
 /* Student: ID + Password (server-side, roster) */
 async function doLogin(){
@@ -106,21 +112,22 @@ async function refresh(){
 
 function vHome(){
   const s = SESS;
-  const top = `<div class="top"><div><b>${esc(s.name)}</b> <small>${s.guest ? '' : 'ID: ' + esc(s.sid)}</small></div>${s.back ? '<button class="btn sm" onclick="backToTeacher()">← Teacher-এ ফিরো</button>' : `<button class="link" onclick="logout()">${esc(T('logout'))}</button>`}</div>${s.back ? '<div class="notice info" style="margin:6px 0">🎓 তুমি এখন <b>Test student</b> হিসেবে আছো</div>' : ''}${banner()}${vNotice()}`;
+  const top = `<div class="top"><div class="muted">${esc(CFG.brand.emoji)} ${esc(CFG.brand.title)}</div>${s.back ? '<button class="btn sm" onclick="backToTeacher()">← Teacher-এ ফিরো</button>' : `<button class="link" onclick="logout()">${esc(T('logout'))}</button>`}</div>${s.back ? '<div class="notice info" style="margin:6px 0">🎓 তুমি এখন <b>Test student</b> হিসেবে আছো</div>' : ''}${banner()}${vNotice()}`;
+  const hello = `<div class="hello">${esc(T('hello'))}, ${esc(s.name)} 👋</div><small>${s.guest ? 'Guest' : 'ID: ' + esc(s.sid)}</small>`;
   const intro = `${introFor ? `<div class="modal"><div class="card"><h2>${esc(introFor)}</h2><div>${esc(introOf(introFor))}</div>
     <div class="row"><button class="btn ghost" onclick="introFor='';render(true)">${esc(T('cancel'))}</button><button class="btn" onclick="const c=introFor;introFor='';startRun(c,'full')">${esc(T('introStart'))}</button></div></div></div>` : ''}`;
   if(s.guest){
     const e = EXAMS[s.code];
-    return top + `<div class="card"><h2>${esc(e ? e.title : s.code)}</h2>
-      <div class="muted">${esc(s.code)}${e ? ' · ' + e.questions.length + ' Q · ' + e.minutes + ' min' : ''}</div>
+    return top + hello + `<div class="card center"><div class="muted">${esc(s.code)}</div><h2 style="font-size:24px;margin:6px 0">${esc(e ? e.title : s.code)}</h2>
+      ${e ? `<div class="muted">${e.questions.length} questions · ${e.minutes} min</div>` : ''}
       ${errBox()}
-      <button class="btn full" onclick="startGuest()">${esc(T('startBtn'))}</button></div>${intro}`;
+      <button class="btn full lg" onclick="startGuest()">${esc(T('startBtn'))}</button></div>${intro}`;
   }
-  return top + `
+  return top + hello + `
   <div class="card"><h2>${esc(T('startTitle'))}</h2>
-    <input id="code" placeholder="${esc(T('codePh'))}" autocapitalize="characters" autocomplete="off" onkeydown="if(event.key==='Enter')startCode()">
+    <input id="code" class="bigin" placeholder="${esc(T('codePh'))}" autocapitalize="characters" autocomplete="off" onkeydown="if(event.key==='Enter')startCode()">
     ${errBox()}
-    <button class="btn full" onclick="startCode()">${esc(T('startBtn'))}</button>
+    <button class="btn full lg" onclick="startCode()">${esc(T('startBtn'))}</button>
   </div>
   ${CFG.rules.analytics ? vBoard(s.sid, false) : ''}${intro}`;
 }

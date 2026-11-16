@@ -3,76 +3,131 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>MCQ Mock Exam</title>
+<title>Muaz's Classroom</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"></script>
 <style>
-:root{--card:#fff;--rad:14px;--p:#4f46e5;--pl:#eef2ff;--g:#16a34a;--gl:#dcfce7;--r:#dc2626;--rl:#fee2e2;--t:#111827;--m:#6b7280;--b:#e5e7eb;--bg:#f3f4f6}
+:root{--card:#fff;--rad:16px;--p:#4f46e5;--pl:#eef2ff;--g:#16a34a;--gl:#dcfce7;--r:#dc2626;--rl:#fee2e2;--t:#111827;--m:#6b7280;--b:#e5e7eb;--bg:#f3f4f6;
+  --pad:18px;--sh:0 1px 2px rgba(0,0,0,.04),0 4px 16px rgba(0,0,0,.06);--w:760px;--btnr:12px;--hero:34px}
 *{box-sizing:border-box}
-body{margin:0;font-size:16px;font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans Bengali",sans-serif;background:var(--bg);color:var(--t);line-height:1.45}
-#app{max-width:760px;margin:0 auto;padding:12px 12px 40px}
-.card{background:var(--card);border-radius:var(--rad);padding:16px;margin:12px 0;box-shadow:0 1px 3px rgba(0,0,0,.08)}
-h1{font-size:22px;margin:8px 0}h2{font-size:17px;margin:0 0 10px}h3{font-size:15px;margin:14px 0 6px}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;font-size:16px;font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans Bengali",sans-serif;background:var(--bg);color:var(--t);line-height:1.5;min-height:100vh}
+body.bg-gradient{background:linear-gradient(165deg,color-mix(in srgb,var(--p) 16%,var(--bg)) 0,var(--bg) 420px) no-repeat,var(--bg)}
+body.bg-dots{background-image:radial-gradient(color-mix(in srgb,var(--p) 22%,transparent) 1px,transparent 1.5px);background-size:22px 22px}
+#app{max-width:var(--w);margin:0 auto;padding:14px 16px 48px}
+.card{background:var(--card);border-radius:var(--rad);padding:var(--pad);margin:14px 0;box-shadow:var(--sh);border:1px solid color-mix(in srgb,var(--t) 6%,transparent)}
+h1{font-size:24px;margin:8px 0;letter-spacing:-.01em}h2{font-size:18px;margin:0 0 10px;letter-spacing:-.01em}h3{font-size:15px;margin:14px 0 6px}
 .muted,small{color:var(--m);font-size:13px}
-input,select,textarea{width:100%;padding:12px;font-size:16px;border:1px solid var(--b);border-radius:10px;margin:6px 0;background:var(--card);color:var(--t);font-family:inherit}
-.btn{background:var(--p);color:#fff;border:0;border-radius:10px;padding:12px 18px;font-size:15px;font-weight:600;cursor:pointer}
-.btn.ghost{background:var(--pl);color:var(--p)}.btn.full{width:100%;margin-top:10px}.btn.red{background:var(--r)}.btn.sm{padding:7px 12px;font-size:13px}
-.btn:disabled{opacity:.4}
-.link{background:none;border:0;color:var(--p);font-size:14px;cursor:pointer;padding:6px}
+.center{text-align:center}
+input,select,textarea{width:100%;padding:13px 14px;font-size:16px;border:1.5px solid var(--b);border-radius:12px;margin:6px 0;background:var(--card);color:var(--t);font-family:inherit;transition:border-color .15s,box-shadow .15s}
+input:focus,select:focus,textarea:focus{outline:0;border-color:var(--p);box-shadow:0 0 0 4px color-mix(in srgb,var(--p) 18%,transparent)}
+input.bigin{font-size:22px;font-weight:700;text-align:center;letter-spacing:.06em;padding:16px}
+.btn{background:var(--p);color:#fff;border:0;border-radius:var(--btnr);padding:13px 20px;font-size:15px;font-weight:650;cursor:pointer;transition:transform .12s,filter .15s,box-shadow .15s;box-shadow:0 2px 8px color-mix(in srgb,var(--p) 30%,transparent)}
+.btn:hover{filter:brightness(1.06)}.btn:active{transform:scale(.97)}
+.btn.ghost{background:var(--pl);color:var(--p);box-shadow:none}.btn.full{width:100%;margin-top:10px}.btn.red{background:var(--r)}.btn.sm{padding:8px 13px;font-size:13px}
+.btn.lg{font-size:18px;padding:16px 22px}
+.btn:disabled{opacity:.4;cursor:default;transform:none}
+.link{background:none;border:0;color:var(--p);font-size:14px;cursor:pointer;padding:6px;font-weight:600}
 .row{display:flex;gap:8px;align-items:center;justify-content:space-between;margin-top:14px;flex-wrap:wrap}
-.top{display:flex;justify-content:space-between;align-items:center;gap:8px;position:sticky;top:0;background:var(--bg);padding:8px 0;z-index:5}
-.tm{font-weight:700;font-size:18px;background:var(--card);border-radius:10px;padding:6px 12px;font-variant-numeric:tabular-nums}.tm.low{color:var(--r)}
-.q{font-size:1.06em;font-weight:600;margin:8px 0 12px}
-.opt{display:flex;gap:10px;align-items:flex-start;width:100%;text-align:left;background:var(--card);border:2px solid var(--b);border-radius:calc(var(--rad) - 2px);padding:12px;margin:8px 0;font-size:15px;cursor:pointer;color:var(--t)}
+.top{display:flex;justify-content:space-between;align-items:center;gap:8px;position:sticky;top:0;background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);padding:10px 0;z-index:5}
+.tm{font-weight:700;font-size:18px;background:var(--card);border-radius:12px;padding:6px 12px;font-variant-numeric:tabular-nums;box-shadow:var(--sh)}.tm.low{color:var(--r)}
+
+/* hero / login */
+.hero{text-align:center;padding:26px 8px 6px}
+.hero .logo{font-size:calc(var(--hero) * 1.4);line-height:1;display:inline-block;width:calc(var(--hero) * 2.3);height:calc(var(--hero) * 2.3);line-height:calc(var(--hero) * 2.3);border-radius:50%;background:var(--card);box-shadow:var(--sh);margin-bottom:12px}
+.hero h1{font-size:var(--hero);margin:4px 0;font-weight:800}
+.hero p{color:var(--m);margin:4px 0 0;font-size:15px}
+.hero.left{text-align:left}
+.choices{display:grid;gap:12px;margin:18px 0}
+.choice{display:flex;align-items:center;gap:14px;width:100%;text-align:left;background:var(--card);border:1.5px solid var(--b);border-radius:var(--rad);padding:16px 18px;cursor:pointer;color:var(--t);box-shadow:var(--sh);transition:transform .15s,border-color .15s}
+.choice:hover{transform:translateY(-2px);border-color:var(--p)}.choice:active{transform:scale(.98)}
+.choice .ic{font-size:28px;width:52px;height:52px;border-radius:14px;background:var(--pl);display:flex;align-items:center;justify-content:center;flex:none}
+.choice b{font-size:18px;display:block}.choice small{display:block}
+.choice:after{content:'›';margin-left:auto;font-size:26px;color:var(--m)}
+
+/* big tiles */
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(100px,1fr));gap:10px;margin:14px 0}
+.tiles:has(>:nth-child(4)){grid-template-columns:repeat(4,1fr)}@media (max-width:560px){.tiles:has(>:nth-child(4)){grid-template-columns:1fr 1fr}}
+.tile{background:var(--card);border-radius:var(--rad);padding:14px 10px;text-align:center;box-shadow:var(--sh);border:1px solid color-mix(in srgb,var(--t) 6%,transparent)}
+.tile b{display:block;font-size:28px;font-weight:800;line-height:1.15;color:var(--p)}.tile small{display:block;margin-top:2px}
+.hello{font-size:22px;font-weight:800;margin:4px 0 0}
+
+/* quiz */
+.q{font-size:1.12em;font-weight:650;margin:8px 0 14px;line-height:1.55}
+.opt{display:flex;gap:12px;align-items:flex-start;width:100%;text-align:left;background:var(--card);border:2px solid var(--b);border-radius:calc(var(--rad) - 2px);padding:13px 14px;margin:9px 0;font-size:15.5px;cursor:pointer;color:var(--t);transition:border-color .12s,background .12s,transform .1s}
+.opt:hover{border-color:color-mix(in srgb,var(--p) 50%,var(--b))}.opt:active{transform:scale(.99)}
 .opt.sel{border-color:var(--p);background:var(--pl)}
 .opt.ok{border-color:var(--g);background:var(--gl)}.opt.bad{border-color:var(--r);background:var(--rl)}
-.L{font-weight:700;min-width:22px;color:var(--p)}
+.L{font-weight:800;min-width:26px;height:26px;border-radius:8px;display:inline-flex;align-items:center;justify-content:center;background:var(--pl);color:var(--p);font-size:13px;flex:none}
+.opt.sel .L{background:var(--p);color:#fff}
 .pal{display:flex;flex-wrap:wrap;gap:6px}
-.pn{width:38px;height:38px;border-radius:8px;border:1px solid var(--b);background:var(--card);color:var(--t);font-size:14px;cursor:pointer}
-.pn.done{background:var(--p);color:#fff;border-color:var(--p)}.pn.cur{outline:3px solid #a5b4fc}
+.pn{width:40px;height:40px;border-radius:10px;border:1.5px solid var(--b);background:var(--card);color:var(--t);font-size:14px;cursor:pointer}
+.pn.done{background:var(--p);color:#fff;border-color:var(--p)}.pn.cur{outline:3px solid color-mix(in srgb,var(--p) 40%,transparent);outline-offset:1px}
+.qprog{height:6px;background:var(--b);border-radius:4px;overflow:hidden;margin:4px 0 2px}.qprog i{display:block;height:100%;background:var(--p);transition:width .3s}
+
 .stats{display:flex;gap:8px}.stat{flex:1;background:var(--pl);border-radius:12px;padding:10px;text-align:center}.stat b{display:block;font-size:20px}
 .bar{height:10px;background:var(--b);border-radius:6px;overflow:hidden}.bar i{display:block;height:100%}
-.trow{display:grid;grid-template-columns:1fr 80px 46px;gap:8px;align-items:center;margin:7px 0;font-size:14px}
-.hist{border-top:1px solid var(--b);padding:10px 0;display:flex;justify-content:space-between;gap:8px;align-items:center;font-size:14px}
-.tag{font-size:11px;background:var(--pl);color:var(--p);border-radius:6px;padding:2px 6px;margin-left:4px}
-.tr{display:flex;align-items:flex-end;gap:4px;height:70px}.tr div{flex:1;border-radius:4px 4px 0 0;min-width:8px;background:var(--p);position:relative}
-.err{color:var(--r);font-size:14px;margin:6px 0}.warn{background:#fef9c3;color:#713f12;border-radius:10px;padding:10px;font-size:13px;margin:8px 0}
-.big{font-size:42px;font-weight:800;color:var(--p);text-align:center;margin:0}
-.exp{background:color-mix(in srgb,var(--t) 5%,var(--card));border-radius:8px;padding:10px;font-size:14px;margin-top:6px;line-height:1.7}
+.trow{display:grid;grid-template-columns:1fr 80px 46px;gap:8px;align-items:center;margin:8px 0;font-size:14px}
+.hist{border-top:1px solid var(--b);padding:11px 0;display:flex;justify-content:space-between;gap:8px;align-items:center;font-size:14px}
+.tag{font-size:11px;background:var(--pl);color:var(--p);border-radius:6px;padding:2px 7px;margin-left:4px;font-weight:600}
+.tr{display:flex;align-items:flex-end;gap:4px;height:80px}.tr div{flex:1;border-radius:6px 6px 0 0;min-width:8px;background:var(--p);position:relative}
+.err{color:var(--r);font-size:14px;margin:6px 0}.warn{background:#fef9c3;color:#713f12;border-radius:12px;padding:10px 12px;font-size:13px;margin:8px 0}
+.big{font-size:52px;font-weight:850;color:var(--p);text-align:center;margin:0;line-height:1.1}
+.exp{background:color-mix(in srgb,var(--t) 5%,var(--card));border-radius:10px;padding:10px 12px;font-size:14px;margin-top:6px;line-height:1.7}
 .katex{font-size:1.05em}.opt .katex-display,.exp .katex-display{margin:.4em 0}
-.scroll{overflow-x:auto}table{border-collapse:collapse;font-size:13px;width:100%}th,td{padding:6px 8px;border-bottom:1px solid var(--b);text-align:left;white-space:nowrap}
+.scroll{overflow-x:auto}table{border-collapse:collapse;font-size:13px;width:100%}th,td{padding:8px;border-bottom:1px solid var(--b);text-align:left;white-space:nowrap}th{color:var(--m);font-weight:600}
 td.h{text-align:center;font-weight:600}
-.modal{position:fixed;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;padding:20px;z-index:20}
-.modal .card{max-width:380px;width:100%}
-tr.click{cursor:pointer}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;padding:20px;z-index:20;animation:fade .2s}
+.modal .card{max-width:400px;width:100%;animation:pop .22s ease}
+tr.click{cursor:pointer}tr.click:hover td{background:var(--pl)}
 
 .notice{border-radius:var(--rad);padding:12px 14px;margin:10px 0;font-size:14px;background:var(--pl);color:var(--t);border-left:4px solid var(--p)}
 .notice.warn{background:#fef9c3;color:#713f12;border-color:#eab308}.notice.good{background:var(--gl);border-color:var(--g)}.notice.bad{background:var(--rl);border-color:var(--r)}
-.foot{text-align:center;color:var(--m);font-size:12px;margin:24px 0 0}
-.tabs{display:flex;gap:6px;overflow-x:auto;margin:6px 0 10px;padding-bottom:2px}
-.tabs button{flex:1;white-space:nowrap;background:var(--card);color:var(--t);border:1px solid var(--b);border-radius:10px;padding:9px 12px;font-size:14px;cursor:pointer}
-.tabs button.on{background:var(--p);color:#fff;border-color:var(--p);font-weight:600}
-details.sec{background:var(--card);border-radius:var(--rad);margin:10px 0;box-shadow:0 1px 3px rgba(0,0,0,.08)}
-details.sec>summary{padding:14px 16px;font-weight:700;font-size:1em;cursor:pointer;list-style:none}
+.foot{text-align:center;color:var(--m);font-size:12px;margin:28px 0 0}
+.tabs{display:flex;gap:6px;overflow-x:auto;margin:6px 0 10px;padding:4px;background:var(--card);border-radius:calc(var(--rad) - 2px);box-shadow:var(--sh)}
+.tabs button{flex:1;white-space:nowrap;background:transparent;color:var(--t);border:0;border-radius:10px;padding:10px 12px;font-size:14px;cursor:pointer;font-weight:600}
+.tabs button.on{background:var(--p);color:#fff}
+
+/* collapsible sections */
+details.sec{background:var(--card);border-radius:var(--rad);margin:12px 0;box-shadow:var(--sh);border:1px solid color-mix(in srgb,var(--t) 6%,transparent);overflow:hidden}
+details.sec>summary{padding:16px 18px;font-weight:700;font-size:1.02em;cursor:pointer;list-style:none;display:flex;align-items:center;gap:10px;user-select:none}
 details.sec>summary::-webkit-details-marker{display:none}
-details.sec>summary:after{content:'▾';float:right;color:var(--m)}details.sec[open]>summary:after{content:'▴'}
-details.sec>.in{padding:0 16px 16px}
+details.sec>summary .sub{margin-left:auto;white-space:nowrap;font-weight:500;font-size:13px;color:var(--m)}
+details.sec>summary:after{content:'';width:9px;height:9px;border-right:2px solid var(--m);border-bottom:2px solid var(--m);transform:rotate(45deg);transition:transform .25s;margin-left:8px;flex:none}
+details.sec:not(:has(.sub))>summary:after{margin-left:auto}
+details.sec[open]>summary:after{transform:rotate(-135deg)}
+details.sec>summary:hover{background:color-mix(in srgb,var(--p) 5%,transparent)}
+details.sec>.in{padding:0 18px 18px}
+details.sec[open]>.in{animation:slide .3s ease}
+
 .fld{display:block;margin:10px 0}.fld>span{display:block;font-size:13px;color:var(--m);margin-bottom:2px}
-.fld input[type=color]{padding:2px;height:42px;width:100%}.fld input[type=range]{padding:0}
-.chk{display:flex;gap:10px;align-items:center;margin:10px 0;font-size:14px}.chk input{width:20px;height:20px;margin:0;flex:none}
+.fld input[type=color]{padding:2px;height:42px;width:100%}.fld input[type=range]{padding:0;accent-color:var(--p)}
+.chk{display:flex;gap:10px;align-items:center;margin:10px 0;font-size:14px}.chk input{width:20px;height:20px;margin:0;flex:none;accent-color:var(--p)}
 .g2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .sw{display:flex;flex-wrap:wrap;gap:8px;margin:6px 0}
-.sw button{border:2px solid var(--b);border-radius:10px;padding:6px 10px;font-size:13px;cursor:pointer;color:#fff;font-weight:600}
-.savebar{position:sticky;bottom:0;background:var(--bg);padding:10px 0;z-index:6}
+.sw button{border:2px solid var(--b);border-radius:10px;padding:7px 11px;font-size:13px;cursor:pointer;color:#fff;font-weight:600}
+.savebar{position:sticky;bottom:0;background:color-mix(in srgb,var(--bg) 90%,transparent);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);padding:10px 0;z-index:6}
 .qed{border:1px solid var(--b);border-radius:var(--rad);padding:12px;margin:10px 0;background:var(--card)}
 .qed .pv{background:color-mix(in srgb,var(--t) 5%,var(--card));border-radius:8px;padding:8px;margin:6px 0;font-size:.95em}
-.oe{display:flex;gap:6px;align-items:center}.oe input[type=radio]{width:20px;height:20px;margin:0;flex:none}
+.oe{display:flex;gap:6px;align-items:center}.oe input[type=radio]{width:20px;height:20px;margin:0;flex:none;accent-color:var(--p)}
 .oe input[type=text]{margin:3px 0}
-
 .stats.w{flex-wrap:wrap}.stats.w .stat{flex:1 1 30%;min-width:90px}
-.kbhint{font-size:12px;color:var(--m);margin:6px 0 2px}@media (hover:none){.kbhint{display:none}}
+.kbhint{font-size:12px;color:var(--m);margin:8px 0 2px}@media (hover:none){.kbhint{display:none}}
 .tbar{height:8px;background:var(--b);border-radius:5px;overflow:hidden;margin-top:4px}.tbar i{display:block;height:100%;background:var(--p)}
+
+/* animation (teacher can switch off: theme.anim) */
+@keyframes up{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+@keyframes slide{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
+@keyframes fade{from{opacity:0}to{opacity:1}}
+@keyframes pop{from{opacity:0;transform:scale(.94)}to{opacity:1;transform:none}}
+html.anim #app.enter>*{animation:up .4s cubic-bezier(.2,.7,.3,1) both}
+html.anim #app.enter>*:nth-child(2){animation-delay:.05s}html.anim #app.enter>*:nth-child(3){animation-delay:.1s}
+html.anim #app.enter>*:nth-child(4){animation-delay:.15s}html.anim #app.enter>*:nth-child(5){animation-delay:.2s}
+html.anim #app.enter>*:nth-child(n+6){animation-delay:.25s}
+html:not(.anim) *{animation:none!important;transition:none!important}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+@media (max-width:480px){.hero{padding-top:16px}.tile b{font-size:24px}.big{font-size:44px}}
 </style>
 </head>
 <body>
@@ -172,8 +227,9 @@ const FONTS = {
   round:  '"Trebuchet MS","Nunito","Noto Sans Bengali",sans-serif'
 };
 const DEF_CFG = {
-  theme:  {preset:'indigo', primary:'#4f46e5', bg:'#f3f4f6', card:'#ffffff', text:'#111827', ok:'#16a34a', bad:'#dc2626', radius:14, font:16, family:'system'},
-  brand:  {title:'MCQ Mock Exam', emoji:'📝', notice:'', noticeType:'info', intro:'', footer:''},
+  theme:  {preset:'indigo', primary:'#4f46e5', bg:'#f3f4f6', card:'#ffffff', text:'#111827', ok:'#16a34a', bad:'#dc2626', radius:16, font:16, family:'system',
+           bgStyle:'gradient', shadow:'soft', density:'normal', width:'normal', btnShape:'rounded', hero:34, align:'center', anim:true},
+  brand:  {title:"Muaz's Classroom", tagline:'Practice smart, score high ✨', emoji:'📚', notice:'', noticeType:'info', intro:'', footer:''},
   text:   {},
   access: {guest:true, teacherId:'teacher'},
   rules:  {review:'full', explain:true, showScore:true, passMark:0, retake:true, mistakes:true, maxAttempts:0,
@@ -182,6 +238,7 @@ const DEF_CFG = {
 };
 /* UI label defaults (teacher "Texts" section-এ যেকোনোটা বদলানো যায়) */
 const TX = {
+  chooseTitle:'কীভাবে ঢুকবে?', chStudent:'ID আর password দিয়ে', chGuest:'শুধু নাম আর exam code', chTeacher:'Dashboard ও control panel', hello:'হ্যালো', statAttempts:'Exams given', statAvg:'Average', statBest:'Best', focusTitle:'🎯 কোন topic-এ practice দরকার', trendTitle:'📈 Score trend', retakeTitle:'🔁 আবার দাও',
   tabStudent:'Student', tabGuest:'Guest', tabTeacher:'Teacher', idPh:'ID', passPh:'Password', loginBtn:'Login', guestHint:'নাম আর exam code দিয়ে সরাসরি exam দাও', guestNamePh:'তোমার নাম', back:'← Back', guestBtn:'Start exam ▶',
   startTitle:'Start exam', codePh:'Exam code', startBtn:'Start ▶', logout:'Logout',
   prev:'← Prev', next:'Next →', clear:'Clear', submit:'Submit', submitTitle:'Submit করবে?', submitYes:'Yes, Submit', cancel:'Cancel',
@@ -212,10 +269,17 @@ function applyTheme(c){
   const css = `:root{--p:${t.primary};--g:${t.ok};--r:${t.bad};--bg:${t.bg};--card:${t.card};--t:${t.text};--rad:${t.radius}px;
     --pl:color-mix(in srgb,${t.primary} 13%,${t.card});--gl:color-mix(in srgb,${t.ok} 16%,${t.card});--rl:color-mix(in srgb,${t.bad} 14%,${t.card});
     --m:color-mix(in srgb,${t.text} 58%,${t.card});--b:color-mix(in srgb,${t.text} 14%,${t.card})}
+    --pad:${{compact:'12px', normal:'18px', roomy:'24px'}[t.density] || '18px'};--w:${{narrow:'620px', normal:'760px', wide:'1000px'}[t.width] || '760px'};
+    --btnr:${{pill:'999px', square:'4px'}[t.btnShape] || Math.min(t.radius, 14) + 'px'};--hero:${t.hero || 34}px;
+    --sh:${{none:'none', strong:'0 2px 4px rgba(0,0,0,.06),0 10px 30px rgba(0,0,0,.14)'}[t.shadow] || '0 1px 2px rgba(0,0,0,.04),0 4px 16px rgba(0,0,0,.06)'}}
     body{font-size:${t.font}px;font-family:${FONTS[t.family] || FONTS.system}}`;
   if(typeof document === 'undefined' || !document.head || !document.createElement) return;
   if(!st){ st = document.createElement('style'); st.id = 'mq-theme'; document.head.appendChild(st); }
   st.textContent = css;
+  try{
+    document.documentElement.classList.toggle('anim', t.anim !== false);
+    if(document.body){ document.body.classList.remove('bg-gradient', 'bg-dots'); if(t.bgStyle === 'gradient' || t.bgStyle === 'dots') document.body.classList.add('bg-' + t.bgStyle); }
+  }catch(e){}
   try{ document.title = (c.brand.emoji ? c.brand.emoji + ' ' : '') + c.brand.title; }catch(e){}
 }
 function setCfg(remote){
@@ -434,6 +498,7 @@ function render(keep){
   else if(view === 'teacher') h = vTeacher();
   const KEEP = ['#code', '#sid', '#pw', '#tid', '#tp', '#gcode', '#gname'], kv = KEEP.map(k => $(k) ? $(k).value : '');
   if(CFG.brand.footer && view !== 'quiz') h += `<div class="foot">${esc(CFG.brand.footer)}</div>`;
+  a.classList.toggle('enter', !keep);
   a.innerHTML = h;
   mathify(a);
   if(view === 'teacher' && EDX && !EDX.loading) EDX.qs.forEach((_, i) => edPrev(i));
@@ -459,22 +524,28 @@ function vLogin(){
   const opts = [['student', T('tabStudent'), '🎓']].concat(A.guest ? [['guest', T('tabGuest'), '👤']] : []).concat([['teacher', T('tabTeacher'), '🧑‍🏫']]);
   if(!opts.some(t => t[0] === LMODE)) LMODE = '';
   const enter = f => `onkeydown="if(event.key==='Enter')${f}()"`;
+  const desc = {student:T('chStudent'), guest:T('chGuest'), teacher:T('chTeacher')};
   let card;
-  if(!LMODE) card = `<div class="card"><div style="display:grid;gap:10px">${opts.map(([k, l, ic]) => `<button class="btn full" style="font-size:18px;padding:16px" onclick="setLM('${k}')">${ic} ${esc(l)}</button>`).join('')}</div></div>`;
+  if(!LMODE) card = `<div class="center muted" style="margin-top:14px">${esc(T('chooseTitle'))}</div><div class="choices">${opts.map(([k, l, ic]) => `<button class="choice" onclick="setLM('${k}')"><span class="ic">${ic}</span><span><b>${esc(l)}</b><small>${esc(desc[k])}</small></span></button>`).join('')}</div>`;
   else{
     let body;
     if(LMODE === 'guest') body = `<div class="muted" style="margin-bottom:6px">${esc(T('guestHint'))}</div>
       <input id="gname" placeholder="${esc(T('guestNamePh'))}" autocomplete="name" maxlength="40">
       <input id="gcode" placeholder="${esc(T('codePh'))}" autocapitalize="characters" autocomplete="off" ${enter('doGuest')}>
-      ${errBox()}<button class="btn full" onclick="doGuest()">${esc(T('guestBtn'))}</button>`;
+      ${errBox()}<button class="btn full lg" onclick="doGuest()">${esc(T('guestBtn'))}</button>`;
     else body = `<input id="${LMODE === 'teacher' ? 'tid' : 'sid'}" placeholder="${esc(T('idPh'))}" autocomplete="username" autocapitalize="off">
       <input id="${LMODE === 'teacher' ? 'tp' : 'pw'}" type="password" placeholder="${esc(T('passPh'))}" autocomplete="current-password" ${enter(LMODE === 'teacher' ? 'doTeacher' : 'doLogin')}>
-      ${errBox()}<button class="btn full" onclick="${LMODE === 'teacher' ? 'doTeacher' : 'doLogin'}()">${esc(T('loginBtn'))}</button>`;
-    card = `<div class="card"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><b>${esc(opts.find(o => o[0] === LMODE)[1])}</b><button class="link" onclick="setLM('')">${esc(T('back'))}</button></div>${body}</div>`;
+      ${errBox()}<button class="btn full lg" onclick="${LMODE === 'teacher' ? 'doTeacher' : 'doLogin'}()">${esc(T('loginBtn'))}</button>`;
+    const cur = opts.find(o => o[0] === LMODE);
+    card = `<div class="card"><div class="row" style="margin:0 0 10px"><b style="font-size:19px">${cur[2]} ${esc(cur[1])}</b><button class="link" onclick="setLM('')">${esc(T('back'))}</button></div>${body}</div>`;
   }
-  return `<h1>${esc(b.emoji)} ${esc(b.title)}</h1>${banner()}${vNotice()}
+  return `${vHero()}${banner()}${vNotice()}
   ${card}
-  <div style="text-align:center"><button class="link" onclick="diag()">🔧 Connection check</button></div>${DIAG ? `<div class="card"><small>${esc(DIAG)}</small></div>` : ''}`;
+  <div class="center"><button class="link" style="font-weight:500;color:var(--m)" onclick="diag()">🔧 Connection check</button></div>${DIAG ? `<div class="card"><small>${esc(DIAG)}</small></div>` : ''}`;
+}
+function vHero(){
+  const b = CFG.brand;
+  return `<div class="hero ${CFG.theme.align === 'left' ? 'left' : ''}">${b.emoji ? `<div class="logo">${esc(b.emoji)}</div>` : ''}<h1>${esc(b.title)}</h1>${b.tagline ? `<p>${esc(b.tagline)}</p>` : ''}</div>`;
 }
 /* Student: ID + Password (server-side, roster) */
 async function doLogin(){
@@ -550,21 +621,22 @@ async function refresh(){
 
 function vHome(){
   const s = SESS;
-  const top = `<div class="top"><div><b>${esc(s.name)}</b> <small>${s.guest ? '' : 'ID: ' + esc(s.sid)}</small></div>${s.back ? '<button class="btn sm" onclick="backToTeacher()">← Teacher-এ ফিরো</button>' : `<button class="link" onclick="logout()">${esc(T('logout'))}</button>`}</div>${s.back ? '<div class="notice info" style="margin:6px 0">🎓 তুমি এখন <b>Test student</b> হিসেবে আছো</div>' : ''}${banner()}${vNotice()}`;
+  const top = `<div class="top"><div class="muted">${esc(CFG.brand.emoji)} ${esc(CFG.brand.title)}</div>${s.back ? '<button class="btn sm" onclick="backToTeacher()">← Teacher-এ ফিরো</button>' : `<button class="link" onclick="logout()">${esc(T('logout'))}</button>`}</div>${s.back ? '<div class="notice info" style="margin:6px 0">🎓 তুমি এখন <b>Test student</b> হিসেবে আছো</div>' : ''}${banner()}${vNotice()}`;
+  const hello = `<div class="hello">${esc(T('hello'))}, ${esc(s.name)} 👋</div><small>${s.guest ? 'Guest' : 'ID: ' + esc(s.sid)}</small>`;
   const intro = `${introFor ? `<div class="modal"><div class="card"><h2>${esc(introFor)}</h2><div>${esc(introOf(introFor))}</div>
     <div class="row"><button class="btn ghost" onclick="introFor='';render(true)">${esc(T('cancel'))}</button><button class="btn" onclick="const c=introFor;introFor='';startRun(c,'full')">${esc(T('introStart'))}</button></div></div></div>` : ''}`;
   if(s.guest){
     const e = EXAMS[s.code];
-    return top + `<div class="card"><h2>${esc(e ? e.title : s.code)}</h2>
-      <div class="muted">${esc(s.code)}${e ? ' · ' + e.questions.length + ' Q · ' + e.minutes + ' min' : ''}</div>
+    return top + hello + `<div class="card center"><div class="muted">${esc(s.code)}</div><h2 style="font-size:24px;margin:6px 0">${esc(e ? e.title : s.code)}</h2>
+      ${e ? `<div class="muted">${e.questions.length} questions · ${e.minutes} min</div>` : ''}
       ${errBox()}
-      <button class="btn full" onclick="startGuest()">${esc(T('startBtn'))}</button></div>${intro}`;
+      <button class="btn full lg" onclick="startGuest()">${esc(T('startBtn'))}</button></div>${intro}`;
   }
-  return top + `
+  return top + hello + `
   <div class="card"><h2>${esc(T('startTitle'))}</h2>
-    <input id="code" placeholder="${esc(T('codePh'))}" autocapitalize="characters" autocomplete="off" onkeydown="if(event.key==='Enter')startCode()">
+    <input id="code" class="bigin" placeholder="${esc(T('codePh'))}" autocapitalize="characters" autocomplete="off" onkeydown="if(event.key==='Enter')startCode()">
     ${errBox()}
-    <button class="btn full" onclick="startCode()">${esc(T('startBtn'))}</button>
+    <button class="btn full lg" onclick="startCode()">${esc(T('startBtn'))}</button>
   </div>
   ${CFG.rules.analytics ? vBoard(s.sid, false) : ''}${intro}`;
 }
@@ -646,38 +718,32 @@ function retake(exam, mode){
     startRun(exam, 'full');
   }
 }
-/* ---------- Dashboard (student; teacher reuses) ---------- */
+/* ---------- Dashboard (student's own view): few big numbers up front, details in folds ---------- */
+const tile = (v, l, c) => `<div class="tile"><b ${c ? 'style="color:' + c + '"' : ''}>${v}</b><small>${esc(l)}</small></div>`;
 function vBoard(sid, isT){
   const recs = allRecs().filter(r => norm(r.sid) === norm(sid));
   let h = '';
   if(remoteMsg) h += `<div class="warn">${esc(remoteMsg)}</div>`;
-  h += `<div class="row" style="margin:0"><h2 style="margin:0">${isT ? esc((recs[recs.length-1]||{}).name || sid) + ' — ' : ''}${esc(T('analytics'))}</h2><button class="btn ghost sm" onclick="refresh()">${loading ? 'Syncing…' : '↻ Refresh'}</button></div>`;
-  if(!recs.length) return h + '<div class="card muted">এখনো কোনো attempt নেই। Exam code দিয়ে শুরু করো।</div>';
+  if(!recs.length) return h + '<div class="card muted center">এখনো কোনো attempt নেই। উপরে exam code দিয়ে শুরু করো 🚀</div>';
   const ps = recs.map(pct), ts = topicStats(recs);
-  h += `<div class="card"><div class="stats">
-    <div class="stat"><b>${recs.length}</b><small>Attempts</small></div>
-    <div class="stat"><b>${avg(ps)}%</b><small>Average</small></div>
-    <div class="stat"><b>${Math.max(...ps)}%</b><small>Best</small></div></div>
-    <h3>Trend (last ${Math.min(12, ps.length)})</h3>
-    <div class="tr">${ps.slice(-12).map(p => `<div style="height:${Math.max(4,Math.min(100,p))}%" title="${p}%"></div>`).join('')}</div></div>`;
-  const weak = ts.filter(t => t.p < 0.8).slice(0, 5);
-  h += `<div class="card"><h2>🎯 Focus next</h2>${weak.length ? '' : '<div class="muted">সব topic ভালো আছে 👍</div>'}` +
+  h += `<div class="tiles">${tile(recs.length, T('statAttempts'))}${tile(avg(ps) + '%', T('statAvg'))}${tile(Math.max(...ps) + '%', T('statBest'), 'var(--g)')}</div>`;
+  const weak = ts.filter(t => t.p < 0.8);
+  h += sec('b_focus', esc(T('focusTitle')), (weak.length ? '' : '<div class="muted">সব topic ভালো আছে 👍</div>') +
     ts.map(t => `<div class="trow"><span>${esc(t.t)}</span><div class="bar"><i style="width:${Math.round(t.p*100)}%;background:${t.p<0.5?'var(--r)':t.p<0.8?'#f59e0b':'var(--g)'}"></i></div><b>${Math.round(t.p*100)}%</b></div>`).join('') +
-    `<small class="muted">${ts.map(t => t.ok + '/' + t.n).length ? 'সবচেয়ে দুর্বল topic উপরে' : ''}</small></div>`;
+    '<small class="muted">সবচেয়ে দুর্বল topic উপরে</small>', weak.length ? weak.length + ' topic' : '');
+  h += sec('b_trend', esc(T('trendTitle')), `<div class="tr">${ps.slice(-12).map(p => `<div style="height:${Math.max(4,Math.min(100,p))}%" title="${p}%"></div>`).join('')}</div><small class="muted">শেষ ${Math.min(12, ps.length)}টা attempt</small>`);
   if(!isT){
     const exams = [...new Set(recs.map(r => r.exam))].filter(c => EXAMS[c]);
-    if(exams.length){
-      h += `<div class="card"><h2>🔁 Retake</h2>` + exams.map(c => {
-        const w = wrongIdx(sid, c).length;
-        return `<div class="hist"><div><b>${esc(EXAMS[c].title)}</b> <small>${esc(c)}</small></div><div>
-          <button class="btn sm ghost" ${w ? '' : 'disabled'} data-c="${esc(c)}" onclick="retake(this.dataset.c,'mistakes')">Mistakes (${w})</button>
-          <button class="btn sm" data-c="${esc(c)}" onclick="retake(this.dataset.c,'full')">Full</button></div></div>`;
-      }).join('') + '</div>';
-    }
+    if(exams.length) h += sec('b_retake', esc(T('retakeTitle')), exams.map(c => {
+      const w = wrongIdx(sid, c).length;
+      return `<div class="hist"><div><b>${esc(EXAMS[c].title)}</b> <small>${esc(c)}</small></div><div>
+        <button class="btn sm ghost" ${w ? '' : 'disabled'} data-c="${esc(c)}" onclick="retake(this.dataset.c,'mistakes')">Mistakes (${w})</button>
+        <button class="btn sm" data-c="${esc(c)}" onclick="retake(this.dataset.c,'full')">Full</button></div></div>`;
+    }).join(''), exams.length + ' exam');
   }
-  if(CFG.rules.history || isT) h += `<div class="card"><h2>${esc(T('history'))}</h2>` + recs.slice().reverse().map(r =>
+  if(CFG.rules.history || isT) h += sec('b_hist', '🕒 ' + esc(T('history')), recs.slice().reverse().map(r =>
     `<div class="hist"><div><b>${esc(r.exam)}</b>${r.mode==='mistakes'?'<span class="tag">mistakes</span>':''}<br><small>${new Date(aidTime(r.aid)).toLocaleString()} · ${fmt(r.secs)}</small></div>
-     <div style="text-align:right"><b>${r.score}/${r.total}</b> <small>(${pct(r)}%)</small><br><button class="link" data-a="${esc(r.aid)}" onclick="openRec(this.dataset.a)">Review</button></div></div>`).join('') + '</div>';
+     <div style="text-align:right"><b>${r.score}/${r.total}</b> <small>(${pct(r)}%)</small><br><button class="link" data-a="${esc(r.aid)}" onclick="openRec(this.dataset.a)">Review</button></div></div>`).join(''), recs.length + '');
   return h;
 }
 function openRec(aid){
@@ -685,7 +751,6 @@ function openRec(aid){
   if(!r) return;
   BACK = SESS && SESS.teacher ? 'teacher' : 'home'; LAST = r; view = 'result'; render();
 }
-
 /* ---------- Student profile (teacher drill-down): activity, scores, strengths, weak points ---------- */
 const pcol = p => p < 0.5 ? 'var(--r)' : p < 0.8 ? '#f59e0b' : 'var(--g)';
 const dShort = aid => new Date(aidTime(aid)).toLocaleDateString(undefined, {day:'numeric', month:'short'});
@@ -738,10 +803,11 @@ function vProfile(sid){
   if(strongT.length) L.push(`💪 শক্তিশালী topic: <b>${strongT.map(t => esc(t.t)).join(', ')}</b>`);
   if(tot && sk / tot > 0.15) L.push(`⏭ ${Math.round(sk / tot * 100)}% question skip করে — time management/confidence দেখো।`);
   if(n >= 2 && ps[n - 1] < ps[n - 2] - 10) L.push('🔻 শেষ attempt আগেরটার চেয়ে অনেক কম।');
+  h += `<div class="tiles">${tile(n, 'Attempts')}${tile(myAvg + '%', 'Average')}${tile(ps[n - 1] + '%', 'Latest', pcol(ps[n - 1] / 100))}${tile(trendTag(tr), 'Trend')}</div>`;
   h += `<div class="card"><h2>📝 Summary</h2>${L.map(x => `<div style="margin:5px 0">${x}</div>`).join('')}</div>`;
 
   // ---- numbers
-  h += `<div class="card"><div class="stats w">
+  h += sec('p_num', '📊 বিস্তারিত সংখ্যা ও trend', `<div class="stats w">
     <div class="stat"><b>${n}</b><small>Attempts</small></div>
     <div class="stat"><b>${myAvg}%</b><small>Average</small></div>
     <div class="stat"><b>${Math.max(...ps)}%</b><small>Best</small></div>
@@ -756,34 +822,34 @@ function vProfile(sid){
   <small class="muted">প্রথম attempt: ${dLong(recs[0].aid)} · শেষ: ${dLong(recs[n - 1].aid)}${qn ? ' · গড় ' + Math.round(qs / qn) + ' sec/question' : ''}</small>
   <h3>Score trend (last ${Math.min(15, n)})</h3>
   <div class="tr">${ps.slice(-15).map((p, i) => `<div style="height:${Math.max(4, Math.min(100, p))}%;background:${pcol(p / 100)}" title="${esc(dShort(recs.slice(-15)[i].aid))}: ${p}%"></div>`).join('')}</div>
-  <div class="row" style="margin:2px 0 0"><small class="muted">${dShort(recs.slice(-15)[0].aid)}</small><small class="muted">${dShort(recs[n - 1].aid)}</small></div></div>`;
+  <div class="row" style="margin:2px 0 0"><small class="muted">${dShort(recs.slice(-15)[0].aid)}</small><small class="muted">${dShort(recs[n - 1].aid)}</small></div>`);
 
   // ---- per exam
   const ex = {}; recs.forEach(r => { (ex[r.exam] = ex[r.exam] || []).push(r); });
-  h += `<div class="card"><h2>📚 Exam-wise</h2><div class="scroll"><table><tr><th>Exam</th><th>Att.</th><th>Avg</th><th>Best</th><th>Last</th><th>Trend</th><th>Last date</th></tr>
-    ${Object.entries(ex).map(([c, rs]) => { const p = rs.map(pct); return `<tr><td>${esc(c)}</td><td>${rs.length}</td><td class="h" style="background:${heat(avg(p) / 100)}">${avg(p)}%</td><td>${Math.max(...p)}%</td><td>${p[p.length - 1]}%</td><td>${trendTag(trendOf(p))}</td><td>${esc(dShort(rs[rs.length - 1].aid))}</td></tr>`; }).join('')}</table></div></div>`;
+  h += sec('p_exam', '📚 Exam-wise', `<div class="scroll"><table><tr><th>Exam</th><th>Att.</th><th>Avg</th><th>Best</th><th>Last</th><th>Trend</th><th>Last date</th></tr>
+    ${Object.entries(ex).map(([c, rs]) => { const p = rs.map(pct); return `<tr><td>${esc(c)}</td><td>${rs.length}</td><td class="h" style="background:${heat(avg(p) / 100)}">${avg(p)}%</td><td>${Math.max(...p)}%</td><td>${p[p.length - 1]}%</td><td>${trendTag(trendOf(p))}</td><td>${esc(dShort(rs[rs.length - 1].aid))}</td></tr>`; }).join('')}</table></div>`, Object.keys(ex).length + ' exam');
 
   // ---- topics (strong / weak) vs class
-  h += `<div class="card"><h2>🎯 Topic-wise (weakest first)</h2>${ts.map(t => {
+  h += sec('p_topic', '🎯 Topic-wise (weakest first)', `${ts.map(t => {
     const c = cts[t.t], tag = t.p < 0.5 ? '<span class="tag" style="background:#fee2e2;color:#b91c1c">Weak</span>' : t.p < 0.8 ? '<span class="tag" style="background:#fef3c7;color:#b45309">Improve</span>' : '<span class="tag" style="background:#dcfce7;color:#15803d">Strong</span>';
     return `<div class="trow" style="grid-template-columns:1fr 80px 46px"><span>${esc(t.t)} ${tag}<br><small class="muted">${t.ok}/${t.n} সঠিক${c ? ' · class ' + Math.round(c.p * 100) + '%' : ''}</small></span><div class="bar"><i style="width:${Math.round(t.p * 100)}%;background:${pcol(t.p)}"></i></div><b>${Math.round(t.p * 100)}%</b></div>`;
-  }).join('') || '<div class="muted">Topic data নেই</div>'}</div>`;
+  }).join('') || '<div class="muted">Topic data নেই</div>'}`, weakT.length ? '⚠ ' + weakT.length : '');
 
   // ---- weak questions
-  h += `<div class="card"><h2>❌ এখনো ভুল করছে (${weakQ.length})</h2>${weakQ.length ? '' : '<div class="muted">সব question-এর সর্বশেষ উত্তর ঠিক 👍</div>'}${weakQ.map(o => {
+  h += sec('p_wrong', '❌ এখনো ভুল করছে', `${weakQ.length ? '' : '<div class="muted">সব question-এর সর্বশেষ উত্তর ঠিক 👍</div>'}${weakQ.map(o => {
     const q = qinfo(o.exam, o.i);
     return `<div class="hist" style="display:block"><div class="muted">${esc(o.exam)} · ${esc(q.t || 'General')} · ${o.n} বারের মধ্যে ${o.w} বার ভুল/skip</div>
       <div>${esc(q.q)}</div><small>সঠিক: <b>${LET[q.a]}</b>. ${esc(q.o[q.a] || '')}${o.lc >= 0 ? ' · সে দিয়েছে: <b>' + LET[o.lc] + '</b>' : ' · skip করেছে'}</small></div>`;
-  }).join('')}</div>`;
-  if(slowQ.length) h += `<div class="card"><h2>🐢 সবচেয়ে বেশি সময় নেয়</h2>${slowQ.map(o => { const q = qinfo(o.exam, o.i); return `<div class="hist" style="display:block"><div class="muted">${esc(o.exam)} · ${esc(q.t || 'General')} · গড় ${Math.round(o.secs / o.sn)} sec${o.sn > 1 ? ' (' + o.sn + ' বার)' : ''}${cT[o.exam + '|' + o.i] ? ' · class avg ' + Math.round(cT[o.exam + '|' + o.i]) + ' sec' : ''}</div><div>${esc(q.q)}</div></div>`; }).join('')}</div>`;
+  }).join('')}`, weakQ.length + '');
+  if(slowQ.length) h += sec('p_slow', '🐢 সবচেয়ে বেশি সময় নেয়', `${slowQ.map(o => { const q = qinfo(o.exam, o.i); return `<div class="hist" style="display:block"><div class="muted">${esc(o.exam)} · ${esc(q.t || 'General')} · গড় ${Math.round(o.secs / o.sn)} sec${o.sn > 1 ? ' (' + o.sn + ' বার)' : ''}${cT[o.exam + '|' + o.i] ? ' · class avg ' + Math.round(cT[o.exam + '|' + o.i]) + ' sec' : ''}</div><div>${esc(q.q)}</div></div>`; }).join('')}`);
 
   // ---- full activity log
-  h += `<div class="card"><h2>🕒 সব Activity (${n})</h2>` + recs.slice().reverse().map(r => {
+  h += sec('p_act', '🕒 সব Activity', recs.slice().reverse().map(r => {
     let a = 0, b = 0, c = 0; r.d.forEach(([i, ch, k]) => { if(ch < 0) c++; else if(k) a++; else b++; });
     const p = pct(r);
     return `<div class="hist"><div><b>${esc(r.exam)}</b>${r.mode === 'mistakes' ? '<span class="tag">mistakes</span>' : ''}<br><small>${esc(dLong(r.aid))} · ${fmt(r.secs)}</small><br><small>✔${a} ✘${b} ⏭${c}</small></div>
       <div style="text-align:right"><b>${r.score}/${r.total}</b> <small style="color:${pcol(p / 100)}">(${p}%)</small><br><button class="link" data-a="${esc(r.aid)}" onclick="openRec(this.dataset.a)">Review</button></div></div>`;
-  }).join('') + '</div>';
+  }).join(''), n + '');
   return h;
 }
 /* ---------- Quiz ---------- */
@@ -877,20 +943,19 @@ function vResult(r){
   <div class="card"><div class="muted" style="text-align:center">${esc(e ? e.title : r.exam)}${r.mode==='mistakes'?' · mistakes':''}</div>
     ${showScore ? `<p class="big">${r.score}/${r.total}</p><div style="text-align:center" class="muted">${p}% · ${fmt(r.secs)}</div>` : `<p class="big" style="font-size:26px">✓</p><div style="text-align:center" class="muted">Submitted · ${fmt(r.secs)}</div>`}
     ${msgPass && showScore ? `<div style="text-align:center;font-weight:700;margin-top:8px">${esc(msgPass)}</div>` : ''}
-    ${showScore ? `<div class="stats" style="margin-top:12px"><div class="stat"><b style="color:var(--g)">${okN}</b><small>${esc(T('correct'))}</small></div>
-      <div class="stat"><b style="color:var(--r)">${wrN}</b><small>${esc(T('wrong'))}</small></div><div class="stat"><b>${skN}</b><small>${esc(T('skipped'))}</small></div></div>` : ''}
+    ${showScore ? `<div class="tiles">${tile(okN, T('correct'), 'var(--g)')}${tile(wrN, T('wrong'), 'var(--r)')}${tile(skN, T('skipped'), 'var(--m)')}</div>` : ''}
     ${mine && e && (R.mistakes || R.retake) ? `<div class="row">${R.mistakes ? `<button class="btn ghost" ${w?'':'disabled'} onclick="retake('${esc(r.exam)}','mistakes')">${esc(T('retakeMistakes'))} (${w})</button>` : '<span></span>'}${R.retake ? `<button class="btn" onclick="retake('${esc(r.exam)}','full')">${esc(T('fullAgain'))}</button>` : ''}</div>` : ''}</div>`;
-  if(showScore) h += `<div class="card"><h2>${esc(T('topicWise'))}</h2>${ts.map(t => `<div class="trow"><span>${esc(t.t)} <small>${t.ok}/${t.n}</small></span><div class="bar"><i style="width:${Math.round(t.p*100)}%;background:${t.p<0.5?'var(--r)':t.p<0.8?'#f59e0b':'var(--g)'}"></i></div><b>${Math.round(t.p*100)}%</b></div>`).join('')}</div>`;
+  if(showScore) h += sec('r_topic', '📊 ' + esc(T('topicWise')), `${ts.map(t => `<div class="trow"><span>${esc(t.t)} <small>${t.ok}/${t.n}</small></span><div class="bar"><i style="width:${Math.round(t.p*100)}%;background:${t.p<0.5?'var(--r)':t.p<0.8?'#f59e0b':'var(--g)'}"></i></div><b>${Math.round(t.p*100)}%</b></div>`).join('')}`, ts.length + ' topic');
   if(rv === 'none') return h + `<div class="card muted">${esc(T('reviewLocked'))}</div>`;
-  h += `<div class="card"><h2>${esc(T('reviewTitle'))}</h2>`;
+  let rvh = '';
   r.d.forEach(([qi, c, g, s], n) => {
     const q = qinfo(r.exam, qi);
     if(!q) return;
-    h += `<div style="margin-bottom:18px"><div class="muted">Q${n+1} · ${esc(q.t || '')} · ${s}s ${rv==='marks' ? (c < 0 ? '· —' : g ? '· ✅' : '· ❌') : ''}</div><div class="q" style="font-size:.95em">${esc(q.q)}</div>` +
+    rvh += `<div style="margin-bottom:18px"><div class="muted">Q${n+1} · ${esc(q.t || '')} · ${s}s ${rv==='marks' ? (c < 0 ? '· —' : g ? '· ✅' : '· ❌') : ''}</div><div class="q" style="font-size:.95em">${esc(q.q)}</div>` +
       q.o.map((o, i) => `<div class="opt ${rv==='full' && i===q.a ? 'ok' : i===c ? (rv==='full' ? 'bad' : (g ? 'ok' : 'bad')) : ''}" style="margin:4px 0;padding:8px"><span class="L">${LET[i]}</span><span>${esc(o)}${i===c?' <small>' + esc(T('yourAnswer')) + '</small>':''}</span></div>`).join('') +
       (c < 0 ? `<small class="err">${esc(T('skipped'))}</small>` : '') + (rv === 'full' && R.explain && q.e ? `<div class="exp">💡 ${esc(q.e)}</div>` : '') + '</div>';
   });
-  return h + '</div>';
+  return h + sec('r_review', '📝 ' + esc(T('reviewTitle')), rvh, wrN + skN ? '❌ ' + (wrN + skN) : '✅');
 }
 /* ---------- Teacher ---------- */
 function openStu(sid){ TSTU = sid; render(); }
@@ -914,47 +979,48 @@ function vTeacher(){
     if(c >= 0 && !ok) o.pick[c] = (o.pick[c] || 0) + 1;
   }));
   const hard = Object.values(qs).filter(o => qinfo(o.exam, o.i)).sort((a,b) => a.ok/a.n - b.ok/b.n).slice(0, 10);
-  const hd = `<div class="top"><b>👩‍🏫 Teacher</b><span><button class="btn sm ghost" onclick="asTestStudent()">🎓 Test student</button> <button class="link" onclick="logout()">Logout</button></span></div>${TSTMSG ? `<div class="warn">${esc(TSTMSG)}</div>` : ''}${vTabs()}`;
+  const hd = `<div class="top"><b>${esc(CFG.brand.emoji)} Teacher</b><span style="white-space:nowrap"><button class="btn sm ghost" onclick="asTestStudent()">🎓 Test student</button> <button class="link" onclick="logout()">Logout</button></span></div>${TSTMSG ? `<div class="warn">${esc(TSTMSG)}</div>` : ''}${vTabs()}`;
   if(TTAB === 'set') return hd + vSettings();
   if(TTAB === 'stu') return hd + vStudents();
   if(TTAB === 'exams') return hd + banner() + vExams();
+  const cAvg = avg(rows.map(r => r.avg)), need = rows.filter(r => r.avg < 60).slice(0, 3);
   return `${hd}
   ${banner()}${remoteMsg ? `<div class="warn">${esc(remoteMsg)}</div>` : ''}
-  <div class="card"><div class="row" style="margin:0"><select id="tf" style="width:auto;flex:1" onchange="TF=this.value;render(true)">
+  <div class="row" style="margin:6px 0"><select id="tf" style="width:auto;flex:1;margin:0" onchange="TF=this.value;render(true)">
       <option value="">All exams</option>${exams.map(c => `<option ${c===TF?'selected':''} value="${esc(c)}">${esc(c)}</option>`).join('')}</select>
       <button class="btn ghost sm" onclick="refresh()">${loading ? 'Syncing…' : '↻ Refresh'}</button><button class="btn ghost sm" onclick="exportCSV()">⬇ CSV</button></div>
-    <small>${recs.length} attempts · ${rows.length} students</small></div>
-  ${!recs.length ? '<div class="card muted">এখনো কোনো data নেই।</div>' : `
-  <div class="card"><h2>Students (weakest first)</h2><div class="scroll"><table>
+  <div class="tiles">${tile(rows.length, 'Students')}${tile(recs.length, 'Attempts')}${tile(cAvg + '%', 'Class average')}${tile((EXL || []).length || exams.length, 'Exams')}</div>
+  ${!recs.length ? '<div class="card muted center">এখনো কোনো data নেই।</div>' : `
+  ${need.length ? `<div class="card"><b>⚠ মনোযোগ দরকার</b>${need.map(r => `<div class="hist click" style="cursor:pointer" data-s="${esc(r.sid)}" onclick="openStu(this.dataset.s)"><span>${esc(r.name)} <small>${esc(r.sid)}</small></span><b style="color:var(--r)">${r.avg}% ›</b></div>`).join('')}</div>` : ''}
+  ${sec('d_stu', '👥 Students (weakest first)', `<div class="scroll"><table>
     <tr><th>ID</th><th>Name</th><th>Att.</th><th>Avg</th><th>Best</th><th>Last</th><th>Trend</th><th>Weak topic</th></tr>
     ${rows.map(r => `<tr class="click" data-s="${esc(r.sid)}" onclick="openStu(this.dataset.s)"><td>${esc(r.sid)}</td><td>${esc(r.name)}</td><td>${r.n}</td><td class="h" style="background:${heat(r.avg/100)}">${r.avg}%</td><td>${r.best}%</td><td>${r.last}%</td><td>${trendTag(r.tr)}</td><td>${esc(r.weak)}</td></tr>`).join('')}
-  </table></div><small>Row-এ tap করলে ওই student-এর full profile</small></div>
-  <div class="card"><h2>Class topic accuracy</h2>${topics.map(t => `<div class="trow"><span>${esc(t.t)} <small>${t.ok}/${t.n}</small></span><div class="bar"><i style="width:${Math.round(t.p*100)}%;background:${t.p<0.5?'var(--r)':t.p<0.8?'#f59e0b':'var(--g)'}"></i></div><b>${Math.round(t.p*100)}%</b></div>`).join('')}</div>
-  <div class="card"><h2>Student × Topic heatmap</h2><div class="scroll"><table>
+  </table></div><small>Row-এ tap করলে ওই student-এর full profile</small>`, rows.length + '')}
+  ${sec('d_topic', '📊 Class topic accuracy', topics.map(t => `<div class="trow"><span>${esc(t.t)} <small>${t.ok}/${t.n}</small></span><div class="bar"><i style="width:${Math.round(t.p*100)}%;background:${t.p<0.5?'var(--r)':t.p<0.8?'#f59e0b':'var(--g)'}"></i></div><b>${Math.round(t.p*100)}%</b></div>`).join(''), topics.length + ' topic')}
+  ${sec('d_heat', '🟩 Student × Topic heatmap', `<div class="scroll"><table>
     <tr><th>Student</th>${topics.map(t => `<th>${esc(t.t)}</th>`).join('')}</tr>
     ${rows.map(r => { const m = {}; r.ts.forEach(t => m[t.t] = t); return `<tr><td>${esc(r.name)}</td>${topics.map(t => m[t.t] ? `<td class="h" style="background:${heat(m[t.t].p)}">${Math.round(m[t.t].p*100)}</td>` : '<td class="h">–</td>').join('')}</tr>`; }).join('')}
-  </table></div></div>
+  </table></div>`)}
   ${vTimeCard(recs)}
-  <div class="card"><h2>সবচেয়ে বেশি ভুল হওয়া Questions</h2>${hard.map(o => {
+  ${sec('d_hard', '❌ সবচেয়ে বেশি ভুল হওয়া Questions', hard.map(o => {
     const q = qinfo(o.exam, o.i), top = Object.entries(o.pick).sort((a,b) => b[1]-a[1])[0];
     return `<div class="hist" style="display:block"><div class="muted">${esc(o.exam)} · ${esc(q.t || '')} · ${Math.round(o.ok/o.n*100)}% correct (${o.ok}/${o.n})</div>
       <div>${esc(q.q)}</div><small>সঠিক: ${LET[q.a]}${top ? ' · সবাই বেশি দিয়েছে ভুল: ' + LET[top[0]] : ''}</small></div>`;
-  }).join('')}</div>`}`;
+  }).join(''), hard.length + '')}`}`;
 }
-
 
 /* ⏱ কোন question-এ student-রা সবচেয়ে বেশি সময় দিচ্ছে (প্রতি question screen-এ থাকার সময় background-এ count হয়) */
 function vTimeCard(recs){
   const ts = qTimeStats(recs).sort((a, b) => b.avg - a.avg).slice(0, 15);
   if(!ts.length) return '';
   const mx = ts[0].avg || 1, tot = qTimeStats(recs), all = tot.reduce((a, o) => a + o.avg, 0) / tot.length;
-  return `<div class="card"><h2>⏱ কোন question-এ বেশি সময় যাচ্ছে</h2>
+  return sec('d_time', '⏱ কোন question-এ বেশি সময় যাচ্ছে', `
     <small class="muted">প্রতি question screen-এ student কতক্ষণ ছিল (সবার average) · সব question-এর average: ${Math.round(all)}s</small>
     ${ts.map(o => { const q = qinfo(o.exam, o.i), a = o.ok / o.n;
       const note = o.avg > all * 1.5 ? (a < 0.5 ? '🔴 সময় বেশি + ভুল বেশি → কঠিন/confusing' : a >= 0.8 ? '🟡 সময় বেশি কিন্তু সঠিক → lengthy' : '🟠 সময় বেশি') : '';
       return `<div class="hist" style="display:block"><div class="row" style="margin:0"><span class="muted">${esc(o.exam)} · Q${o.i + 1} · ${esc(q.t || '')}</span><b>${Math.round(o.avg)}s</b></div>
         <div>${esc(q.q)}</div><div class="tbar"><i style="width:${Math.round(o.avg / mx * 100)}%"></i></div>
-        <small class="muted">${o.n} জন/বার · max ${Math.round(o.max)}s · ${Math.round(a * 100)}% সঠিক ${note ? '· ' + note : ''}</small></div>`; }).join('')}</div>`;
+        <small class="muted">${o.n} জন/বার · max ${Math.round(o.max)}s · ${Math.round(a * 100)}% সঠিক ${note ? '· ' + note : ''}</small></div>`; }).join('')}`, 'avg ' + Math.round(all) + 's');
 }
 /* ---------- Teacher: exam upload / manage ---------- */
 const escT = s => String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;');
@@ -1068,7 +1134,7 @@ function vExams(){
 /* ============================================================
    Teacher control panel: tabs, Settings, Students (roster), Save
    ============================================================ */
-let CD = null, ROSTER = [], ROSTER_OK = false, SO = {theme:true}, saveMsg = '', EDX = null;
+let CD = null, ROSTER = [], ROSTER_OK = false, SO = {}, saveMsg = '', EDX = null;
 const eA = s => String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');
 const clone = o => JSON.parse(JSON.stringify(o));
 const gp = p => p.split('.').reduce((x, k) => x == null ? x : x[k], CD);
@@ -1087,7 +1153,8 @@ const fC = (p, l) => `<label class="fld"><span>${l}</span><input type="color" da
 const fR = (p, l, min, max) => `<label class="fld"><span>${l}: <b>${eA(gp(p))}</b></span><input type="range" min="${min}" max="${max}" data-p="${eA(p)}" value="${eA(gp(p))}" oninput="this.previousElementSibling.lastElementChild.textContent=this.value;sp(this.dataset.p,Number(this.value))"></label>`;
 const fS = (p, l, opts) => `<label class="fld"><span>${l}</span><select data-p="${eA(p)}" onchange="sp(this.dataset.p,this.value)">${opts.map(([v, t]) => `<option value="${eA(v)}" ${String(gp(p)) === String(v) ? 'selected' : ''}>${eA(t)}</option>`).join('')}</select></label>`;
 const fK = (p, l) => `<label class="chk"><input type="checkbox" data-p="${eA(p)}" ${gp(p) ? 'checked' : ''} onchange="sp(this.dataset.p,this.checked)"><span>${l}</span></label>`;
-const sec = (id, title, body) => `<details class="sec" ${SO[id] ? 'open' : ''} ontoggle="SO['${id}']=this.open"><summary>${title}</summary><div class="in">${body}</div></details>`;
+/* collapsible section (open/closed state survives re-render) — used on every page */
+const sec = (id, title, body, sub) => `<details class="sec" ${SO[id] ? 'open' : ''} ontoggle="SO['${id}']=this.open"><summary><span>${title}</span>${sub ? `<span class="sub">${sub}</span>` : ''}</summary><div class="in">${body}</div></details>`;
 
 function vTabs(){
   const t = [['dash','📊 Dashboard'],['exams','📚 Exams'],['stu','👥 Students'],['set','⚙ Settings']];
@@ -1151,8 +1218,17 @@ function vSettings(){
     <div class="g2">${fC('theme.primary', 'Main color')}${fC('theme.bg', 'Page background')}${fC('theme.card', 'Card background')}${fC('theme.text', 'Text color')}${fC('theme.ok', 'Correct color')}${fC('theme.bad', 'Wrong color')}</div>
     ${fR('theme.radius', 'Corner roundness', 0, 28)}${fR('theme.font', 'Font size', 13, 20)}
     ${fS('theme.family', 'Font style', [['system','Default (clean)'],['serif','Serif (book)'],['mono','Monospace'],['round','Rounded']])}
+    <h3>🖼 Layout & style (সব page-এ)</h3>
+    <div class="g2">${fS('theme.bgStyle', 'Background style', [['plain','Plain'],['gradient','Soft gradient'],['dots','Dots pattern']])}
+    ${fS('theme.shadow', 'Card shadow', [['none','None (flat)'],['soft','Soft'],['strong','Strong']])}
+    ${fS('theme.density', 'Spacing', [['compact','Compact'],['normal','Normal'],['roomy','Roomy']])}
+    ${fS('theme.width', 'Page width (computer-এ)', [['narrow','Narrow'],['normal','Normal'],['wide','Wide']])}
+    ${fS('theme.btnShape', 'Button shape', [['rounded','Rounded'],['pill','Pill'],['square','Square']])}
+    ${fS('theme.align', 'Login page title', [['center','Center'],['left','Left']])}</div>
+    ${fR('theme.hero', 'Login page title size', 22, 48)}
+    ${fK('theme.anim', '✨ Animation (page খুললে আস্তে আস্তে আসবে)')}
     <button class="btn ghost sm" onclick="resetSec('theme')">↺ Reset theme</button>`;
-  const brand = `${fT('brand.title', 'App title')}${fT('brand.emoji', 'Logo emoji')}
+  const brand = `${fT('brand.title', 'App / brand name')}${fT('brand.tagline', 'Tagline (login page-এ নামের নিচে)')}${fT('brand.emoji', 'Logo emoji')}
     ${fA('brand.notice', '📢 Notice / announcement (login + home page-এ দেখাবে)', 'যেমন: কাল CT, সবাই প্রস্তুত থাকো', 3)}
     ${fS('brand.noticeType', 'Notice style', [['info','Info (blue)'],['warn','Warning (yellow)'],['good','Good (green)'],['bad','Alert (red)']])}
     ${fA('brand.intro', '📋 Exam instructions (exam শুরুর আগে popup হিসেবে দেখাবে; ফাঁকা = দেখাবে না)', 'যেমন: ১ ঘণ্টা সময়। Negative marking আছে।', 4)}

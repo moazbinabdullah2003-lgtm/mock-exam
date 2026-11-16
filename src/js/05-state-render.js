@@ -19,6 +19,7 @@ function render(keep){
   else if(view === 'teacher') h = vTeacher();
   const KEEP = ['#code', '#sid', '#pw', '#tid', '#tp', '#gcode', '#gname'], kv = KEEP.map(k => $(k) ? $(k).value : '');
   if(CFG.brand.footer && view !== 'quiz') h += `<div class="foot">${esc(CFG.brand.footer)}</div>`;
+  a.classList.toggle('enter', !keep);
   a.innerHTML = h;
   mathify(a);
   if(view === 'teacher' && EDX && !EDX.loading) EDX.qs.forEach((_, i) => edPrev(i));

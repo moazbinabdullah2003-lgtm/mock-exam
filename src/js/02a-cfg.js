@@ -18,8 +18,9 @@ const FONTS = {
   round:  '"Trebuchet MS","Nunito","Noto Sans Bengali",sans-serif'
 };
 const DEF_CFG = {
-  theme:  {preset:'indigo', primary:'#4f46e5', bg:'#f3f4f6', card:'#ffffff', text:'#111827', ok:'#16a34a', bad:'#dc2626', radius:14, font:16, family:'system'},
-  brand:  {title:'MCQ Mock Exam', emoji:'📝', notice:'', noticeType:'info', intro:'', footer:''},
+  theme:  {preset:'indigo', primary:'#4f46e5', bg:'#f3f4f6', card:'#ffffff', text:'#111827', ok:'#16a34a', bad:'#dc2626', radius:16, font:16, family:'system',
+           bgStyle:'gradient', shadow:'soft', density:'normal', width:'normal', btnShape:'rounded', hero:34, align:'center', anim:true},
+  brand:  {title:"Muaz's Classroom", tagline:'Practice smart, score high ✨', emoji:'📚', notice:'', noticeType:'info', intro:'', footer:''},
   text:   {},
   access: {guest:true, teacherId:'teacher'},
   rules:  {review:'full', explain:true, showScore:true, passMark:0, retake:true, mistakes:true, maxAttempts:0,
@@ -28,6 +29,7 @@ const DEF_CFG = {
 };
 /* UI label defaults (teacher "Texts" section-এ যেকোনোটা বদলানো যায়) */
 const TX = {
+  chooseTitle:'কীভাবে ঢুকবে?', chStudent:'ID আর password দিয়ে', chGuest:'শুধু নাম আর exam code', chTeacher:'Dashboard ও control panel', hello:'হ্যালো', statAttempts:'Exams given', statAvg:'Average', statBest:'Best', focusTitle:'🎯 কোন topic-এ practice দরকার', trendTitle:'📈 Score trend', retakeTitle:'🔁 আবার দাও',
   tabStudent:'Student', tabGuest:'Guest', tabTeacher:'Teacher', idPh:'ID', passPh:'Password', loginBtn:'Login', guestHint:'নাম আর exam code দিয়ে সরাসরি exam দাও', guestNamePh:'তোমার নাম', back:'← Back', guestBtn:'Start exam ▶',
   startTitle:'Start exam', codePh:'Exam code', startBtn:'Start ▶', logout:'Logout',
   prev:'← Prev', next:'Next →', clear:'Clear', submit:'Submit', submitTitle:'Submit করবে?', submitYes:'Yes, Submit', cancel:'Cancel',
@@ -58,10 +60,17 @@ function applyTheme(c){
   const css = `:root{--p:${t.primary};--g:${t.ok};--r:${t.bad};--bg:${t.bg};--card:${t.card};--t:${t.text};--rad:${t.radius}px;
     --pl:color-mix(in srgb,${t.primary} 13%,${t.card});--gl:color-mix(in srgb,${t.ok} 16%,${t.card});--rl:color-mix(in srgb,${t.bad} 14%,${t.card});
     --m:color-mix(in srgb,${t.text} 58%,${t.card});--b:color-mix(in srgb,${t.text} 14%,${t.card})}
+    --pad:${{compact:'12px', normal:'18px', roomy:'24px'}[t.density] || '18px'};--w:${{narrow:'620px', normal:'760px', wide:'1000px'}[t.width] || '760px'};
+    --btnr:${{pill:'999px', square:'4px'}[t.btnShape] || Math.min(t.radius, 14) + 'px'};--hero:${t.hero || 34}px;
+    --sh:${{none:'none', strong:'0 2px 4px rgba(0,0,0,.06),0 10px 30px rgba(0,0,0,.14)'}[t.shadow] || '0 1px 2px rgba(0,0,0,.04),0 4px 16px rgba(0,0,0,.06)'}}
     body{font-size:${t.font}px;font-family:${FONTS[t.family] || FONTS.system}}`;
   if(typeof document === 'undefined' || !document.head || !document.createElement) return;
   if(!st){ st = document.createElement('style'); st.id = 'mq-theme'; document.head.appendChild(st); }
   st.textContent = css;
+  try{
+    document.documentElement.classList.toggle('anim', t.anim !== false);
+    if(document.body){ document.body.classList.remove('bg-gradient', 'bg-dots'); if(t.bgStyle === 'gradient' || t.bgStyle === 'dots') document.body.classList.add('bg-' + t.bgStyle); }
+  }catch(e){}
   try{ document.title = (c.brand.emoji ? c.brand.emoji + ' ' : '') + c.brand.title; }catch(e){}
 }
 function setCfg(remote){

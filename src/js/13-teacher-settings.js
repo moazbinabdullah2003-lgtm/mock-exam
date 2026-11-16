@@ -1,7 +1,7 @@
 /* ============================================================
    Teacher control panel: tabs, Settings, Students (roster), Save
    ============================================================ */
-let CD = null, ROSTER = [], ROSTER_OK = false, SO = {theme:true}, saveMsg = '', EDX = null;
+let CD = null, ROSTER = [], ROSTER_OK = false, SO = {}, saveMsg = '', EDX = null;
 const eA = s => String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');
 const clone = o => JSON.parse(JSON.stringify(o));
 const gp = p => p.split('.').reduce((x, k) => x == null ? x : x[k], CD);
@@ -20,7 +20,8 @@ const fC = (p, l) => `<label class="fld"><span>${l}</span><input type="color" da
 const fR = (p, l, min, max) => `<label class="fld"><span>${l}: <b>${eA(gp(p))}</b></span><input type="range" min="${min}" max="${max}" data-p="${eA(p)}" value="${eA(gp(p))}" oninput="this.previousElementSibling.lastElementChild.textContent=this.value;sp(this.dataset.p,Number(this.value))"></label>`;
 const fS = (p, l, opts) => `<label class="fld"><span>${l}</span><select data-p="${eA(p)}" onchange="sp(this.dataset.p,this.value)">${opts.map(([v, t]) => `<option value="${eA(v)}" ${String(gp(p)) === String(v) ? 'selected' : ''}>${eA(t)}</option>`).join('')}</select></label>`;
 const fK = (p, l) => `<label class="chk"><input type="checkbox" data-p="${eA(p)}" ${gp(p) ? 'checked' : ''} onchange="sp(this.dataset.p,this.checked)"><span>${l}</span></label>`;
-const sec = (id, title, body) => `<details class="sec" ${SO[id] ? 'open' : ''} ontoggle="SO['${id}']=this.open"><summary>${title}</summary><div class="in">${body}</div></details>`;
+/* collapsible section (open/closed state survives re-render) — used on every page */
+const sec = (id, title, body, sub) => `<details class="sec" ${SO[id] ? 'open' : ''} ontoggle="SO['${id}']=this.open"><summary><span>${title}</span>${sub ? `<span class="sub">${sub}</span>` : ''}</summary><div class="in">${body}</div></details>`;
 
 function vTabs(){
   const t = [['dash','📊 Dashboard'],['exams','📚 Exams'],['stu','👥 Students'],['set','⚙ Settings']];
@@ -84,8 +85,17 @@ function vSettings(){
     <div class="g2">${fC('theme.primary', 'Main color')}${fC('theme.bg', 'Page background')}${fC('theme.card', 'Card background')}${fC('theme.text', 'Text color')}${fC('theme.ok', 'Correct color')}${fC('theme.bad', 'Wrong color')}</div>
     ${fR('theme.radius', 'Corner roundness', 0, 28)}${fR('theme.font', 'Font size', 13, 20)}
     ${fS('theme.family', 'Font style', [['system','Default (clean)'],['serif','Serif (book)'],['mono','Monospace'],['round','Rounded']])}
+    <h3>🖼 Layout & style (সব page-এ)</h3>
+    <div class="g2">${fS('theme.bgStyle', 'Background style', [['plain','Plain'],['gradient','Soft gradient'],['dots','Dots pattern']])}
+    ${fS('theme.shadow', 'Card shadow', [['none','None (flat)'],['soft','Soft'],['strong','Strong']])}
+    ${fS('theme.density', 'Spacing', [['compact','Compact'],['normal','Normal'],['roomy','Roomy']])}
+    ${fS('theme.width', 'Page width (computer-এ)', [['narrow','Narrow'],['normal','Normal'],['wide','Wide']])}
+    ${fS('theme.btnShape', 'Button shape', [['rounded','Rounded'],['pill','Pill'],['square','Square']])}
+    ${fS('theme.align', 'Login page title', [['center','Center'],['left','Left']])}</div>
+    ${fR('theme.hero', 'Login page title size', 22, 48)}
+    ${fK('theme.anim', '✨ Animation (page খুললে আস্তে আস্তে আসবে)')}
     <button class="btn ghost sm" onclick="resetSec('theme')">↺ Reset theme</button>`;
-  const brand = `${fT('brand.title', 'App title')}${fT('brand.emoji', 'Logo emoji')}
+  const brand = `${fT('brand.title', 'App / brand name')}${fT('brand.tagline', 'Tagline (login page-এ নামের নিচে)')}${fT('brand.emoji', 'Logo emoji')}
     ${fA('brand.notice', '📢 Notice / announcement (login + home page-এ দেখাবে)', 'যেমন: কাল CT, সবাই প্রস্তুত থাকো', 3)}
     ${fS('brand.noticeType', 'Notice style', [['info','Info (blue)'],['warn','Warning (yellow)'],['good','Good (green)'],['bad','Alert (red)']])}
     ${fA('brand.intro', '📋 Exam instructions (exam শুরুর আগে popup হিসেবে দেখাবে; ফাঁকা = দেখাবে না)', 'যেমন: ১ ঘণ্টা সময়। Negative marking আছে।', 4)}

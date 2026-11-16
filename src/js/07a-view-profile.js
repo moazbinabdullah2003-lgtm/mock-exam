@@ -50,10 +50,11 @@ function vProfile(sid){
   if(strongT.length) L.push(`💪 শক্তিশালী topic: <b>${strongT.map(t => esc(t.t)).join(', ')}</b>`);
   if(tot && sk / tot > 0.15) L.push(`⏭ ${Math.round(sk / tot * 100)}% question skip করে — time management/confidence দেখো।`);
   if(n >= 2 && ps[n - 1] < ps[n - 2] - 10) L.push('🔻 শেষ attempt আগেরটার চেয়ে অনেক কম।');
+  h += `<div class="tiles">${tile(n, 'Attempts')}${tile(myAvg + '%', 'Average')}${tile(ps[n - 1] + '%', 'Latest', pcol(ps[n - 1] / 100))}${tile(trendTag(tr), 'Trend')}</div>`;
   h += `<div class="card"><h2>📝 Summary</h2>${L.map(x => `<div style="margin:5px 0">${x}</div>`).join('')}</div>`;
 
   // ---- numbers
-  h += `<div class="card"><div class="stats w">
+  h += sec('p_num', '📊 বিস্তারিত সংখ্যা ও trend', `<div class="stats w">
     <div class="stat"><b>${n}</b><small>Attempts</small></div>
     <div class="stat"><b>${myAvg}%</b><small>Average</small></div>
     <div class="stat"><b>${Math.max(...ps)}%</b><small>Best</small></div>
@@ -68,33 +69,33 @@ function vProfile(sid){
   <small class="muted">প্রথম attempt: ${dLong(recs[0].aid)} · শেষ: ${dLong(recs[n - 1].aid)}${qn ? ' · গড় ' + Math.round(qs / qn) + ' sec/question' : ''}</small>
   <h3>Score trend (last ${Math.min(15, n)})</h3>
   <div class="tr">${ps.slice(-15).map((p, i) => `<div style="height:${Math.max(4, Math.min(100, p))}%;background:${pcol(p / 100)}" title="${esc(dShort(recs.slice(-15)[i].aid))}: ${p}%"></div>`).join('')}</div>
-  <div class="row" style="margin:2px 0 0"><small class="muted">${dShort(recs.slice(-15)[0].aid)}</small><small class="muted">${dShort(recs[n - 1].aid)}</small></div></div>`;
+  <div class="row" style="margin:2px 0 0"><small class="muted">${dShort(recs.slice(-15)[0].aid)}</small><small class="muted">${dShort(recs[n - 1].aid)}</small></div>`);
 
   // ---- per exam
   const ex = {}; recs.forEach(r => { (ex[r.exam] = ex[r.exam] || []).push(r); });
-  h += `<div class="card"><h2>📚 Exam-wise</h2><div class="scroll"><table><tr><th>Exam</th><th>Att.</th><th>Avg</th><th>Best</th><th>Last</th><th>Trend</th><th>Last date</th></tr>
-    ${Object.entries(ex).map(([c, rs]) => { const p = rs.map(pct); return `<tr><td>${esc(c)}</td><td>${rs.length}</td><td class="h" style="background:${heat(avg(p) / 100)}">${avg(p)}%</td><td>${Math.max(...p)}%</td><td>${p[p.length - 1]}%</td><td>${trendTag(trendOf(p))}</td><td>${esc(dShort(rs[rs.length - 1].aid))}</td></tr>`; }).join('')}</table></div></div>`;
+  h += sec('p_exam', '📚 Exam-wise', `<div class="scroll"><table><tr><th>Exam</th><th>Att.</th><th>Avg</th><th>Best</th><th>Last</th><th>Trend</th><th>Last date</th></tr>
+    ${Object.entries(ex).map(([c, rs]) => { const p = rs.map(pct); return `<tr><td>${esc(c)}</td><td>${rs.length}</td><td class="h" style="background:${heat(avg(p) / 100)}">${avg(p)}%</td><td>${Math.max(...p)}%</td><td>${p[p.length - 1]}%</td><td>${trendTag(trendOf(p))}</td><td>${esc(dShort(rs[rs.length - 1].aid))}</td></tr>`; }).join('')}</table></div>`, Object.keys(ex).length + ' exam');
 
   // ---- topics (strong / weak) vs class
-  h += `<div class="card"><h2>🎯 Topic-wise (weakest first)</h2>${ts.map(t => {
+  h += sec('p_topic', '🎯 Topic-wise (weakest first)', `${ts.map(t => {
     const c = cts[t.t], tag = t.p < 0.5 ? '<span class="tag" style="background:#fee2e2;color:#b91c1c">Weak</span>' : t.p < 0.8 ? '<span class="tag" style="background:#fef3c7;color:#b45309">Improve</span>' : '<span class="tag" style="background:#dcfce7;color:#15803d">Strong</span>';
     return `<div class="trow" style="grid-template-columns:1fr 80px 46px"><span>${esc(t.t)} ${tag}<br><small class="muted">${t.ok}/${t.n} সঠিক${c ? ' · class ' + Math.round(c.p * 100) + '%' : ''}</small></span><div class="bar"><i style="width:${Math.round(t.p * 100)}%;background:${pcol(t.p)}"></i></div><b>${Math.round(t.p * 100)}%</b></div>`;
-  }).join('') || '<div class="muted">Topic data নেই</div>'}</div>`;
+  }).join('') || '<div class="muted">Topic data নেই</div>'}`, weakT.length ? '⚠ ' + weakT.length : '');
 
   // ---- weak questions
-  h += `<div class="card"><h2>❌ এখনো ভুল করছে (${weakQ.length})</h2>${weakQ.length ? '' : '<div class="muted">সব question-এর সর্বশেষ উত্তর ঠিক 👍</div>'}${weakQ.map(o => {
+  h += sec('p_wrong', '❌ এখনো ভুল করছে', `${weakQ.length ? '' : '<div class="muted">সব question-এর সর্বশেষ উত্তর ঠিক 👍</div>'}${weakQ.map(o => {
     const q = qinfo(o.exam, o.i);
     return `<div class="hist" style="display:block"><div class="muted">${esc(o.exam)} · ${esc(q.t || 'General')} · ${o.n} বারের মধ্যে ${o.w} বার ভুল/skip</div>
       <div>${esc(q.q)}</div><small>সঠিক: <b>${LET[q.a]}</b>. ${esc(q.o[q.a] || '')}${o.lc >= 0 ? ' · সে দিয়েছে: <b>' + LET[o.lc] + '</b>' : ' · skip করেছে'}</small></div>`;
-  }).join('')}</div>`;
-  if(slowQ.length) h += `<div class="card"><h2>🐢 সবচেয়ে বেশি সময় নেয়</h2>${slowQ.map(o => { const q = qinfo(o.exam, o.i); return `<div class="hist" style="display:block"><div class="muted">${esc(o.exam)} · ${esc(q.t || 'General')} · গড় ${Math.round(o.secs / o.sn)} sec${o.sn > 1 ? ' (' + o.sn + ' বার)' : ''}${cT[o.exam + '|' + o.i] ? ' · class avg ' + Math.round(cT[o.exam + '|' + o.i]) + ' sec' : ''}</div><div>${esc(q.q)}</div></div>`; }).join('')}</div>`;
+  }).join('')}`, weakQ.length + '');
+  if(slowQ.length) h += sec('p_slow', '🐢 সবচেয়ে বেশি সময় নেয়', `${slowQ.map(o => { const q = qinfo(o.exam, o.i); return `<div class="hist" style="display:block"><div class="muted">${esc(o.exam)} · ${esc(q.t || 'General')} · গড় ${Math.round(o.secs / o.sn)} sec${o.sn > 1 ? ' (' + o.sn + ' বার)' : ''}${cT[o.exam + '|' + o.i] ? ' · class avg ' + Math.round(cT[o.exam + '|' + o.i]) + ' sec' : ''}</div><div>${esc(q.q)}</div></div>`; }).join('')}`);
 
   // ---- full activity log
-  h += `<div class="card"><h2>🕒 সব Activity (${n})</h2>` + recs.slice().reverse().map(r => {
+  h += sec('p_act', '🕒 সব Activity', recs.slice().reverse().map(r => {
     let a = 0, b = 0, c = 0; r.d.forEach(([i, ch, k]) => { if(ch < 0) c++; else if(k) a++; else b++; });
     const p = pct(r);
     return `<div class="hist"><div><b>${esc(r.exam)}</b>${r.mode === 'mistakes' ? '<span class="tag">mistakes</span>' : ''}<br><small>${esc(dLong(r.aid))} · ${fmt(r.secs)}</small><br><small>✔${a} ✘${b} ⏭${c}</small></div>
       <div style="text-align:right"><b>${r.score}/${r.total}</b> <small style="color:${pcol(p / 100)}">(${p}%)</small><br><button class="link" data-a="${esc(r.aid)}" onclick="openRec(this.dataset.a)">Review</button></div></div>`;
-  }).join('') + '</div>';
+  }).join(''), n + '');
   return h;
 }

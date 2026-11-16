@@ -20,45 +20,46 @@ function vTeacher(){
     if(c >= 0 && !ok) o.pick[c] = (o.pick[c] || 0) + 1;
   }));
   const hard = Object.values(qs).filter(o => qinfo(o.exam, o.i)).sort((a,b) => a.ok/a.n - b.ok/b.n).slice(0, 10);
-  const hd = `<div class="top"><b>👩‍🏫 Teacher</b><span><button class="btn sm ghost" onclick="asTestStudent()">🎓 Test student</button> <button class="link" onclick="logout()">Logout</button></span></div>${TSTMSG ? `<div class="warn">${esc(TSTMSG)}</div>` : ''}${vTabs()}`;
+  const hd = `<div class="top"><b>${esc(CFG.brand.emoji)} Teacher</b><span style="white-space:nowrap"><button class="btn sm ghost" onclick="asTestStudent()">🎓 Test student</button> <button class="link" onclick="logout()">Logout</button></span></div>${TSTMSG ? `<div class="warn">${esc(TSTMSG)}</div>` : ''}${vTabs()}`;
   if(TTAB === 'set') return hd + vSettings();
   if(TTAB === 'stu') return hd + vStudents();
   if(TTAB === 'exams') return hd + banner() + vExams();
+  const cAvg = avg(rows.map(r => r.avg)), need = rows.filter(r => r.avg < 60).slice(0, 3);
   return `${hd}
   ${banner()}${remoteMsg ? `<div class="warn">${esc(remoteMsg)}</div>` : ''}
-  <div class="card"><div class="row" style="margin:0"><select id="tf" style="width:auto;flex:1" onchange="TF=this.value;render(true)">
+  <div class="row" style="margin:6px 0"><select id="tf" style="width:auto;flex:1;margin:0" onchange="TF=this.value;render(true)">
       <option value="">All exams</option>${exams.map(c => `<option ${c===TF?'selected':''} value="${esc(c)}">${esc(c)}</option>`).join('')}</select>
       <button class="btn ghost sm" onclick="refresh()">${loading ? 'Syncing…' : '↻ Refresh'}</button><button class="btn ghost sm" onclick="exportCSV()">⬇ CSV</button></div>
-    <small>${recs.length} attempts · ${rows.length} students</small></div>
-  ${!recs.length ? '<div class="card muted">এখনো কোনো data নেই।</div>' : `
-  <div class="card"><h2>Students (weakest first)</h2><div class="scroll"><table>
+  <div class="tiles">${tile(rows.length, 'Students')}${tile(recs.length, 'Attempts')}${tile(cAvg + '%', 'Class average')}${tile((EXL || []).length || exams.length, 'Exams')}</div>
+  ${!recs.length ? '<div class="card muted center">এখনো কোনো data নেই।</div>' : `
+  ${need.length ? `<div class="card"><b>⚠ মনোযোগ দরকার</b>${need.map(r => `<div class="hist click" style="cursor:pointer" data-s="${esc(r.sid)}" onclick="openStu(this.dataset.s)"><span>${esc(r.name)} <small>${esc(r.sid)}</small></span><b style="color:var(--r)">${r.avg}% ›</b></div>`).join('')}</div>` : ''}
+  ${sec('d_stu', '👥 Students (weakest first)', `<div class="scroll"><table>
     <tr><th>ID</th><th>Name</th><th>Att.</th><th>Avg</th><th>Best</th><th>Last</th><th>Trend</th><th>Weak topic</th></tr>
     ${rows.map(r => `<tr class="click" data-s="${esc(r.sid)}" onclick="openStu(this.dataset.s)"><td>${esc(r.sid)}</td><td>${esc(r.name)}</td><td>${r.n}</td><td class="h" style="background:${heat(r.avg/100)}">${r.avg}%</td><td>${r.best}%</td><td>${r.last}%</td><td>${trendTag(r.tr)}</td><td>${esc(r.weak)}</td></tr>`).join('')}
-  </table></div><small>Row-এ tap করলে ওই student-এর full profile</small></div>
-  <div class="card"><h2>Class topic accuracy</h2>${topics.map(t => `<div class="trow"><span>${esc(t.t)} <small>${t.ok}/${t.n}</small></span><div class="bar"><i style="width:${Math.round(t.p*100)}%;background:${t.p<0.5?'var(--r)':t.p<0.8?'#f59e0b':'var(--g)'}"></i></div><b>${Math.round(t.p*100)}%</b></div>`).join('')}</div>
-  <div class="card"><h2>Student × Topic heatmap</h2><div class="scroll"><table>
+  </table></div><small>Row-এ tap করলে ওই student-এর full profile</small>`, rows.length + '')}
+  ${sec('d_topic', '📊 Class topic accuracy', topics.map(t => `<div class="trow"><span>${esc(t.t)} <small>${t.ok}/${t.n}</small></span><div class="bar"><i style="width:${Math.round(t.p*100)}%;background:${t.p<0.5?'var(--r)':t.p<0.8?'#f59e0b':'var(--g)'}"></i></div><b>${Math.round(t.p*100)}%</b></div>`).join(''), topics.length + ' topic')}
+  ${sec('d_heat', '🟩 Student × Topic heatmap', `<div class="scroll"><table>
     <tr><th>Student</th>${topics.map(t => `<th>${esc(t.t)}</th>`).join('')}</tr>
     ${rows.map(r => { const m = {}; r.ts.forEach(t => m[t.t] = t); return `<tr><td>${esc(r.name)}</td>${topics.map(t => m[t.t] ? `<td class="h" style="background:${heat(m[t.t].p)}">${Math.round(m[t.t].p*100)}</td>` : '<td class="h">–</td>').join('')}</tr>`; }).join('')}
-  </table></div></div>
+  </table></div>`)}
   ${vTimeCard(recs)}
-  <div class="card"><h2>সবচেয়ে বেশি ভুল হওয়া Questions</h2>${hard.map(o => {
+  ${sec('d_hard', '❌ সবচেয়ে বেশি ভুল হওয়া Questions', hard.map(o => {
     const q = qinfo(o.exam, o.i), top = Object.entries(o.pick).sort((a,b) => b[1]-a[1])[0];
     return `<div class="hist" style="display:block"><div class="muted">${esc(o.exam)} · ${esc(q.t || '')} · ${Math.round(o.ok/o.n*100)}% correct (${o.ok}/${o.n})</div>
       <div>${esc(q.q)}</div><small>সঠিক: ${LET[q.a]}${top ? ' · সবাই বেশি দিয়েছে ভুল: ' + LET[top[0]] : ''}</small></div>`;
-  }).join('')}</div>`}`;
+  }).join(''), hard.length + '')}`}`;
 }
-
 
 /* ⏱ কোন question-এ student-রা সবচেয়ে বেশি সময় দিচ্ছে (প্রতি question screen-এ থাকার সময় background-এ count হয়) */
 function vTimeCard(recs){
   const ts = qTimeStats(recs).sort((a, b) => b.avg - a.avg).slice(0, 15);
   if(!ts.length) return '';
   const mx = ts[0].avg || 1, tot = qTimeStats(recs), all = tot.reduce((a, o) => a + o.avg, 0) / tot.length;
-  return `<div class="card"><h2>⏱ কোন question-এ বেশি সময় যাচ্ছে</h2>
+  return sec('d_time', '⏱ কোন question-এ বেশি সময় যাচ্ছে', `
     <small class="muted">প্রতি question screen-এ student কতক্ষণ ছিল (সবার average) · সব question-এর average: ${Math.round(all)}s</small>
     ${ts.map(o => { const q = qinfo(o.exam, o.i), a = o.ok / o.n;
       const note = o.avg > all * 1.5 ? (a < 0.5 ? '🔴 সময় বেশি + ভুল বেশি → কঠিন/confusing' : a >= 0.8 ? '🟡 সময় বেশি কিন্তু সঠিক → lengthy' : '🟠 সময় বেশি') : '';
       return `<div class="hist" style="display:block"><div class="row" style="margin:0"><span class="muted">${esc(o.exam)} · Q${o.i + 1} · ${esc(q.t || '')}</span><b>${Math.round(o.avg)}s</b></div>
         <div>${esc(q.q)}</div><div class="tbar"><i style="width:${Math.round(o.avg / mx * 100)}%"></i></div>
-        <small class="muted">${o.n} জন/বার · max ${Math.round(o.max)}s · ${Math.round(a * 100)}% সঠিক ${note ? '· ' + note : ''}</small></div>`; }).join('')}</div>`;
+        <small class="muted">${o.n} জন/বার · max ${Math.round(o.max)}s · ${Math.round(a * 100)}% সঠিক ${note ? '· ' + note : ''}</small></div>`; }).join('')}`, 'avg ' + Math.round(all) + 's');
 }
