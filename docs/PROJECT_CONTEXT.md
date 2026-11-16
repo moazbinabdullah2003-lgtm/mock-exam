@@ -37,7 +37,7 @@ Everything the teacher controls is edited **in the web UI** — no code edits ne
 | Web app `/exec` URL | in `src/js/01-config.js` → `CONFIG.SCRIPT_URL` (`https://script.google.com/macros/s/AKfycbx2xuErMRJf9XPij0Yt28hqLXf79oAN3MnQva2ERw4rTJLQsFrkmQwO6qpFxTCG3IRPjw/exec`). **Never create a "New deployment"** — it changes the URL. Always *Manage deployments → edit → New version*. |
 | Spreadsheet "MCQ Mock Data" | id `1sU8tzNalkI30mmx8aAOQwz8lA_8jX4atM0m4fsnK3og` (also Script property `SSID`). Tabs: `Attempts`, `Questions`, `Settings`. |
 | Teacher login | ID `teacher`, password `teacher123` (defaults; password can be changed in Settings→Security which stores Script property `TPASS`; ID is `access.teacherId` in settings) |
-| Live `quiz.html` sha256 | starts `23834f46aae9…` (2026-11-16 end of session: UI redesign, themes, copy-for-AI) = current `dist/quiz.html`. `tools/health.py` checks this automatically. |
+| Live `quiz.html` sha256 | starts `b3d565365e64…` (2026-11-16: date range + log editor) = current `dist/quiz.html`. `tools/health.py` checks this automatically. |
 
 ### Live data right now
 - Exams: `DEMO1` (3 Q), **`MATH-B`** Beginner (17 Q, 20 min), **`MATH-I`** Intermediate (17 Q, 25 min), **`MATH-A`** Advanced (16 Q, 30 min); negative mark 0.25 on the three MATH exams. Source: `samples/math_3levels.csv` ← `samples/math_questions_with_solutions.md` (50 Higher-Math questions with step-by-step solutions, KaTeX).
