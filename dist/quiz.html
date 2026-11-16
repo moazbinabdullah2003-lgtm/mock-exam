@@ -15,6 +15,11 @@ html{-webkit-text-size-adjust:100%}
 body{margin:0;font-size:16px;font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans Bengali",sans-serif;background:var(--bg);color:var(--t);line-height:1.5;min-height:100vh}
 body.bg-gradient{background:linear-gradient(165deg,color-mix(in srgb,var(--p) 16%,var(--bg)) 0,var(--bg) 420px) no-repeat,var(--bg)}
 body.bg-dots{background-image:radial-gradient(color-mix(in srgb,var(--p) 22%,transparent) 1px,transparent 1.5px);background-size:22px 22px}
+body.has-motif::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;background-image:var(--motif);background-size:var(--msz) var(--msz);opacity:var(--mop)}
+body.has-motif.in-quiz:not(.motif-quiz)::before{display:none}
+body.hero-sym:not(.in-quiz) .hero{position:relative}
+body.hero-sym:not(.in-quiz) .hero::after{content:var(--msym);position:absolute;right:4%;top:2px;font-size:calc(var(--hero) * 2.6);line-height:1;color:var(--p);opacity:.13;transform:rotate(-12deg);pointer-events:none;font-family:Georgia,serif;font-style:italic}
+body.hero-sym .hero.left::after{right:2%}
 #app{max-width:var(--w);margin:0 auto;padding:14px 16px 48px}
 .card{background:var(--card);border-radius:var(--rad);padding:var(--pad);margin:14px 0;box-shadow:var(--sh);border:1px solid color-mix(in srgb,var(--t) 6%,transparent)}
 h1{font-size:24px;margin:8px 0;letter-spacing:-.01em}h2{font-size:18px;margin:0 0 10px;letter-spacing:-.01em}h3{font-size:15px;margin:14px 0 6px}
@@ -131,8 +136,8 @@ html:not(.anim) *{animation:none!important;transition:none!important}
 .thg{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;margin:10px 0}
 .thm{display:block;text-align:left;background:var(--card);border:2px solid var(--b);border-radius:14px;padding:8px;cursor:pointer;color:var(--t);transition:transform .15s,border-color .15s}
 .thm:hover{transform:translateY(-2px)}.thm.on{border-color:var(--p);box-shadow:0 0 0 3px color-mix(in srgb,var(--p) 20%,transparent)}
-.thm b{display:block;font-size:14px;margin-top:6px}.thm small{display:block;font-size:12px}
-.thp{padding:10px}.thp>div{display:flex;align-items:center;justify-content:space-between;padding:10px}.thp>div b{margin:0;font-size:18px}.thp>div span{display:block;width:42px;height:16px}
+.thm b{display:block;font-size:14px;margin-top:6px}.thp{position:relative;overflow:hidden}.thp>div{position:relative}.thh{margin:14px 0 0;font-size:15px}.thm small{display:block;font-size:12px}
+.thp{padding:10px}.thp>div{display:flex;align-items:center;justify-content:space-between;padding:10px}.thp>div b{margin:0;font-size:18px}.thp>div span{display:block;width:42px;height:16px}.thp.mo{padding:30px 22px 10px}.thp.mo>div{padding:7px 10px}
 </style>
 </head>
 <body>
@@ -218,16 +223,26 @@ if(typeof addEventListener === 'function') addEventListener('load', () => mathif
 /* Theme presets — শুধু রং দিলে style (shadow/shape ইত্যাদি) আগেরটা থাকে; পুরো "look" দিলে সব বদলায়.
    n = গ্যালারিতে নাম, d = ছোট বর্ণনা */
 const PRESETS = {
-  classic:  {n:'Classic Blue', d:'পরিষ্কার, professional', primary:'#2563eb', bg:'#f5f7fb', card:'#ffffff', text:'#0f172a', ok:'#16a34a', bad:'#dc2626', bgStyle:'gradient', shadow:'soft', radius:16, btnShape:'rounded', family:'system'},
-  mint:     {n:'Mint Fresh', d:'হালকা সবুজ, চোখে আরাম', primary:'#0d9488', bg:'#f0fdfa', card:'#ffffff', text:'#0f2a27', ok:'#16a34a', bad:'#e11d48', bgStyle:'gradient', shadow:'soft', radius:18, btnShape:'rounded', family:'system'},
-  lavender: {n:'Lavender', d:'নরম বেগুনি, modern', primary:'#7c3aed', bg:'#f7f5ff', card:'#ffffff', text:'#1e1633', ok:'#16a34a', bad:'#e11d48', bgStyle:'gradient', shadow:'soft', radius:20, btnShape:'pill', family:'round'},
-  coral:    {n:'Coral', d:'উষ্ণ, বন্ধুত্বপূর্ণ', primary:'#f43f5e', bg:'#fff6f5', card:'#ffffff', text:'#2b1517', ok:'#16a34a', bad:'#b91c1c', bgStyle:'gradient', shadow:'soft', radius:18, btnShape:'rounded', family:'round'},
-  sky:      {n:'Sky Pill', d:'উজ্জ্বল নীল, গোল button', primary:'#0ea5e9', bg:'#f0f9ff', card:'#ffffff', text:'#0c1e2e', ok:'#10b981', bad:'#ef4444', bgStyle:'dots', shadow:'soft', radius:22, btnShape:'pill', family:'system'},
-  notebook: {n:'Notebook', d:'খাতার মতো, পড়তে আরাম', primary:'#1d4ed8', bg:'#fbfaf5', card:'#fffefa', text:'#1f2937', ok:'#15803d', bad:'#b91c1c', bgStyle:'dots', shadow:'none', radius:10, btnShape:'square', family:'serif'},
-  minimal:  {n:'Minimal', d:'সাদা-কালো, একদম simple', primary:'#111827', bg:'#fafafa', card:'#ffffff', text:'#111827', ok:'#16a34a', bad:'#dc2626', bgStyle:'plain', shadow:'none', radius:12, btnShape:'rounded', family:'system'},
-  emerald:  {n:'Emerald', d:'গাঢ় সবুজ, শান্ত', primary:'#059669', bg:'#f2f8f5', card:'#ffffff', text:'#0f241b', ok:'#16a34a', bad:'#dc2626', bgStyle:'plain', shadow:'strong', radius:16, btnShape:'rounded', family:'system'},
-  night:    {n:'Night Blue', d:'Dark mode, রাতে পড়তে', primary:'#60a5fa', bg:'#0b1220', card:'#131c2e', text:'#e2e8f0', ok:'#34d399', bad:'#f87171', bgStyle:'gradient', shadow:'none', radius:16, btnShape:'rounded', family:'system'},
-  grape:    {n:'Dark Grape', d:'Dark + বেগুনি', primary:'#a78bfa', bg:'#110f17', card:'#1c1826', text:'#ede9fe', ok:'#4ade80', bad:'#fb7185', bgStyle:'dots', shadow:'none', radius:18, btnShape:'pill', family:'round'},
+  classic:  {n:'Classic Blue', d:'পরিষ্কার, professional', primary:'#2563eb', bg:'#f5f7fb', card:'#ffffff', text:'#0f172a', ok:'#16a34a', bad:'#dc2626', bgStyle:'gradient', shadow:'soft', radius:16, btnShape:'rounded', family:'system', motif:'none'},
+  mint:     {n:'Mint Fresh', d:'হালকা সবুজ, চোখে আরাম', primary:'#0d9488', bg:'#f0fdfa', card:'#ffffff', text:'#0f2a27', ok:'#16a34a', bad:'#e11d48', bgStyle:'gradient', shadow:'soft', radius:18, btnShape:'rounded', family:'system', motif:'none'},
+  lavender: {n:'Lavender', d:'নরম বেগুনি, modern', primary:'#7c3aed', bg:'#f7f5ff', card:'#ffffff', text:'#1e1633', ok:'#16a34a', bad:'#e11d48', bgStyle:'gradient', shadow:'soft', radius:20, btnShape:'pill', family:'round', motif:'none'},
+  coral:    {n:'Coral', d:'উষ্ণ, বন্ধুত্বপূর্ণ', primary:'#f43f5e', bg:'#fff6f5', card:'#ffffff', text:'#2b1517', ok:'#16a34a', bad:'#b91c1c', bgStyle:'gradient', shadow:'soft', radius:18, btnShape:'rounded', family:'round', motif:'none'},
+  sky:      {n:'Sky Pill', d:'উজ্জ্বল নীল, গোল button', primary:'#0ea5e9', bg:'#f0f9ff', card:'#ffffff', text:'#0c1e2e', ok:'#10b981', bad:'#ef4444', bgStyle:'dots', shadow:'soft', radius:22, btnShape:'pill', family:'system', motif:'none'},
+  notebook: {n:'Notebook', d:'খাতার মতো, পড়তে আরাম', primary:'#1d4ed8', bg:'#fbfaf5', card:'#fffefa', text:'#1f2937', ok:'#15803d', bad:'#b91c1c', bgStyle:'dots', shadow:'none', radius:10, btnShape:'square', family:'serif', motif:'none'},
+  minimal:  {n:'Minimal', d:'সাদা-কালো, একদম simple', primary:'#111827', bg:'#fafafa', card:'#ffffff', text:'#111827', ok:'#16a34a', bad:'#dc2626', bgStyle:'plain', shadow:'none', radius:12, btnShape:'rounded', family:'system', motif:'none'},
+  emerald:  {n:'Emerald', d:'গাঢ় সবুজ, শান্ত', primary:'#059669', bg:'#f2f8f5', card:'#ffffff', text:'#0f241b', ok:'#16a34a', bad:'#dc2626', bgStyle:'plain', shadow:'strong', radius:16, btnShape:'rounded', family:'system', motif:'none'},
+  night:    {n:'Night Blue', d:'Dark mode, রাতে পড়তে', primary:'#60a5fa', bg:'#0b1220', card:'#131c2e', text:'#e2e8f0', ok:'#34d399', bad:'#f87171', bgStyle:'gradient', shadow:'none', radius:16, btnShape:'rounded', family:'system', motif:'none'},
+  grape:    {n:'Dark Grape', d:'Dark + বেগুনি', primary:'#a78bfa', bg:'#110f17', card:'#1c1826', text:'#ede9fe', ok:'#4ade80', bad:'#fb7185', bgStyle:'dots', shadow:'none', radius:18, btnShape:'pill', family:'round', motif:'none'},
+  // 🔬 Science look (রং + style + background-এ বিজ্ঞানের symbol)
+  chalk:    {n:'Chalkboard', d:'সবুজ বোর্ডে chalk-এর formula', sci:1, primary:'#facc15', bg:'#1f3a2e', card:'#26463a', text:'#f1f5ee', ok:'#86efac', bad:'#fca5a5', bgStyle:'plain', shadow:'none', radius:10, btnShape:'rounded', family:'round', motif:'math', motifInk:'text', motifOp:13, motifSize:100},
+  blueprint:{n:'Blueprint', d:'নীল নকশা, grid + formula', sci:1, primary:'#7dd3fc', bg:'#0b3a6e', card:'#104680', text:'#e6f1ff', ok:'#6ee7b7', bad:'#fda4af', bgStyle:'plain', shadow:'none', radius:6, btnShape:'square', family:'mono', motif:'blueprint', motifInk:'text', motifOp:10, motifSize:100},
+  labnote:  {n:'Lab Notebook', d:'খাতার পাতায় molecule', sci:1, primary:'#0f766e', bg:'#fbfaf3', card:'#fffef8', text:'#1f2937', ok:'#15803d', bad:'#b91c1c', bgStyle:'plain', shadow:'none', radius:10, btnShape:'rounded', family:'serif', motif:'chemistry', motifInk:'primary', motifOp:12, motifSize:100},
+  periodic: {n:'Periodic Table', d:'Element-এর ছোট tile', sci:1, primary:'#7c3aed', bg:'#f5f4fc', card:'#ffffff', text:'#1b1636', ok:'#16a34a', bad:'#dc2626', bgStyle:'plain', shadow:'soft', radius:14, btnShape:'rounded', family:'system', motif:'periodic', motifInk:'primary', motifOp:10, motifSize:100},
+  quantum:  {n:'Quantum Dark', d:'Dark, ψ আর atom orbit', sci:1, primary:'#22d3ee', bg:'#090b1a', card:'#13162c', text:'#e0e7ff', ok:'#4ade80', bad:'#fb7185', bgStyle:'gradient', shadow:'none', radius:18, btnShape:'pill', family:'system', motif:'physics', motifInk:'primary', motifOp:14, motifSize:110},
+  dna:      {n:'DNA Bio', d:'সবুজ, DNA helix আর cell', sci:1, primary:'#059669', bg:'#f1faf5', card:'#ffffff', text:'#0f2a1e', ok:'#16a34a', bad:'#e11d48', bgStyle:'gradient', shadow:'soft', radius:18, btnShape:'pill', family:'round', motif:'biology', motifInk:'primary', motifOp:12, motifSize:110},
+  circuit:  {n:'Circuit Board', d:'Dark সবুজ PCB, trace আর chip', sci:1, primary:'#34d399', bg:'#05261b', card:'#0b3628', text:'#d1fae5', ok:'#a3e635', bad:'#f87171', bgStyle:'plain', shadow:'none', radius:8, btnShape:'square', family:'mono', motif:'circuit', motifInk:'primary', motifOp:14, motifSize:100},
+  graphpad: {n:'Graph Paper', d:'Math-এর graph খাতা', sci:1, primary:'#2563eb', bg:'#fdfdfa', card:'#ffffff', text:'#1e293b', ok:'#16a34a', bad:'#dc2626', bgStyle:'plain', shadow:'soft', radius:12, btnShape:'rounded', family:'serif', motif:'graph', motifInk:'primary', motifOp:9, motifSize:100},
+  scimix:   {n:'Science Mix', d:'হালকা, সব subject-এর symbol', sci:1, primary:'#4f46e5', bg:'#f5f5ff', card:'#ffffff', text:'#15173a', ok:'#16a34a', bad:'#dc2626', bgStyle:'gradient', shadow:'soft', radius:16, btnShape:'rounded', family:'system', motif:'mix', motifInk:'primary', motifOp:11, motifSize:100},
   // পুরোনো preset (শুধু রং)
   indigo:   {n:'Indigo', d:'আগের default', primary:'#4f46e5', bg:'#f3f4f6', card:'#ffffff', text:'#111827'},
   ocean:    {n:'Ocean', d:'নীল', primary:'#0284c7', bg:'#eef6fb', card:'#ffffff', text:'#0f172a'},
@@ -246,7 +261,8 @@ const FONTS = {
 };
 const DEF_CFG = {
   theme:  {preset:'indigo', primary:'#4f46e5', bg:'#f3f4f6', card:'#ffffff', text:'#111827', ok:'#16a34a', bad:'#dc2626', radius:16, font:16, family:'system',
-           bgStyle:'gradient', shadow:'soft', density:'normal', width:'normal', btnShape:'rounded', hero:34, align:'center', anim:true},
+           bgStyle:'gradient', shadow:'soft', density:'normal', width:'normal', btnShape:'rounded', hero:34, align:'center', anim:true,
+           motif:'none', motifOp:12, motifSize:100, motifInk:'primary', motifQuiz:false, heroSym:true},
   brand:  {title:"Muaz's Classroom", tagline:'Practice smart, score high ✨', emoji:'📚', notice:'', noticeType:'info', intro:'', footer:''},
   text:   {},
   access: {guest:true, teacherId:'teacher'},
@@ -290,13 +306,15 @@ function applyTheme(c){
     --pad:${{compact:'12px', normal:'18px', roomy:'24px'}[t.density] || '18px'};--w:${{narrow:'620px', normal:'760px', wide:'1000px'}[t.width] || '760px'};
     --btnr:${{pill:'999px', square:'4px'}[t.btnShape] || Math.min(t.radius, 14) + 'px'};--hero:${t.hero || 34}px;
     --sh:${{none:'none', strong:'0 2px 4px rgba(0,0,0,.06),0 10px 30px rgba(0,0,0,.14)'}[t.shadow] || '0 1px 2px rgba(0,0,0,.04),0 4px 16px rgba(0,0,0,.06)'}}
-    body{font-size:${t.font}px;font-family:${FONTS[t.family] || FONTS.system}}`;
+    body{font-size:${t.font}px;font-family:${FONTS[t.family] || FONTS.system}}${typeof motifCSS === 'function' ? motifCSS(t) : ''}`;
   if(typeof document === 'undefined' || !document.head || !document.createElement) return;
   if(!st){ st = document.createElement('style'); st.id = 'mq-theme'; document.head.appendChild(st); }
   st.textContent = css;
   try{
     document.documentElement.classList.toggle('anim', t.anim !== false);
-    if(document.body){ document.body.classList.remove('bg-gradient', 'bg-dots'); if(t.bgStyle === 'gradient' || t.bgStyle === 'dots') document.body.classList.add('bg-' + t.bgStyle); }
+    if(document.body){ document.body.classList.remove('bg-gradient', 'bg-dots'); if(t.bgStyle === 'gradient' || t.bgStyle === 'dots') document.body.classList.add('bg-' + t.bgStyle);
+      const mo = t.motif && t.motif !== 'none' && typeof MOTIFS !== 'undefined' && MOTIFS[t.motif];
+      document.body.classList.toggle('has-motif', !!mo); document.body.classList.toggle('motif-quiz', !!mo && !!t.motifQuiz); document.body.classList.toggle('hero-sym', !!mo && t.heroSym !== false); }
   }catch(e){}
   try{ document.title = (c.brand.emoji ? c.brand.emoji + ' ' : '') + c.brand.title; }catch(e){}
 }
@@ -338,6 +356,90 @@ const introOf = code => exOv(code).intro || CFG.brand.intro || '';
 function vNotice(){
   const b = CFG.brand;
   return b.notice ? `<div class="notice ${esc(b.noticeType)}">${esc(b.notice)}</div>` : '';
+}
+/* ============================================================
+   Science motif: background-এ হালকা বিজ্ঞানের symbol / shape (SVG tile, code-এই আঁকা, কোনো image নেই)
+   theme keys: motif, motifOp (%), motifSize (%), motifInk ('primary'|'text'), motifQuiz (exam-এ দেখাবে?), heroSym
+   ============================================================ */
+const MOTIFS = {
+  none:      {n:'None (কিছু না)'},
+  math:      {n:'Math (π ∫ ∑)', hero:'∑', it:true, shp:.15, s:['π','√x','∫','∑','θ','∞','±','≠','dy/dx','f(x)','Δ','≈','x²','∂','log','sin θ','n!','∈'], sh:['curve']},
+  physics:   {n:'Physics (λ ψ ⚛)', hero:'⚛', it:true, s:['λ','ħ','ψ','Ω','E=mc²','F=ma','ν','∇','μ₀','Δt','v=u+at','ω','ρ','ε₀'], sh:['atom','wave','atom']},
+  chemistry: {n:'Chemistry (⬡ H₂O)', hero:'⚗', s:['H₂O','CO₂','NaCl','pH','⇌','Na⁺','e⁻','CH₄','O₂','NH₃','Cl⁻','H₂SO₄','mol'], sh:['hex','hex','bond']},
+  biology:   {n:'Biology (🧬 DNA)', hero:'🧬', s:['DNA','ATP','RNA','C₆H₁₂O₆','A–T','G–C','CO₂','O₂','pH'], sh:['helix','cell','helix']},
+  circuit:   {n:'Circuit board', hero:'⚡', s:['Ω','V=IR','+','−','5V','GND'], sh:['trace','trace','trace','chip','res']},
+  periodic:  {n:'Periodic table', hero:'⚛', s:[], sh:['elem']},
+  graph:     {n:'Graph paper', hero:'ƒ', grid:1, it:true, s:['y=x²','f(x)','y=sin x','(0,0)','x','y','dy/dx'], sh:['curve','axes']},
+  blueprint: {n:'Blueprint (grid + formula)', hero:'∇', grid:1, s:['∇·E','∮','F=ma','Σ','λ','r=2m','∫dx','⊥','∠θ'], sh:['atom','hex','wave']},
+  mix:       {n:'Science mix (সব মিলিয়ে)', hero:'⚛', it:true, s:['π','∫','λ','ψ','E=mc²','H₂O','DNA','∑','Δ','⇌','Ω','√x'], sh:['atom','hex','helix','wave','curve']}
+};
+const ELEMS = [['H',1],['He',2],['C',6],['N',7],['O',8],['Na',11],['Mg',12],['Cl',17],['K',19],['Ca',20],['Fe',26],['Cu',29],['Zn',30],['Ag',47],['Au',79],['S',16],['P',15],['Ne',10]];
+
+function motifRng(seed){ let s = seed >>> 0 || 1; return () => (s = (s * 1664525 + 1013904223) >>> 0) / 4294967296; }
+const MOTIF_SHAPES = {
+  atom: (c, r) => `<g fill="none" stroke="${c}" stroke-width="1.4">${[0, 60, 120].map(a => `<ellipse rx="${r}" ry="${r * .36}" transform="rotate(${a})"/>`).join('')}</g><circle r="${r * .14}" fill="${c}"/>`,
+  hex: (c, r) => { const p = [0, 1, 2, 3, 4, 5].map(i => { const a = Math.PI / 3 * i + Math.PI / 6; return (r * Math.cos(a)).toFixed(1) + ',' + (r * Math.sin(a)).toFixed(1); }).join(' ');
+    return `<polygon points="${p}" fill="none" stroke="${c}" stroke-width="1.5"/><circle r="${r * .55}" fill="none" stroke="${c}" stroke-width="1.2"/>`; },
+  bond: (c, r) => `<g stroke="${c}" stroke-width="1.4"><line x1="${-r}" y1="0" x2="0" y2="0"/><line x1="0" y1="0" x2="${r * .7}" y2="${-r * .7}"/><line x1="0" y1="0" x2="${r * .7}" y2="${r * .7}"/></g>` +
+    [[-r, 0, 5], [0, 0, 7], [r * .7, -r * .7, 4.5], [r * .7, r * .7, 4.5]].map(([x, y, q]) => `<circle cx="${x}" cy="${y}" r="${q}" fill="${c}"/>`).join(''),
+  wave: (c, r) => { let d = `M${-r * 1.4},0`; for(let i = 0; i < 4; i++){ const x = -r * 1.4 + i * r * .7; d += ` Q${(x + r * .35).toFixed(1)},${i % 2 ? r * .5 : -r * .5} ${(x + r * .7).toFixed(1)},0`; } return `<path d="${d}" fill="none" stroke="${c}" stroke-width="1.5"/>`; },
+  helix: (c, r) => { let a = '', b = '', g = ''; const h = r * 1.6;
+    for(let i = 0; i <= 16; i++){ const y = -h + i * h / 8, x = Math.sin(i / 16 * Math.PI * 2) * r * .45; a += (i ? 'L' : 'M') + x.toFixed(1) + ',' + y.toFixed(1); b += (i ? 'L' : 'M') + (-x).toFixed(1) + ',' + y.toFixed(1); if(i % 2 && i < 16) g += `<line x1="${x.toFixed(1)}" y1="${y.toFixed(1)}" x2="${(-x).toFixed(1)}" y2="${y.toFixed(1)}"/>`; }
+    return `<g fill="none" stroke="${c}" stroke-width="1.4"><path d="${a}"/><path d="${b}"/></g><g stroke="${c}" stroke-width=".9">${g}</g>`; },
+  cell: (c, r) => `<ellipse rx="${r}" ry="${r * .7}" fill="none" stroke="${c}" stroke-width="1.4"/><circle cx="${r * .2}" cy="${-r * .1}" r="${r * .28}" fill="${c}" fill-opacity=".35" stroke="${c}"/><circle cx="${-r * .45}" cy="${r * .25}" r="2" fill="${c}"/><circle cx="${-r * .2}" cy="${-r * .35}" r="1.6" fill="${c}"/>`,
+  curve: (c, r) => `<path d="M${-r},${-r * .8} Q0,${r * 1.2} ${r},${-r * .8}" fill="none" stroke="${c}" stroke-width="1.5"/>`,
+  axes: (c, r) => `<g stroke="${c}" stroke-width="1.3" fill="${c}"><line x1="${-r}" y1="${r * .6}" x2="${r}" y2="${r * .6}"/><line x1="${-r * .7}" y1="${r * .9}" x2="${-r * .7}" y2="${-r}"/><path d="M${r},${r * .6} l-5,-3 v6z M${-r * .7},${-r} l-3,5 h6z"/></g><path d="M${-r * .7},${r * .6} C0,${r * .5} ${r * .3},${-r * .2} ${r * .8},${-r * .8}" fill="none" stroke="${c}" stroke-width="1.5"/>`,
+  trace: (c, r, rnd) => { const s = rnd() < .5 ? 1 : -1, x2 = r * .2, y2 = s * r * .7;
+    return `<path d="M${-r * 1.1},${-y2 / 2} H${x2 - r * .5} L${x2},${y2 / 2} H${r * 1.1}" fill="none" stroke="${c}" stroke-width="1.6"/><circle cx="${-r * 1.1}" cy="${-y2 / 2}" r="3.2" fill="none" stroke="${c}" stroke-width="1.5"/><circle cx="${r * 1.1}" cy="${y2 / 2}" r="3.2" fill="${c}"/>`; },
+  chip: (c, r) => { let p = ''; for(let i = -2; i <= 2; i++) p += `<line x1="${i * r * .25}" y1="${-r * .6}" x2="${i * r * .25}" y2="${-r * .85}"/><line x1="${i * r * .25}" y1="${r * .6}" x2="${i * r * .25}" y2="${r * .85}"/>`;
+    return `<rect x="${-r * .7}" y="${-r * .6}" width="${r * 1.4}" height="${r * 1.2}" rx="3" fill="none" stroke="${c}" stroke-width="1.5"/><g stroke="${c}" stroke-width="1.4">${p}</g>`; },
+  res: (c, r) => `<path d="M${-r},0 H${-r * .5} l4,-6 l6,12 l6,-12 l6,12 l6,-12 l4,6 H${r}" fill="none" stroke="${c}" stroke-width="1.5"/>`,
+  elem: (c, r, rnd) => { const [e, z] = ELEMS[Math.floor(rnd() * ELEMS.length)];
+    return `<rect x="-19" y="-21" width="38" height="42" rx="4" fill="${c}" fill-opacity=".08" stroke="${c}" stroke-width="1.4"/><text x="-15" y="-10" font-size="8" fill="${c}" font-family="Arial,sans-serif">${z}</text><text y="9" font-size="17" font-weight="700" text-anchor="middle" fill="${c}" font-family="Arial,sans-serif">${e}</text>`; }
+};
+const motifEsc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+/* একটা repeat-হওয়া tile (W×W px) এর SVG — একই input দিলে সবসময় একই ছবি (seeded) */
+function motifSVG(kind, color){
+  const m = MOTIFS[kind];
+  if(!m || kind === 'none') return '';
+  const W = 264, N = 4, cell = W / N, rnd = motifRng(kind.length * 977 + kind.charCodeAt(0) * 31);
+  let body = '';
+  if(m.grid){
+    let g = '';
+    for(let i = 0; i < W; i += 11) g += `<path d="M${i},0V${W}M0,${i}H${W}" stroke-width="${i % 66 ? .5 : 1.1}" stroke-opacity="${i % 66 ? .45 : .9}"/>`;
+    body += `<g stroke="${color}" fill="none">${g}</g>`;
+  }
+  const font = m.it ? 'Georgia,Cambria,serif' : 'Arial,Helvetica,sans-serif';   // quote রাখা যাবে না (data URL ভেঙে যায়)
+  for(let r = 0; r < N; r++) for(let c = 0; c < N; c++){
+    if(m.grid && rnd() < .45) continue;            // grid motif-এ কম জিনিস
+    const x = c * cell + cell / 2 + (rnd() - .5) * cell * .3, y = r * cell + cell / 2 + (rnd() - .5) * cell * .3;
+    const rot = Math.round((rnd() - .5) * 40);
+    const useShape = m.sh && m.sh.length && (!m.s.length || rnd() < (m.shp || .38));
+    if(useShape){
+      const sh = m.sh[Math.floor(rnd() * m.sh.length)], sc = .8 + rnd() * .35;
+      body += `<g transform="translate(${x.toFixed(1)},${y.toFixed(1)}) rotate(${sh === 'elem' ? 0 : rot}) scale(${sc.toFixed(2)})">${MOTIF_SHAPES[sh](color, 20, rnd)}</g>`;
+    } else {
+      const t = m.s[Math.floor(rnd() * m.s.length)], fs = Math.round(14 + rnd() * 9 - Math.max(0, t.length - 4) * 1.2);
+      body += `<text x="${x.toFixed(1)}" y="${y.toFixed(1)}" transform="rotate(${rot} ${x.toFixed(1)} ${y.toFixed(1)})" font-size="${fs}" ${m.it ? 'font-style="italic"' : ''} text-anchor="middle" dominant-baseline="middle" fill="${color}" font-family="${font}">${motifEsc(t)}</text>`;
+    }
+  }
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${W}" viewBox="0 0 ${W} ${W}">${body}</svg>`;
+}
+const MOTIF_CACHE = {};
+function motifURL(kind, color){
+  const k = kind + '|' + color;
+  if(!(k in MOTIF_CACHE)){ const s = motifSVG(kind, color); MOTIF_CACHE[k] = s ? `url("data:image/svg+xml,${encodeURIComponent(s).replace(/'/g, '%27')}")` : 'none'; }
+  return MOTIF_CACHE[k];
+}
+/* applyTheme-এর জন্য CSS (variables + layer) */
+function motifCSS(t){
+  const kind = MOTIFS[t.motif] ? t.motif : 'none';
+  if(kind === 'none') return '';
+  const ink = t.motifInk === 'text' ? t.text : t.primary;
+  const op = Math.max(2, Math.min(40, +t.motifOp || 12)) / 100, sz = Math.round(264 * Math.max(50, Math.min(200, +t.motifSize || 100)) / 100);
+  const hero = MOTIFS[kind].hero || '';
+  return `:root{--motif:${motifURL(kind, ink)};--mop:${op};--msz:${sz}px;--msym:"${hero}"}`;
 }
 /* ============================================================
    Network helper: timeout + আসল error-এর কারণ আলাদা করে বোঝা
@@ -516,6 +618,7 @@ function render(keep){
   else if(view === 'teacher') h = vTeacher();
   const KEEP = ['#code', '#sid', '#pw', '#tid', '#tp', '#gcode', '#gname'], kv = KEEP.map(k => $(k) ? $(k).value : '');
   if(CFG.brand.footer && view !== 'quiz') h += `<div class="foot">${esc(CFG.brand.footer)}</div>`;
+  try{ document.body.classList.toggle('in-quiz', view === 'quiz'); }catch(e){}
   a.classList.toggle('enter', !keep);
   a.innerHTML = h;
   mathify(a);
@@ -1326,7 +1429,8 @@ function vExams(){
 let CD = null, ROSTER = [], ROSTER_OK = false, SO = {}, saveMsg = '', EDX = null;
 const eA = s => String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');
 const clone = o => JSON.parse(JSON.stringify(o));
-const gp = p => p.split('.').reduce((x, k) => x == null ? x : x[k], CD);
+const gpIn = (o, p) => p.split('.').reduce((x, k) => x == null ? x : x[k], o);
+const gp = p => { const v = gpIn(CD, p); return v === undefined ? gpIn(DEF_CFG, p) : v; };   // নতুন key পুরোনো saved settings-এ না থাকলে default
 function sp(path, v){
   const k = path.split('.'); let o = CD;
   for(let i = 0; i < k.length - 1; i++) o = o[k[i]] = o[k[i]] || {};
@@ -1390,7 +1494,7 @@ async function saveAll(){
 
 /* ---------------- Settings tab ---------------- */
 function applyPreset(n){
-  const {n:_n, d:_d, ...pv} = PRESETS[n];
+  const {n:_n, d:_d, sci:_s, ...pv} = PRESETS[n];
   CD.theme = {...CD.theme, ...pv, preset:n}; DIRTY = true; saveMsg = '';
   CFG = deepMerge(DEF_CFG, CD); applyTheme(); render(true);
 }
@@ -1404,10 +1508,13 @@ function resetSec(k){
 function vSettings(){
   if(!CD) CD = clone(CFG);
   const cur = CD.theme.preset;
-  const sw = Object.entries(PRESETS).map(([k, p]) => `<button class="thm ${cur === k ? 'on' : ''}" onclick="applyPreset('${k}')">
-      <div class="thp" style="background:${p.bg};border-radius:${Math.min(p.radius || 14, 16)}px"><div style="background:${p.card};color:${p.text};border-radius:${Math.min(p.radius || 14, 16) - 4}px;${p.shadow === 'none' ? 'border:1px solid ' + p.text + '22' : 'box-shadow:0 2px 6px rgba(0,0,0,.12)'}"><b style="font-family:${FONTS[p.family] || FONTS.system}">Aa</b><span style="background:${p.primary};border-radius:${p.btnShape === 'pill' ? '99px' : p.btnShape === 'square' ? '2px' : '6px'}"></span></div></div>
-      <b>${esc(p.n || k)}${cur === k ? ' ✓' : ''}</b><small>${esc(p.d || '')}</small></button>`).join('');
-  const theme = `<small class="muted">একটা theme-এ tap করো — সাথে সাথে পুরো app-এ preview হবে। পছন্দ হলে নিচে Save।</small><div class="thg">${sw}</div><h3>🎛 নিজের মতো বদলাও</h3>
+  const card = ([k, p]) => { const pr = Math.min(p.radius || 14, 16), mo = p.motif && p.motif !== 'none' ? motifURL(p.motif, p.motifInk === 'text' ? p.text : p.primary) : '';
+    return `<button class="thm ${cur === k ? 'on' : ''}" onclick="applyPreset('${k}')">
+      <div class="thp${mo ? ' mo' : ''}" style="background:${p.bg};border-radius:${pr}px">${mo ? `<i style="position:absolute;inset:0;background-image:${mo.replace(/"/g, "'")};background-size:150px;opacity:${Math.min(.6, (p.motifOp || 12) * 3 / 100)}"></i>` : ''}<div style="background:${p.card};color:${p.text};border-radius:${pr - 4}px;${p.shadow === 'none' ? 'border:1px solid ' + p.text + '22' : 'box-shadow:0 2px 6px rgba(0,0,0,.12)'}"><b style="font-family:${FONTS[p.family] || FONTS.system}">Aa</b><span style="background:${p.primary};border-radius:${p.btnShape === 'pill' ? '99px' : p.btnShape === 'square' ? '2px' : '6px'}"></span></div></div>
+      <b>${esc(p.n || k)}${cur === k ? ' ✓' : ''}</b><small>${esc(p.d || '')}</small></button>`; };
+  const all = Object.entries(PRESETS), sw = `<h3 class="thh">🔬 Science themes (symbol সহ)</h3><div class="thg">${all.filter(e => e[1].sci).map(card).join('')}</div>
+    <h3 class="thh">🎨 Color themes</h3><div class="thg">${all.filter(e => !e[1].sci).map(card).join('')}</div>`;
+  const theme = `<small class="muted">একটা theme-এ tap করো — সাথে সাথে পুরো app-এ preview হবে। পছন্দ হলে নিচে Save।</small>${sw}<h3>🎛 নিজের মতো বদলাও</h3>
     <div class="g2">${fC('theme.primary', 'Main color')}${fC('theme.bg', 'Page background')}${fC('theme.card', 'Card background')}${fC('theme.text', 'Text color')}${fC('theme.ok', 'Correct color')}${fC('theme.bad', 'Wrong color')}</div>
     ${fR('theme.radius', 'Corner roundness', 0, 28)}${fR('theme.font', 'Font size', 13, 20)}
     ${fS('theme.family', 'Font style', [['system','Default (clean)'],['serif','Serif (book)'],['mono','Monospace'],['round','Rounded']])}
@@ -1420,6 +1527,11 @@ function vSettings(){
     ${fS('theme.align', 'Login page title', [['center','Center'],['left','Left']])}</div>
     ${fR('theme.hero', 'Login page title size', 22, 48)}
     ${fK('theme.anim', '✨ Animation (page খুললে আস্তে আস্তে আসবে)')}
+    <h3>🔬 Background symbols (বিজ্ঞানের pattern)</h3>
+    <div class="g2">${fS('theme.motif', 'Symbol type', Object.entries(MOTIFS).map(([k, m]) => [k, m.n]))}
+    ${fS('theme.motifInk', 'Symbol color', [['primary','Main color'],['text','Text color (chalk look)']])}</div>
+    ${fR('theme.motifOp', 'Symbol কতটা গাঢ় (%)', 3, 35)}${fR('theme.motifSize', 'Symbol size (%)', 60, 180)}
+    ${fK('theme.motifQuiz', 'Exam চলার সময়ও symbol দেখাবে (off থাকলে exam page পরিষ্কার থাকে)')}${fK('theme.heroSym', 'Login page-এর title-এর পাশে বড় symbol')}
     <button class="btn ghost sm" onclick="resetSec('theme')">↺ Reset theme</button>`;
   const brand = `${fT('brand.title', 'App / brand name')}${fT('brand.tagline', 'Tagline (login page-এ নামের নিচে)')}${fT('brand.emoji', 'Logo emoji')}
     ${fA('brand.notice', '📢 Notice / announcement (login + home page-এ দেখাবে)', 'যেমন: কাল CT, সবাই প্রস্তুত থাকো', 3)}

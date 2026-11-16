@@ -17,6 +17,18 @@ CD = clone(CFG); applyPreset('notebook');
 TT.ok(CD.theme.preset === 'notebook' && CD.theme.family === 'serif' && CD.theme.btnShape === 'square' && !('n' in CD.theme) && !('d' in CD.theme), 'full-look preset applies style keys, not name/desc');
 applyPreset('rose'); TT.ok(CD.theme.primary === '#e11d48' && CD.theme.family === 'serif', 'colour-only preset keeps style');
 TT.ok(vSettings().includes('Night Blue'), 'theme gallery lists new presets');
+// 0c. Science motif themes
+applyPreset('chalk');
+TT.ok(CD.theme.motif === 'math' && CD.theme.motifInk === 'text' && !('sci' in CD.theme), 'science preset sets motif, not sci flag');
+{ const css = motifCSS(CFG.theme); TT.ok(css.includes('--motif:url(') && css.includes('--msym:"∑"') && css.includes('--mop:0.13'), 'motifCSS builds SVG layer vars'); }
+for(const k of Object.keys(MOTIFS)){ const sv = motifSVG(k, '#123456'); TT.ok(k === 'none' ? sv === '' : sv.startsWith('<svg') && sv.length > 300 && !/NaN|undefined/.test(sv), 'motif svg ok: ' + k); }
+TT.eq(motifSVG('physics', '#000'), motifSVG('physics', '#000'), 'motif svg is deterministic');
+for(const k of Object.keys(MOTIFS)) TT.ok(!motifURL(k, '#123456').slice(5, -2).includes("'") && !motifURL(k, '#123456').slice(5, -2).includes('"'), 'motif url has no raw quotes (safe in style attr): ' + k);
+applyPreset('classic'); TT.eq(CD.theme.motif, 'none', 'old full-look preset clears motif');
+applyPreset('quantum'); applyPreset('rose'); TT.eq(CD.theme.motif, 'physics', 'colour-only preset keeps motif');
+TT.eq(motifCSS({...CFG.theme, motif:'none'}), '', 'no motif -> no css');
+{ const v = vSettings(); TT.ok(v.includes('Science themes') && v.includes('Chalkboard') && v.includes('Background symbols') && v.includes('Circuit board'), 'settings shows science gallery + motif controls'); }
+CD = {theme:{primary:'#000000'}}; TT.eq(gp('theme.motifOp'), 12, 'gp falls back to default for keys missing in old saved settings');
 CD = null; DIRTY = false; CFG = deepMerge(DEF_CFG, {});
 
 // 1. CSV parsing

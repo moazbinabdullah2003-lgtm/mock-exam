@@ -4,7 +4,8 @@
 let CD = null, ROSTER = [], ROSTER_OK = false, SO = {}, saveMsg = '', EDX = null;
 const eA = s => String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');
 const clone = o => JSON.parse(JSON.stringify(o));
-const gp = p => p.split('.').reduce((x, k) => x == null ? x : x[k], CD);
+const gpIn = (o, p) => p.split('.').reduce((x, k) => x == null ? x : x[k], o);
+const gp = p => { const v = gpIn(CD, p); return v === undefined ? gpIn(DEF_CFG, p) : v; };   // নতুন key পুরোনো saved settings-এ না থাকলে default
 function sp(path, v){
   const k = path.split('.'); let o = CD;
   for(let i = 0; i < k.length - 1; i++) o = o[k[i]] = o[k[i]] || {};
@@ -68,7 +69,7 @@ async function saveAll(){
 
 /* ---------------- Settings tab ---------------- */
 function applyPreset(n){
-  const {n:_n, d:_d, ...pv} = PRESETS[n];
+  const {n:_n, d:_d, sci:_s, ...pv} = PRESETS[n];
   CD.theme = {...CD.theme, ...pv, preset:n}; DIRTY = true; saveMsg = '';
   CFG = deepMerge(DEF_CFG, CD); applyTheme(); render(true);
 }
@@ -82,10 +83,13 @@ function resetSec(k){
 function vSettings(){
   if(!CD) CD = clone(CFG);
   const cur = CD.theme.preset;
-  const sw = Object.entries(PRESETS).map(([k, p]) => `<button class="thm ${cur === k ? 'on' : ''}" onclick="applyPreset('${k}')">
-      <div class="thp" style="background:${p.bg};border-radius:${Math.min(p.radius || 14, 16)}px"><div style="background:${p.card};color:${p.text};border-radius:${Math.min(p.radius || 14, 16) - 4}px;${p.shadow === 'none' ? 'border:1px solid ' + p.text + '22' : 'box-shadow:0 2px 6px rgba(0,0,0,.12)'}"><b style="font-family:${FONTS[p.family] || FONTS.system}">Aa</b><span style="background:${p.primary};border-radius:${p.btnShape === 'pill' ? '99px' : p.btnShape === 'square' ? '2px' : '6px'}"></span></div></div>
-      <b>${esc(p.n || k)}${cur === k ? ' ✓' : ''}</b><small>${esc(p.d || '')}</small></button>`).join('');
-  const theme = `<small class="muted">একটা theme-এ tap করো — সাথে সাথে পুরো app-এ preview হবে। পছন্দ হলে নিচে Save।</small><div class="thg">${sw}</div><h3>🎛 নিজের মতো বদলাও</h3>
+  const card = ([k, p]) => { const pr = Math.min(p.radius || 14, 16), mo = p.motif && p.motif !== 'none' ? motifURL(p.motif, p.motifInk === 'text' ? p.text : p.primary) : '';
+    return `<button class="thm ${cur === k ? 'on' : ''}" onclick="applyPreset('${k}')">
+      <div class="thp${mo ? ' mo' : ''}" style="background:${p.bg};border-radius:${pr}px">${mo ? `<i style="position:absolute;inset:0;background-image:${mo.replace(/"/g, "'")};background-size:150px;opacity:${Math.min(.6, (p.motifOp || 12) * 3 / 100)}"></i>` : ''}<div style="background:${p.card};color:${p.text};border-radius:${pr - 4}px;${p.shadow === 'none' ? 'border:1px solid ' + p.text + '22' : 'box-shadow:0 2px 6px rgba(0,0,0,.12)'}"><b style="font-family:${FONTS[p.family] || FONTS.system}">Aa</b><span style="background:${p.primary};border-radius:${p.btnShape === 'pill' ? '99px' : p.btnShape === 'square' ? '2px' : '6px'}"></span></div></div>
+      <b>${esc(p.n || k)}${cur === k ? ' ✓' : ''}</b><small>${esc(p.d || '')}</small></button>`; };
+  const all = Object.entries(PRESETS), sw = `<h3 class="thh">🔬 Science themes (symbol সহ)</h3><div class="thg">${all.filter(e => e[1].sci).map(card).join('')}</div>
+    <h3 class="thh">🎨 Color themes</h3><div class="thg">${all.filter(e => !e[1].sci).map(card).join('')}</div>`;
+  const theme = `<small class="muted">একটা theme-এ tap করো — সাথে সাথে পুরো app-এ preview হবে। পছন্দ হলে নিচে Save।</small>${sw}<h3>🎛 নিজের মতো বদলাও</h3>
     <div class="g2">${fC('theme.primary', 'Main color')}${fC('theme.bg', 'Page background')}${fC('theme.card', 'Card background')}${fC('theme.text', 'Text color')}${fC('theme.ok', 'Correct color')}${fC('theme.bad', 'Wrong color')}</div>
     ${fR('theme.radius', 'Corner roundness', 0, 28)}${fR('theme.font', 'Font size', 13, 20)}
     ${fS('theme.family', 'Font style', [['system','Default (clean)'],['serif','Serif (book)'],['mono','Monospace'],['round','Rounded']])}
@@ -98,6 +102,11 @@ function vSettings(){
     ${fS('theme.align', 'Login page title', [['center','Center'],['left','Left']])}</div>
     ${fR('theme.hero', 'Login page title size', 22, 48)}
     ${fK('theme.anim', '✨ Animation (page খুললে আস্তে আস্তে আসবে)')}
+    <h3>🔬 Background symbols (বিজ্ঞানের pattern)</h3>
+    <div class="g2">${fS('theme.motif', 'Symbol type', Object.entries(MOTIFS).map(([k, m]) => [k, m.n]))}
+    ${fS('theme.motifInk', 'Symbol color', [['primary','Main color'],['text','Text color (chalk look)']])}</div>
+    ${fR('theme.motifOp', 'Symbol কতটা গাঢ় (%)', 3, 35)}${fR('theme.motifSize', 'Symbol size (%)', 60, 180)}
+    ${fK('theme.motifQuiz', 'Exam চলার সময়ও symbol দেখাবে (off থাকলে exam page পরিষ্কার থাকে)')}${fK('theme.heroSym', 'Login page-এর title-এর পাশে বড় symbol')}
     <button class="btn ghost sm" onclick="resetSec('theme')">↺ Reset theme</button>`;
   const brand = `${fT('brand.title', 'App / brand name')}${fT('brand.tagline', 'Tagline (login page-এ নামের নিচে)')}${fT('brand.emoji', 'Logo emoji')}
     ${fA('brand.notice', '📢 Notice / announcement (login + home page-এ দেখাবে)', 'যেমন: কাল CT, সবাই প্রস্তুত থাকো', 3)}
