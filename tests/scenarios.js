@@ -74,10 +74,28 @@ TT.ok(parseQ('# EXAM: bad code\n## Q1\nQ: q\nA) 1\nB) 2\nANS: A').errors[0].incl
 TT.ok(parseQ('## Q1\nQ: q\nA) 1\nB) 2\nANS: A').errors[0].includes('EXAM'), 'MD: missing EXAM line rejected');
 { const pm = aiPrompt('md'), pc = aiPrompt('csv');
   TT.ok(pm.includes('# EXAM: PHY-CT1') && pm.includes('LaTeX') && pm.includes('<<< paste raw questions here >>>') && !pm.includes('CODE,TITLE'), 'MD prompt has rules + MD sample');
-  TT.ok(pc.includes('CODE,TITLE,MINUTES,NEG,OPEN,Q,A,B,C,D,E,ANS,TOPIC,EXPLANATION') && pc.includes('```csv'), 'CSV prompt has header + CSV sample'); }
-PASTE = MD_SAMPLE; doPreview(); await publishUp();
+  TT.ok(pc.includes('CODE,TITLE,MINUTES,NEG,OPEN,MAXATTEMPTS,GUEST,START,END,INTRO,Q,A,B,C,D,E,ANS,TOPIC,EXPLANATION') && pc.includes('```csv'), 'CSV prompt has header + CSV sample'); }
+
+// 3c. Exam rules from upload (MAXATTEMPTS / GUEST / START / END / INTRO)
+{ const e = parseQ(MD_SAMPLE).exams['PHY-CT1'];
+  TT.eq(e.ov, {maxAttempts:1, guest:'no', start:'', end:'', intro:'প্রতিটা প্রশ্নের ১টাই সঠিক উত্তর। ভুল উত্তরে 0.25 কাটা যাবে।'}, 'MD sample rules read');
+  TT.eq(parseQ(CSV_SAMPLE).exams['PHY-CT1'].ov, e.ov, 'CSV sample rules same as MD'); }
+{ const m = parseQ('# EXAM: R1\nTITLE: T\nINTRO: line 1\nline 2\nSTART: 2026-11-20 9:05\nEND: 2026-11-20\nGUEST: yes\n\n## Q1\nQ: q\nA) 1\nB) 2\nANS: A'), e = m.exams.R1;
+  TT.ok(!m.errors.length, 'MD rules parsed: ' + m.errors.join('|'));
+  TT.eq(e.ov, {maxAttempts:0, guest:'yes', start:'2026-11-20T09:05', end:'2026-11-20T23:59', intro:'line 1\nline 2'}, 'multi-line INTRO, date-only END = 23:59, time padded'); }
+TT.eq(parseQ('# EXAM: R2\n## Q1\nQ: q\nA) 1\nB) 2\nANS: A').exams.R2.ov, null, 'no rule keys -> rules untouched (null)');
+TT.eq(parseQ('CODE,Q,A,B,ANS\nX,q,1,2,A').exams.X.ov, null, 'old CSV without rule columns -> rules untouched');
+{ const er = parseQ('# EXAM: R3\nMAXATTEMPTS: two\nGUEST: maybe\nSTART: 20/11/2026\nEND: 2026-11-19 10:00\n## Q1\nQ: q\nA) 1\nB) 2\nANS: A').errors.join('|');
+  TT.ok(er.includes('MAXATTEMPTS') && er.includes('GUEST') && er.includes('START'), 'bad rule values rejected: ' + er); }
+TT.ok(parseQ('# EXAM: R4\nSTART: 2026-11-20 10:00\nEND: 2026-11-20 09:00\n## Q1\nQ: q\nA) 1\nB) 2\nANS: A').errors.join('|').includes('END সময়'), 'END before START rejected');
+TT.ok(rulesTxt(null).includes('আগের মতো') && rulesTxt({maxAttempts:2, guest:'no', start:'2026-11-20T10:00', end:'', intro:'x'}).includes('max 2 attempt'), 'rules summary text');
+TT.ok(aiPrompt('md').includes('MAXATTEMPTS:') && aiPrompt('csv').includes('MAXATTEMPTS,GUEST,START,END,INTRO') && aiPrompt('md').includes('Start time'), 'prompts ask for exam rules');
+PASTE = MD_SAMPLE.replace('START:', 'START: 2026-01-01 08:00').replace('MAXATTEMPTS: 1', 'MAXATTEMPTS: 3'); doPreview(); TT.ok(vExams().includes('max 3 attempt'), 'preview shows rules'); await publishUp();
 TT.ok(upMsg.indexOf('Ready') >= 0, 'MD exam published: ' + upMsg);
 { const x = B.get({ action: 'exam', code: 'PHY-CT1' }); TT.ok(x.questions && x.questions.length === 2 && x.questions[0].q.includes('\\text{m/s}') && x.questions[1].a === 2, 'MD exam stored in backend with LaTeX'); }
+{ const sc = B.get({ action: 'settings' }).cfg.exams['PHY-CT1'];
+  TT.ok(sc && sc.maxAttempts === 3 && sc.guest === 'no' && sc.start === '2026-01-01T08:00' && sc.intro.includes('0.25'), 'rules saved to backend settings: ' + JSON.stringify(sc));
+  TT.ok(exOv('PHY-CT1').maxAttempts === 3 && /exam rules-ও saved/.test(upMsg), 'rules active locally + message: ' + upMsg); }
 await delExam('PHY-CT1'); await delExam('PHY-CT1'); TT.eq(B.get({ action: 'exam', code: 'PHY-CT1' }).error, 'notfound', 'MD test exam removed');
 
 // 4. Student login via roster

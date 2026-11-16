@@ -37,7 +37,8 @@ function parseQ(text){
     const a = 'ABCDE'.indexOf(g('ANS').toUpperCase());
     if(g('ANS').length !== 1 || a < 0 || a >= o.length){ errs.push('Row ' + rn + ': ANS ভুল ("' + g('ANS') + '")'); return; }
     const ex = exams[c] = exams[c] || {code:c, rows:[]};
-    if(!ex.rows.length){ ex.title = g('TITLE') || c; ex.minutes = g('MINUTES') || '10'; ex.neg = g('NEG') || '0'; ex.open = g('OPEN').toUpperCase() === 'NO' ? 'NO' : 'YES'; }
+    if(!ex.rows.length){ ex.title = g('TITLE') || c; ex.minutes = g('MINUTES') || '10'; ex.neg = g('NEG') || '0'; ex.open = g('OPEN').toUpperCase() === 'NO' ? 'NO' : 'YES';
+      const raw = {}; RULE_KEYS.forEach(k => { if(ix(k) >= 0) raw[k] = g(k); }); ex.ov = readRules(raw, 'Row ' + rn + ' (' + c + ')', errs); }
     ex.rows.push({q:g('Q'), o, a, t:g('TOPIC') || 'General', e:g('EXPLANATION')});
   });
   if(!Object.keys(exams).length && !errs.length) errs.push('কোনো valid question পাওয়া যায়নি');
@@ -65,7 +66,11 @@ async function publishUp(){
     if(!(await verifyExam(ex))){ upMsg = '⚠ ' + ex.code + ' confirm হয়নি। Password ' + 'Code.gs-এর সাথে মিলছে কিনা আর Script নতুন version-এ deploy করা কিনা দেখো।'; return render(true); }
     codes.push(ex.code);
   }
-  upMsg = '✅ Ready! Students এখন এই code দিয়ে exam দিতে পারবে: ' + codes.join(', ');
+  const hasR = Object.values(UP.exams).some(e => e.ov);
+  if(hasR) upMsg = 'Questions ready ✓ — এখন exam rules save হচ্ছে…', render(true);
+  const rOk = await saveExamRules(Object.values(UP.exams));
+  upMsg = rOk ? '✅ Ready! Students এখন এই code দিয়ে exam দিতে পারবে: ' + codes.join(', ') + (hasR ? ' (exam rules-ও saved)' : '')
+    : '⚠ Questions ready (' + codes.join(', ') + '), কিন্তু exam rules (attempt/guest/time/instructions) save confirm হয়নি — ✏ Edit থেকে দেখে Save করো।';
   UP = null; PASTE = '';
   await loadExamList(); render(true);
 }
@@ -91,7 +96,7 @@ function vExams(){
   h += `<h3>⬆ নতুন exam upload (CSV বা MD + LaTeX)</h3>${vAiPromptBox()}
     <input type="file" accept=".csv,.tsv,.txt,.md,text/csv,text/plain,text/markdown" onchange="onFile(this.files[0])">
     <small class="muted">অথবা AI-এর দেওয়া CSV / MD text এখানে paste করো:</small>
-    <textarea id="paste" rows="6" placeholder="# EXAM: CODE …  অথবা  CODE,TITLE,MINUTES,NEG,OPEN,Q,A,B,C,D,E,ANS,TOPIC,EXPLANATION" oninput="PASTE=this.value">${escT(PASTE)}</textarea>
+    <textarea id="paste" rows="6" placeholder="# EXAM: CODE …  অথবা  CODE,TITLE,MINUTES,NEG,OPEN,MAXATTEMPTS,GUEST,START,END,INTRO,Q,A,B,C,D,E,ANS,TOPIC,EXPLANATION" oninput="PASTE=this.value">${escT(PASTE)}</textarea>
     <button class="btn ghost full" onclick="doPreview()">Preview</button>`;
   if(upMsg) h += `<div class="warn">${esc(upMsg)}</div>`;
   if(UP){
@@ -102,7 +107,7 @@ function vExams(){
         const exists = EXL.find(e => e.code === ex.code);
         return `<div class="card" style="margin:8px 0"><b>${esc(ex.code)}</b> — ${esc(ex.title)}${exists ? '<span class="tag" style="background:#fef9c3;color:#a16207">আগেরটা replace হবে</span>' : '<span class="tag">নতুন</span>'}<br>
           <small>${ex.rows.length} questions · ${esc(ex.minutes)} min · negative ${esc(ex.neg)} · ${ex.open === 'NO' ? 'closed' : 'open'}</small><br>
-          <small>Topics: ${Object.entries(tc).map(([k, v]) => esc(k) + ' (' + v + ')').join(', ')}</small><br><small class="muted">Q1: ${esc(ex.rows[0].q.slice(0, 80))}</small></div>`;
+          <small>Topics: ${Object.entries(tc).map(([k, v]) => esc(k) + ' (' + v + ')').join(', ')}</small><br><small>${esc(rulesTxt(ex.ov))}</small><br><small class="muted">Q1: ${esc(ex.rows[0].q.slice(0, 80))}</small></div>`;
       }).join('') + '<button class="btn full" onclick="publishUp()">✅ Publish — exam ready করো</button>';
     }
   }
