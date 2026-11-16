@@ -149,7 +149,7 @@ function vStudents(){
       <input placeholder="ID" value="${eA(r.id)}" oninput="rset(${i},'id',this.value)"><input placeholder="Password" value="${eA(r.pin)}" oninput="rset(${i},'pin',this.value)" style="${String(r.pin || '').trim() ? '' : 'border-color:var(--r)'}">
       <input placeholder="Name (optional)" value="${eA(r.name)}" oninput="rset(${i},'name',this.value)">
       <div class="row" style="margin:0"><label class="chk" style="margin:0"><input type="checkbox" ${r.blocked ? 'checked' : ''} onchange="rset(${i},'blocked',this.checked)"><span>Block</span></label>
-      <small>${cnt[norm(r.id)] || 0} attempts</small><button class="btn sm ghost" onclick="rdel(${i})">✕</button></div></div></div>`).join('');
+      <small>${cnt[norm(r.id)] || 0} attempts</small><button class="btn sm ghost" onclick="openStu(String(ROSTER[${i}].id).trim())">👤 Profile</button><button class="btn sm ghost" onclick="rdel(${i})">✕</button></div></div></div>`).join('');
   return `<h2 style="margin:6px 0">👥 Students & Access</h2>
     <div class="card">${fK('access.guest', '👤 Guest login চালু (শুধু exam code দিয়ে ওই exam দিতে পারবে)')}
     <small class="muted">Student শুধু <b>ID + Password</b> দিয়ে ঢোকে। নিচের তালিকায় যাদের ID আর Password আছে শুধু তারাই ঢুকতে পারবে। Password খালি থাকলে ওই ID ঢুকতে পারবে না।</small></div>

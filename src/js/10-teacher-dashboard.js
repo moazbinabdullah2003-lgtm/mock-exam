@@ -2,7 +2,7 @@
 function openStu(sid){ TSTU = sid; render(); }
 function vTeacher(){
   if(EDX) return vExamEditor();
-  if(TSTU) return `<div class="top"><button class="link" onclick="TSTU=null;render()">← All students</button></div>` + vBoard(TSTU, true);
+  if(TSTU) return `<div class="top"><button class="link" onclick="TSTU=null;render()">← All students</button></div>` + vProfile(TSTU);
   let recs = allRecs();
   if(TF) recs = recs.filter(r => r.exam === TF);
   const exams = [...new Set(allRecs().map(r => r.exam))];
@@ -10,7 +10,7 @@ function vTeacher(){
   recs.forEach(r => { (by[norm(r.sid)] = by[norm(r.sid)] || []).push(r); });
   const rows = Object.entries(by).map(([sid, rs]) => {
     const ps = rs.map(pct), ts = topicStats(rs);
-    return {sid, name:rs[rs.length-1].name, n:rs.length, avg:avg(ps), best:Math.max(...ps), last:ps[ps.length-1], weak:ts[0] ? ts[0].t : '-', ts};
+    return {sid, name:rs[rs.length-1].name, n:rs.length, avg:avg(ps), best:Math.max(...ps), last:ps[ps.length-1], tr:trendOf(ps), weak:ts[0] ? ts[0].t : '-', ts};
   }).sort((a,b) => a.avg - b.avg);
   const topics = topicStats(recs);
   const qs = {};
@@ -32,9 +32,9 @@ function vTeacher(){
     <small>${recs.length} attempts · ${rows.length} students</small></div>
   ${!recs.length ? '<div class="card muted">এখনো কোনো data নেই।</div>' : `
   <div class="card"><h2>Students (weakest first)</h2><div class="scroll"><table>
-    <tr><th>ID</th><th>Name</th><th>Att.</th><th>Avg</th><th>Best</th><th>Last</th><th>Weak topic</th></tr>
-    ${rows.map(r => `<tr class="click" data-s="${esc(r.sid)}" onclick="openStu(this.dataset.s)"><td>${esc(r.sid)}</td><td>${esc(r.name)}</td><td>${r.n}</td><td class="h" style="background:${heat(r.avg/100)}">${r.avg}%</td><td>${r.best}%</td><td>${r.last}%</td><td>${esc(r.weak)}</td></tr>`).join('')}
-  </table></div><small>Row-এ tap করলে ওই student-এর details</small></div>
+    <tr><th>ID</th><th>Name</th><th>Att.</th><th>Avg</th><th>Best</th><th>Last</th><th>Trend</th><th>Weak topic</th></tr>
+    ${rows.map(r => `<tr class="click" data-s="${esc(r.sid)}" onclick="openStu(this.dataset.s)"><td>${esc(r.sid)}</td><td>${esc(r.name)}</td><td>${r.n}</td><td class="h" style="background:${heat(r.avg/100)}">${r.avg}%</td><td>${r.best}%</td><td>${r.last}%</td><td>${trendTag(r.tr)}</td><td>${esc(r.weak)}</td></tr>`).join('')}
+  </table></div><small>Row-এ tap করলে ওই student-এর full profile</small></div>
   <div class="card"><h2>Class topic accuracy</h2>${topics.map(t => `<div class="trow"><span>${esc(t.t)} <small>${t.ok}/${t.n}</small></span><div class="bar"><i style="width:${Math.round(t.p*100)}%;background:${t.p<0.5?'var(--r)':t.p<0.8?'#f59e0b':'var(--g)'}"></i></div><b>${Math.round(t.p*100)}%</b></div>`).join('')}</div>
   <div class="card"><h2>Student × Topic heatmap</h2><div class="scroll"><table>
     <tr><th>Student</th>${topics.map(t => `<th>${esc(t.t)}</th>`).join('')}</tr>

@@ -73,5 +73,9 @@ TT.ok(!SESS, 'guest with bad code rejected');
 // 8. Teacher sees everyone, deletes exam (two-tap)
 SESS = { sid: 'TEACHER', name: 'Teacher', teacher: true, key: 'teacher123' }; view = 'teacher'; REMOTE = []; await loadRemote();
 TT.eq(allRecs().length, 1, 'teacher sees all attempts');
+{ const ph = vProfile('7');
+  TT.ok(ph.includes('Summary') && ph.includes('Topic-wise') && ph.includes('Exam-wise') && ph.includes('Activity'), 'profile renders all sections');
+  TT.ok(/Attempts/.test(ph) && ph.includes('CT1'), 'profile shows attempts + exam');
+  TT.ok(vProfile('nobody').includes('এখনো কোনো exam দেয়নি'), 'profile of student without attempts'); }
 await delExam('CT1'); TT.eq(DELC, 'CT1', 'first tap asks confirmation');
 await delExam('CT1'); TT.eq(B.get({ action: 'exam', code: 'CT1' }).error, 'notfound', 'second tap deletes in backend');

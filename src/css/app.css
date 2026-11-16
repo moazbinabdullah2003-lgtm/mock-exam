@@ -59,3 +59,5 @@ details.sec>.in{padding:0 16px 16px}
 .qed .pv{background:color-mix(in srgb,var(--t) 5%,var(--card));border-radius:8px;padding:8px;margin:6px 0;font-size:.95em}
 .oe{display:flex;gap:6px;align-items:center}.oe input[type=radio]{width:20px;height:20px;margin:0;flex:none}
 .oe input[type=text]{margin:3px 0}
+
+.stats.w{flex-wrap:wrap}.stats.w .stat{flex:1 1 30%;min-width:90px}
