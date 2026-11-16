@@ -13,6 +13,7 @@ Build: `python3 build.py` concatenates `src/js/*.js` (**filename order**) into `
 | `06-views-login-home.js` | TKEY, banner, **login (3 tabs Student/Guest/Teacher)**: vLogin/doLogin/doGuest/doTeacher/logout/refresh; vHome (+guest home, intro popup), startGuest, getExam, ensureExams, startCode, startRun (**always shuffles Q+options**), retake | TKEY:4, banner:5, LMODE:10, gid:11, setLM:12, vLogin:13, doLogin:30, doGuest:42, doTeacher:59, logout:74, refresh:75, vHome:82, startGuest:102, introFor:111, getExam:113, ensureExams:123, startCode:128, RUNKEY:143, startRun:144, retake:167 |
 | `07-view-board.js` | vBoard(sid,isT) student/teacher-drilldown analytics; openRec(aid) | vBoard:2, openRec:35 |
 | `07a-view-profile.js` | **Teacher's student profile** (`vProfile(sid)`): auto summary, stats, trend chart, exam-wise, topic strong/weak vs class, still-wrong questions, slow questions, full activity log; `trendOf`, `trendTag` | pcol, trendOf, trendTag, vProfile |
+| `07b-time-analytics.js` | **⏱ Time analytics block** `vTimeBlock(recs,id,{cmp,stu})` used on dashboard (`d_time`), exam page (`ea_time`), profile (`p_time`, vs class), student board (`b_time`), result (`r_time`): tiles, topic-wise time, question-wise time per exam (slowest first), student-wise time table; helpers `topicTime`, `stuTime`, `secS` | secS, topicTime, stuTime, vTimeBlock |
 | `08-quiz.js` | vQuiz (shuffled option view), pick/go/addTime, startTimer/tick, finish() (scoring + save record) | vQuiz:2, pick:17, addTime:22, go:27, startTimer:31, tick:32, finish:39 |
 | `09-result.js` | vResult(rec): score, topic-wise, per-question review honouring rules.review/showScore/passMark/explain | vResult:2 |
 | `10-teacher-dashboard.js` | vTeacher: tab router (Dashboard content lives here: students table, topic accuracy, heatmap, hardest questions, CSV button); openStu | openStu:2, vTeacher:3 |
@@ -32,7 +33,7 @@ Other source: `src/css/app.css` (theme variables `--p --bg --card --t --m --b --
 | **Add a teacher-editable setting** | default in `DEF_CFG` (`02a`) → field in `vSettings()` (`13`) → use `CFG.x.y` where needed. No backend change |
 | **Change a button/label text** | add to `TX` (`02a`), use `T('key')`; it becomes editable in Settings → Texts automatically |
 | Quiz keyboard shortcuts / option numbers | `08-quiz.js` `onQuizKey`, `vQuiz` (+ `.kbhint` in css) |
-| Time-per-question analytics | `qTimeStats` (`04`), `vTimeCard` (`10`), slow list in `07a-view-profile.js`; review shows `Ns` per question in `09-result.js` |
+| Time analytics (everywhere) | `07b-time-analytics.js` `vTimeBlock` (+ `qTimeStats` in `04`); review shows `Ns` per question in `09-result.js` |
 | Timer, scoring rule, what is saved per attempt | `08-quiz.js` (`tick`, `finish`); NEW saved field also: `03-sync.js` (`send`, `loadRemote` mapping) + `backend/Code.gs` (HEAD, doPost, doGet) + new column in Attempts |
 | Shuffle logic / exam start checks / guest home | `06-views-login-home.js` (`startRun`, `startCode`, `startGuest`, `vHome`), `02a-cfg.js` (`canStart`, `applyOv`) |
 | Question screen (math/LaTeX, options) | `08-quiz.js` `vQuiz`, `09-result.js` review, `esc()`/`mathify()` in `02-helpers.js` |

@@ -16,6 +16,7 @@ function vResult(r){
     ${showScore ? `<div class="tiles">${tile(okN, T('correct'), 'var(--g)')}${tile(wrN, T('wrong'), 'var(--r)')}${tile(skN, T('skipped'), 'var(--m)')}</div>` : ''}
     ${mine && e && (R.mistakes || R.retake) ? `<div class="row">${R.mistakes ? `<button class="btn ghost" ${w?'':'disabled'} onclick="retake('${esc(r.exam)}','mistakes')">${esc(T('retakeMistakes'))} (${w})</button>` : '<span></span>'}${R.retake ? `<button class="btn" onclick="retake('${esc(r.exam)}','full')">${esc(T('fullAgain'))}</button>` : ''}</div>` : ''}</div>`;
   if(showScore) h += sec('r_topic', '📊 ' + esc(T('topicWise')), `${ts.map(t => `<div class="trow"><span>${esc(t.t)} <small>${t.ok}/${t.n}</small></span><div class="bar"><i style="width:${Math.round(t.p*100)}%;background:${t.p<0.5?'var(--r)':t.p<0.8?'#f59e0b':'var(--g)'}"></i></div><b>${Math.round(t.p*100)}%</b></div>`).join('')}`, ts.length + ' topic');
+  h += vTimeBlock([r], 'r_time');
   if(rv === 'none') return h + `<div class="card muted">${esc(T('reviewLocked'))}</div>`;
   let rvh = '';
   r.d.forEach(([qi, c, g, s], n) => {

@@ -51,16 +51,5 @@ function vTeacher(){
   }).join(''), hard.length + '')}`}`;
 }
 
-/* ⏱ কোন question-এ student-রা সবচেয়ে বেশি সময় দিচ্ছে (প্রতি question screen-এ থাকার সময় background-এ count হয়) */
-function vTimeCard(recs){
-  const ts = qTimeStats(recs).sort((a, b) => b.avg - a.avg).slice(0, 15);
-  if(!ts.length) return '';
-  const mx = ts[0].avg || 1, tot = qTimeStats(recs), all = tot.reduce((a, o) => a + o.avg, 0) / tot.length;
-  return sec('d_time', '⏱ কোন question-এ বেশি সময় যাচ্ছে', `
-    <small class="muted">প্রতি question screen-এ student কতক্ষণ ছিল (সবার average) · সব question-এর average: ${Math.round(all)}s</small>
-    ${ts.map(o => { const q = qinfo(o.exam, o.i), a = o.ok / o.n;
-      const note = o.avg > all * 1.5 ? (a < 0.5 ? '🔴 সময় বেশি + ভুল বেশি → কঠিন/confusing' : a >= 0.8 ? '🟡 সময় বেশি কিন্তু সঠিক → lengthy' : '🟠 সময় বেশি') : '';
-      return `<div class="hist" style="display:block"><div class="row" style="margin:0"><span class="muted">${esc(o.exam)} · Q${o.i + 1} · ${esc(q.t || '')}</span><b>${Math.round(o.avg)}s</b></div>
-        <div>${esc(q.q)}</div><div class="tbar"><i style="width:${Math.round(o.avg / mx * 100)}%"></i></div>
-        <small class="muted">${o.n} জন/বার · max ${Math.round(o.max)}s · ${Math.round(a * 100)}% সঠিক ${note ? '· ' + note : ''}</small></div>`; }).join('')}`, 'avg ' + Math.round(all) + 's');
-}
+/* ⏱ time analytics (general + student-wise) */
+const vTimeCard = recs => vTimeBlock(recs, 'd_time', {stu:true});

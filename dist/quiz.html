@@ -732,6 +732,7 @@ function vBoard(sid, isT){
     ts.map(t => `<div class="trow"><span>${esc(t.t)}</span><div class="bar"><i style="width:${Math.round(t.p*100)}%;background:${t.p<0.5?'var(--r)':t.p<0.8?'#f59e0b':'var(--g)'}"></i></div><b>${Math.round(t.p*100)}%</b></div>`).join('') +
     '<small class="muted">সবচেয়ে দুর্বল topic উপরে</small>', weak.length ? weak.length + ' topic' : '');
   h += sec('b_trend', esc(T('trendTitle')), `<div class="tr">${ps.slice(-12).map(p => `<div style="height:${Math.max(4,Math.min(100,p))}%" title="${p}%"></div>`).join('')}</div><small class="muted">শেষ ${Math.min(12, ps.length)}টা attempt</small>`);
+  h += vTimeBlock(recs, 'b_time');
   if(!isT){
     const exams = [...new Set(recs.map(r => r.exam))].filter(c => EXAMS[c]);
     if(exams.length) h += sec('b_retake', esc(T('retakeTitle')), exams.map(c => {
@@ -791,8 +792,6 @@ function vProfile(sid){
     o.last = !!k && c >= 0; o.lc = c; if(s > 0){ o.secs += s; o.sn++; }
   }));
   const weakQ = Object.values(qm).filter(o => !o.last && qinfo(o.exam, o.i)).sort((a, b) => b.w - a.w || b.n - a.n).slice(0, 10);
-  const cT = {}; qTimeStats(all).forEach(o => { cT[o.exam + '|' + o.i] = o.avg; });
-  const slowQ = Object.values(qm).filter(o => o.sn && qinfo(o.exam, o.i)).sort((a, b) => b.secs / b.sn - a.secs / a.sn).slice(0, 5);
 
   // ---- auto summary (plain sentences)
   const weakT = ts.filter(t => t.p < 0.8).slice(0, 3), strongT = ts.filter(t => t.p >= 0.8).slice(-3).reverse();
@@ -841,7 +840,7 @@ function vProfile(sid){
     return `<div class="hist" style="display:block"><div class="muted">${esc(o.exam)} · ${esc(q.t || 'General')} · ${o.n} বারের মধ্যে ${o.w} বার ভুল/skip</div>
       <div>${esc(q.q)}</div><small>সঠিক: <b>${LET[q.a]}</b>. ${esc(q.o[q.a] || '')}${o.lc >= 0 ? ' · সে দিয়েছে: <b>' + LET[o.lc] + '</b>' : ' · skip করেছে'}</small></div>`;
   }).join('')}`, weakQ.length + '');
-  if(slowQ.length) h += sec('p_slow', '🐢 সবচেয়ে বেশি সময় নেয়', `${slowQ.map(o => { const q = qinfo(o.exam, o.i); return `<div class="hist" style="display:block"><div class="muted">${esc(o.exam)} · ${esc(q.t || 'General')} · গড় ${Math.round(o.secs / o.sn)} sec${o.sn > 1 ? ' (' + o.sn + ' বার)' : ''}${cT[o.exam + '|' + o.i] ? ' · class avg ' + Math.round(cT[o.exam + '|' + o.i]) + ' sec' : ''}</div><div>${esc(q.q)}</div></div>`; }).join('')}`);
+  h += vTimeBlock(recs, 'p_time', {cmp:all});
 
   // ---- full activity log
   h += sec('p_act', '🕒 সব Activity', recs.slice().reverse().map(r => {
@@ -851,6 +850,70 @@ function vProfile(sid){
       <div style="text-align:right"><b>${r.score}/${r.total}</b> <small style="color:${pcol(p / 100)}">(${p}%)</small><br><button class="link" data-a="${esc(r.aid)}" onclick="openRec(this.dataset.a)">Review</button></div></div>`;
   }).join(''), n + '');
   return h;
+}
+/* ---------- ⏱ Time analytics block (used on every analytics page) ----------
+   Time per question = how long the student stayed on that question screen (counted in background, d[k][3] secs).
+   vTimeBlock(recs, id, {cmp: classRecs, stu: true})  → one fold with: summary, topic-wise, question-wise (per exam, slowest first), student-wise */
+const secS = s => s >= 60 ? Math.floor(s / 60) + 'm ' + Math.round(s % 60) + 's' : Math.round(s) + 's';
+function topicTime(recs){
+  const m = {};
+  recs.forEach(r => r.d.forEach(([i, c, ok, s]) => {
+    if(!(s > 0)) return;
+    const q = qinfo(r.exam, i), t = (q && q.t) || 'General', o = m[t] = m[t] || {t, n:0, sum:0, ok:0};
+    o.n++; o.sum += s; if(c >= 0 && ok) o.ok++;
+  }));
+  return Object.values(m).map(o => ({...o, avg:o.sum / o.n})).sort((a, b) => b.avg - a.avg);
+}
+function stuTime(recs){
+  const m = {};
+  recs.forEach(r => {
+    const o = m[norm(r.sid)] = m[norm(r.sid)] || {sid:norm(r.sid), name:r.name, n:0, sum:0, recs:[]};
+    o.name = r.name; o.recs.push(r);
+    r.d.forEach(([i, c, ok, s]) => { if(s > 0){ o.n++; o.sum += s; } });
+  });
+  return Object.values(m).filter(o => o.n).map(o => { const tt = topicTime(o.recs); return {...o, avg:o.sum / o.n, slow:tt[0], fast:tt[tt.length - 1]}; }).sort((a, b) => b.avg - a.avg);
+}
+function vTimeBlock(recs, id, opt){
+  opt = opt || {};
+  const qt = qTimeStats(recs);
+  if(!qt.length) return sec(id, '⏱ Time analytics', '<div class="muted">এখনো সময়ের data নেই।</div>');
+  const tot = qt.reduce((a, o) => a + o.sum, 0), cnt = qt.reduce((a, o) => a + o.n, 0), overall = tot / cnt;
+  const cq = {}, ct = {};
+  if(opt.cmp){ qTimeStats(opt.cmp).forEach(o => { cq[o.exam + '|' + o.i] = o.avg; }); topicTime(opt.cmp).forEach(o => { ct[o.t] = o.avg; }); }
+  const vs = (me, cl) => cl ? ` <small class="muted">(class ${secS(cl)}${me > cl * 1.3 ? ' · <b style="color:var(--r)">ধীর</b>' : me < cl * 0.7 ? ' · <b style="color:var(--g)">দ্রুত</b>' : ''})</small>` : '';
+  const bar = (v, mx, c) => `<div class="tbar"><i style="width:${Math.max(3, Math.round(v / (mx || 1) * 100))}%;${c ? 'background:' + c : ''}"></i></div>`;
+
+  // topic-wise
+  const tt = topicTime(recs), tmx = tt[0].avg;
+  const tHtml = tt.map(o => `<div style="margin:10px 0"><div class="row" style="margin:0"><span>${esc(o.t)} <small>${Math.round(o.ok / o.n * 100)}% সঠিক</small></span><b>${secS(o.avg)}<small class="muted"> /Q</small></b></div>${bar(o.avg, tmx, o.avg > overall * 1.3 ? '#f59e0b' : '')}<small class="muted">মোট ${secS(o.sum)} (${Math.round(o.sum / tot * 100)}% সময়)</small>${vs(o.avg, ct[o.t])}</div>`).join('');
+
+  // question-wise, each exam separately, slowest first
+  const byEx = {}; qt.forEach(o => { (byEx[o.exam] = byEx[o.exam] || []).push(o); });
+  const qHtml = Object.entries(byEx).map(([ex, list]) => {
+    list.sort((a, b) => b.avg - a.avg);
+    const mx = list[0].avg, eAvg = list.reduce((a, o) => a + o.avg, 0) / list.length;
+    return `<h3>${esc(ex)} <small>· ${list.length} Q · গড় ${secS(eAvg)}/Q · সবচেয়ে ধীর আগে</small></h3>` + list.map((o, k) => {
+      const q = qinfo(o.exam, o.i), a = o.ok / o.n, slow = o.avg > eAvg * 1.5;
+      return `<div class="hist" style="display:block;padding:8px 0"><div class="row" style="margin:0"><span><b>${k + 1}.</b> Q${o.i + 1} <small>${esc(q.t || '')}</small>${slow ? '<span class="tag" style="background:#fef3c7;color:#b45309">বেশি সময়</span>' : ''}</span><b>${secS(o.avg)}</b></div>
+        <div style="font-size:14px">${esc(q.q)}</div>${bar(o.avg, mx, slow ? (a < 0.5 ? 'var(--r)' : '#f59e0b') : '')}
+        <small class="muted">${Math.round(a * 100)}% সঠিক · ${o.n} বার${o.n > 1 ? ' · max ' + secS(o.max) : ''}${slow ? (a < 0.5 ? ' · 🔴 কঠিন/confusing' : a >= 0.8 ? ' · 🟡 lengthy কিন্তু পারে' : '') : ''}</small>${vs(o.avg, cq[o.exam + '|' + o.i])}</div>`;
+    }).join('');
+  }).join('');
+
+  // student-wise
+  let sHtml = '';
+  if(opt.stu){
+    const st = stuTime(recs), smx = st.length ? st[0].avg : 1;
+    sHtml = sec(id + '_s', '👥 Student-wise time', `<div class="scroll"><table><tr><th>Name</th><th>গড়/Q</th><th></th><th>মোট</th><th>ধীর topic</th><th>দ্রুত topic</th></tr>
+      ${st.map(s => `<tr class="click" data-s="${esc(s.sid)}" onclick="openStu(this.dataset.s)"><td><b>${esc(s.name)}</b> <small>${esc(s.sid)}</small></td><td><b>${secS(s.avg)}</b></td><td style="min-width:70px">${bar(s.avg, smx, s.avg > overall * 1.3 ? '#f59e0b' : '')}</td><td>${secS(s.sum)}</td><td>${s.slow ? esc(s.slow.t) + ' ' + secS(s.slow.avg) : '–'}</td><td>${s.fast && s.fast !== s.slow ? esc(s.fast.t) + ' ' + secS(s.fast.avg) : '–'}</td></tr>`).join('')}
+      </table></div><small class="muted">সবচেয়ে ধীর student উপরে · নামে tap করলে profile</small>`, st.length + '');
+  }
+  const body = `<div class="tiles">${tile(secS(overall), 'গড় সময় / question')}${tile(secS(tot), 'মোট সময়')}${tile(tt[0] ? esc(tt[0].t) : '–', 'সবচেয়ে ধীর topic', '#f59e0b')}</div>
+    <small class="muted">Student কোন question screen-এ কতক্ষণ ছিল — background-এ গোনা হয়।</small>
+    ${sec(id + '_t', '🎯 Topic-wise time', tHtml, tt.length + ' topic')}
+    ${sec(id + '_q', '❓ Question-wise time (exam অনুযায়ী, ধীর আগে)', qHtml, qt.length + ' Q')}
+    ${sHtml}`;
+  return sec(id, '⏱ Time analytics', body, 'গড় ' + secS(overall) + '/Q');
 }
 /* ---------- Quiz ---------- */
 function vQuiz(){
@@ -946,6 +1009,7 @@ function vResult(r){
     ${showScore ? `<div class="tiles">${tile(okN, T('correct'), 'var(--g)')}${tile(wrN, T('wrong'), 'var(--r)')}${tile(skN, T('skipped'), 'var(--m)')}</div>` : ''}
     ${mine && e && (R.mistakes || R.retake) ? `<div class="row">${R.mistakes ? `<button class="btn ghost" ${w?'':'disabled'} onclick="retake('${esc(r.exam)}','mistakes')">${esc(T('retakeMistakes'))} (${w})</button>` : '<span></span>'}${R.retake ? `<button class="btn" onclick="retake('${esc(r.exam)}','full')">${esc(T('fullAgain'))}</button>` : ''}</div>` : ''}</div>`;
   if(showScore) h += sec('r_topic', '📊 ' + esc(T('topicWise')), `${ts.map(t => `<div class="trow"><span>${esc(t.t)} <small>${t.ok}/${t.n}</small></span><div class="bar"><i style="width:${Math.round(t.p*100)}%;background:${t.p<0.5?'var(--r)':t.p<0.8?'#f59e0b':'var(--g)'}"></i></div><b>${Math.round(t.p*100)}%</b></div>`).join('')}`, ts.length + ' topic');
+  h += vTimeBlock([r], 'r_time');
   if(rv === 'none') return h + `<div class="card muted">${esc(T('reviewLocked'))}</div>`;
   let rvh = '';
   r.d.forEach(([qi, c, g, s], n) => {
@@ -1010,19 +1074,8 @@ function vTeacher(){
   }).join(''), hard.length + '')}`}`;
 }
 
-/* ⏱ কোন question-এ student-রা সবচেয়ে বেশি সময় দিচ্ছে (প্রতি question screen-এ থাকার সময় background-এ count হয়) */
-function vTimeCard(recs){
-  const ts = qTimeStats(recs).sort((a, b) => b.avg - a.avg).slice(0, 15);
-  if(!ts.length) return '';
-  const mx = ts[0].avg || 1, tot = qTimeStats(recs), all = tot.reduce((a, o) => a + o.avg, 0) / tot.length;
-  return sec('d_time', '⏱ কোন question-এ বেশি সময় যাচ্ছে', `
-    <small class="muted">প্রতি question screen-এ student কতক্ষণ ছিল (সবার average) · সব question-এর average: ${Math.round(all)}s</small>
-    ${ts.map(o => { const q = qinfo(o.exam, o.i), a = o.ok / o.n;
-      const note = o.avg > all * 1.5 ? (a < 0.5 ? '🔴 সময় বেশি + ভুল বেশি → কঠিন/confusing' : a >= 0.8 ? '🟡 সময় বেশি কিন্তু সঠিক → lengthy' : '🟠 সময় বেশি') : '';
-      return `<div class="hist" style="display:block"><div class="row" style="margin:0"><span class="muted">${esc(o.exam)} · Q${o.i + 1} · ${esc(q.t || '')}</span><b>${Math.round(o.avg)}s</b></div>
-        <div>${esc(q.q)}</div><div class="tbar"><i style="width:${Math.round(o.avg / mx * 100)}%"></i></div>
-        <small class="muted">${o.n} জন/বার · max ${Math.round(o.max)}s · ${Math.round(a * 100)}% সঠিক ${note ? '· ' + note : ''}</small></div>`; }).join('')}`, 'avg ' + Math.round(all) + 's');
-}
+/* ⏱ time analytics (general + student-wise) */
+const vTimeCard = recs => vTimeBlock(recs, 'd_time', {stu:true});
 /* ---------- Teacher: one exam's analytics (general + student-wise). Opened from Exams tab ---------- */
 let EXA = null;   // exam code being viewed
 async function openExA(code){
@@ -1064,6 +1117,7 @@ function vExamAnalytics(code){
   const ts = topicStats(recs);
   h += sec('ea_topic', '🎯 Topic-wise', ts.map(t => `<div class="trow"><span>${esc(t.t)} <small>${t.ok}/${t.n}</small></span><div class="bar"><i style="width:${Math.round(t.p*100)}%;background:${pcol(t.p)}"></i></div><b>${Math.round(t.p*100)}%</b></div>`).join(''), ts.length + ' topic');
 
+  h += vTimeBlock(recs, 'ea_time', {stu:true});
   if(e){
     const qs = e.questions.map((q, i) => ({i, q, n:0, ok:0, wr:0, sk:0, secs:0, sn:0, pick:{}}));
     recs.forEach(r => r.d.forEach(([i, c, ok, s]) => { const o = qs[i]; if(!o) return; o.n++; if(c < 0) o.sk++; else if(ok) o.ok++; else { o.wr++; o.pick[c] = (o.pick[c] || 0) + 1; } if(s > 0){ o.secs += s; o.sn++; } }));

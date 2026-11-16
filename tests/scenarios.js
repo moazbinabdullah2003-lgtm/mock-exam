@@ -87,7 +87,7 @@ TT.eq(allRecs().length, 1, 'teacher sees all attempts');
 { const ph = vProfile('7');
   TT.ok(ph.includes('Summary') && ph.includes('Topic-wise') && ph.includes('Exam-wise') && ph.includes('Activity'), 'profile renders all sections');
   TT.ok(/Attempts/.test(ph) && ph.includes('CT1'), 'profile shows attempts + exam');
-  TT.ok(vTimeCard([{ exam: 'CT1', sid: '7', aid: 'x', secs: 42, score: 1, total: 2, d: [[0, 1, 1, 12], [1, 0, 0, 30]] }]).includes('30s'), 'teacher time-per-question card renders');
+  TT.ok((() => { const h = vTimeCard([{ exam: 'CT1', sid: '7', name: 'R', aid: 'x', secs: 42, score: 1, total: 2, d: [[0, 1, 1, 12], [1, 0, 0, 30]] }]); return h.includes('30s') && h.includes('Topic-wise time') && h.includes('Question-wise time') && h.includes('Student-wise time') && h.indexOf('Q2') < h.indexOf('Q1 '); })(), 'teacher time-per-question card renders');
   TT.ok(vProfile('nobody').includes('এখনো কোনো exam দেয়নি'), 'profile of student without attempts'); }
 B.post({ action: 'saveroster', key: 'teacher123', roster: JSON.stringify([{ id: '007', pin: 'pw1', name: 'Rahim' }]) });
 await asTestStudent();

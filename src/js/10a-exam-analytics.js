@@ -39,6 +39,7 @@ function vExamAnalytics(code){
   const ts = topicStats(recs);
   h += sec('ea_topic', '🎯 Topic-wise', ts.map(t => `<div class="trow"><span>${esc(t.t)} <small>${t.ok}/${t.n}</small></span><div class="bar"><i style="width:${Math.round(t.p*100)}%;background:${pcol(t.p)}"></i></div><b>${Math.round(t.p*100)}%</b></div>`).join(''), ts.length + ' topic');
 
+  h += vTimeBlock(recs, 'ea_time', {stu:true});
   if(e){
     const qs = e.questions.map((q, i) => ({i, q, n:0, ok:0, wr:0, sk:0, secs:0, sn:0, pick:{}}));
     recs.forEach(r => r.d.forEach(([i, c, ok, s]) => { const o = qs[i]; if(!o) return; o.n++; if(c < 0) o.sk++; else if(ok) o.ok++; else { o.wr++; o.pick[c] = (o.pick[c] || 0) + 1; } if(s > 0){ o.secs += s; o.sn++; } }));

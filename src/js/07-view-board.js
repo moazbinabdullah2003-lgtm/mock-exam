@@ -12,6 +12,7 @@ function vBoard(sid, isT){
     ts.map(t => `<div class="trow"><span>${esc(t.t)}</span><div class="bar"><i style="width:${Math.round(t.p*100)}%;background:${t.p<0.5?'var(--r)':t.p<0.8?'#f59e0b':'var(--g)'}"></i></div><b>${Math.round(t.p*100)}%</b></div>`).join('') +
     '<small class="muted">সবচেয়ে দুর্বল topic উপরে</small>', weak.length ? weak.length + ' topic' : '');
   h += sec('b_trend', esc(T('trendTitle')), `<div class="tr">${ps.slice(-12).map(p => `<div style="height:${Math.max(4,Math.min(100,p))}%" title="${p}%"></div>`).join('')}</div><small class="muted">শেষ ${Math.min(12, ps.length)}টা attempt</small>`);
+  h += vTimeBlock(recs, 'b_time');
   if(!isT){
     const exams = [...new Set(recs.map(r => r.exam))].filter(c => EXAMS[c]);
     if(exams.length) h += sec('b_retake', esc(T('retakeTitle')), exams.map(c => {
