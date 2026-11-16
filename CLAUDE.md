@@ -3,7 +3,7 @@
 The user **cannot read or write code**; they work only through Claude. So: keep this folder the single, complete, well-indexed source of truth, and do the work + deploy + backup yourself.
 
 ## Reading order (token-cheap)
-1. `docs/PROJECT_CONTEXT.md` (architecture, live IDs, status, pitfalls) → 2. `docs/INDEX.md` (module map + "Task → where to edit") → open only the modules the task needs. Never open `dist/quiz.html` whole. Protocol/data model: `docs/ARCHITECTURE.md`. Ops: `docs/DEPLOY.md`, `docs/BACKUP.md`. **Something broken? `python3 tools/health.py` then `docs/TROUBLESHOOTING.md`.**
+1. `docs/PROJECT_CONTEXT.md` (architecture, live IDs, status, pitfalls) → 2. `docs/INDEX.md` (module map + "Task → where to edit") → open only the modules the task needs. Never open `dist/quiz.html` whole. Protocol/data model: `docs/ARCHITECTURE.md`. Ops: `docs/DEPLOY.md`, `docs/BACKUP.md`. **Something broken? `python3 tools/health.py` then `docs/TROUBLESHOOTING.md`.** **Supabase migration in progress → `docs/SUPABASE_MIGRATION.md` (plan, secrets rules, user steps, status).**
 
 ## How to talk to the user
 Bengali/Banglish, technical terms in English, **short**. Manual steps for the user: one step at a time, wait for "done". User has Claude Pro only — **no API/paid server**. Use they/them. **End every reply with the live link** https://moazbinabdullah2003-lgtm.github.io/mock-exam/quiz.html Never type passwords; never put credentials in chat or in the public GitHub repo.

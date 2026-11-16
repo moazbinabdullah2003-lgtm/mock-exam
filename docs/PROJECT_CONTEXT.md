@@ -248,6 +248,7 @@ UI/visual checks still use the built-in browser pane + `tools/browser_fake_backe
 - Verified: tests 126 backend + 232 frontend; `tools/health.py` ALL GOOD; each feature looked at in the browser pane with the fake backend. NOT yet done by Claude on the live site: a full test-student exam end-to-end after the redesign (do it at the start of the next session if asked).
 
 **Open / pending:**
+0. **🔄 Supabase migration started (2026-11-16)** — plan, decisions, user steps and status in `docs/SUPABASE_MIGRATION.md`. User created the Supabase account; was creating the project (Singapore, Free) when the session ended. Also open: student login sometimes stuck on "Checking…" until refresh (slow/cold Apps Script + sequential calls in `refresh()`), not fixed yet.
 1. **User reported "Network nei" when logging in on their device.** The server is healthy from our side. The new diagnostic UI was deployed to find the real cause; **waiting for the user to send the new message/`[kind: …]` tag or the Connection-check output**. Likely causes: ISP/WiFi blocking Google, Messenger/Facebook in-app browser, VPN/ad-blocker, stale cached old page (hard refresh).
 2. Review screen shows options in original A-B-C-D order, not the order the student saw — user was asked whether they want the exam-time order; no answer yet.
 3. Math question content decisions: Q21 (argument of −i) answer set to (c) −π/2 (principal value; (a),(d) are also valid arguments) — user may want to reword; Q49 assumes ω is the complex cube root (ω≠1); negative marking 0.25 assumed.

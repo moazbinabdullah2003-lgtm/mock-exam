@@ -88,5 +88,6 @@ Regenerate the symbol list: `python3 tools/symbols.py`.
 | `tests/run_tests.js` + `tests/scenarios.js` | frontend flow tests against the real backend (add scenarios at the bottom; assertions are `TT.ok/TT.eq`) |
 | `.github/workflows/pages.yml` | CI: tests → build → publish to Pages |
 | `.clasp.json` | Apps Script project link (rootDir `backend`) |
+| `docs/SUPABASE_MIGRATION.md` | 🔄 backend move to Supabase: why, phases (Dhap 0/1/2), secret rules, user dashboard steps, status |
 | `docs/PACKUP.md` | end-of-session pack-up checklist ("pack koro") |
 | `docs/DEPLOY.md`, `docs/BACKUP.md`, `docs/TROUBLESHOOTING.md` | shipping, backups/restore, symptom→fix table |
