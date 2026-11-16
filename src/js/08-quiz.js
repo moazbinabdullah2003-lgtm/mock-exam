@@ -5,7 +5,8 @@ function vQuiz(){
   const perm = (RUN.op && RUN.op[qi]) || q.o.map((_, i) => i);
   return `<div class="top"><div><b>${esc(e.title)}</b>${RUN.mode==='mistakes'?'<span class="tag">mistakes</span>':''}</div>${CFG.rules.timer ? '<div id="tm" class="tm"></div>' : ''}</div>
   <div class="card"><div class="muted">Question ${p+1} / ${last+1}</div><div class="q">${esc(q.q)}</div>
-    ${perm.map((oi, n) => `<button class="opt ${a===oi?'sel':''}" onclick="pick(${oi})"><span class="L">${LET[n]}</span><span>${esc(q.o[oi])}</span></button>`).join('')}
+    ${perm.map((oi, n) => `<button class="opt ${a===oi?'sel':''}" onclick="pick(${oi})"><span class="L">${n+1}</span><span>${esc(q.o[oi])}</span></button>`).join('')}
+    <div class="kbhint">⌨ ${perm.length > 1 ? '1–' + perm.length : '1'} = option · Enter = save &amp; next · ← → = prev / next</div>
     <div class="row"><button class="btn ghost" onclick="go(${p-1})" ${p===0?'disabled':''}>${esc(T('prev'))}</button>
       ${a!==undefined ? `<button class="link" onclick="pick(-1)">${esc(T('clear'))}</button>` : '<span></span>'}
       <button class="btn" onclick="go(${p+1})" ${p===last?'disabled':''}>${esc(T('next'))}</button></div></div>
@@ -19,6 +20,22 @@ function pick(i){
   if(i < 0) delete RUN.ans[RUN.cur]; else RUN.ans[RUN.cur] = i;
   LS.set('mq_run', RUN); render(true);
 }
+/* Keyboard: 1..N = option (দেখানো position), Enter = save & next (শেষ question-এ submit confirm), ← → = prev/next */
+function onQuizKey(e){
+  if(view !== 'quiz' || !RUN || e.ctrlKey || e.metaKey || e.altKey) return;
+  const t = e.target; if(t && /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName)) return;
+  const k = e.key;
+  if(confirming){
+    if(k === 'Enter'){ e.preventDefault(); finish(false); } else if(k === 'Escape'){ confirming = false; render(true); }
+    return;
+  }
+  const qi = RUN.order[RUN.cur], q = EXAMS[RUN.exam].questions[qi], perm = (RUN.op && RUN.op[qi]) || q.o.map((_, i) => i), last = RUN.order.length - 1;
+  if(/^[1-9]$/.test(k)){ if(+k <= perm.length){ e.preventDefault(); pick(perm[+k - 1]); } }
+  else if(k === 'Enter'){ e.preventDefault(); if(RUN.cur < last) go(RUN.cur + 1); else { confirming = true; render(true); } }
+  else if(k === 'ArrowRight'){ e.preventDefault(); go(RUN.cur + 1); }
+  else if(k === 'ArrowLeft'){ e.preventDefault(); go(RUN.cur - 1); }
+}
+if(typeof document !== 'undefined' && document.addEventListener) document.addEventListener('keydown', onQuizKey);
 function addTime(){
   const now = Date.now();
   RUN.secs[RUN.cur] = (RUN.secs[RUN.cur] || 0) + (now - RUN.last) / 1000;

@@ -41,6 +41,17 @@ TT.ok(SESS && !SESS.teacher && SESS.name === 'Rahim', 'student logged in');
 el('#code').value = 'ct1'; await startCode(); clearInterval(TM);
 TT.ok(view === 'quiz' && RUN && RUN.exam === 'CT1', 'quiz started from code');
 TT.eq(RUN.dur, 1200, 'timer = 20 min');
+{ const K = (key, t) => onQuizKey({ key, target: { tagName: t || 'BODY' }, preventDefault(){} });
+  RUN.cur = 0; const perm0 = RUN.op[RUN.order[0]], n0 = perm0.length;
+  K('2'); TT.eq(RUN.ans[0], perm0[1], 'key 2 picks the 2nd DISPLAYED option (original index kept)');
+  K(String(n0 + 1)); TT.eq(RUN.ans[0], perm0[1], 'key beyond option count ignored');
+  RUN.last = Date.now() - 7000; K('Enter'); TT.eq(RUN.cur, 1, 'Enter -> next question');
+  TT.ok(RUN.secs[0] >= 6.9 && RUN.secs[0] < 9, 'time on question 1 counted (' + RUN.secs[0] + 's)');
+  K('ArrowLeft'); TT.eq(RUN.cur, 0, 'ArrowLeft -> prev'); K('ArrowRight'); TT.eq(RUN.cur, 1, 'ArrowRight -> next');
+  K('1', 'INPUT'); TT.eq(RUN.ans[1], undefined, 'keys ignored while typing in an input');
+  RUN.cur = RUN.order.length - 1; K('Enter'); TT.ok(confirming === true && RUN.cur === RUN.order.length - 1, 'Enter on last question opens submit confirm');
+  K('Escape'); TT.eq(confirming, false, 'Escape closes confirm');
+  RUN.cur = 0; RUN.ans = {}; RUN.secs = {}; }
 const ex = EXAMS.CT1;
 RUN.order.forEach((qi, p) => { RUN.cur = p; const q = ex.questions[qi];
   /* pick() takes the ORIGINAL option index (display order is shuffled separately in RUN.op) */
@@ -76,6 +87,7 @@ TT.eq(allRecs().length, 1, 'teacher sees all attempts');
 { const ph = vProfile('7');
   TT.ok(ph.includes('Summary') && ph.includes('Topic-wise') && ph.includes('Exam-wise') && ph.includes('Activity'), 'profile renders all sections');
   TT.ok(/Attempts/.test(ph) && ph.includes('CT1'), 'profile shows attempts + exam');
+  TT.ok(vTimeCard([{ exam: 'CT1', sid: '7', aid: 'x', secs: 42, score: 1, total: 2, d: [[0, 1, 1, 12], [1, 0, 0, 30]] }]).includes('30s'), 'teacher time-per-question card renders');
   TT.ok(vProfile('nobody').includes('এখনো কোনো exam দেয়নি'), 'profile of student without attempts'); }
 B.post({ action: 'saveroster', key: 'teacher123', roster: JSON.stringify([{ id: '007', pin: 'pw1', name: 'Rahim' }]) });
 await asTestStudent();

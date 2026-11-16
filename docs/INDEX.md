@@ -29,6 +29,8 @@ Other source: `src/css/app.css` (theme variables `--p --bg --card --t --m --b --
 | Colors / layout / mobile look (defaults) | `src/css/app.css` (+ markup strings in the view module). Teacher-editable look: `PRESETS`/`DEF_CFG.theme`/`applyTheme` in `02a-cfg.js` |
 | **Add a teacher-editable setting** | default in `DEF_CFG` (`02a`) → field in `vSettings()` (`13`) → use `CFG.x.y` where needed. No backend change |
 | **Change a button/label text** | add to `TX` (`02a`), use `T('key')`; it becomes editable in Settings → Texts automatically |
+| Quiz keyboard shortcuts / option numbers | `08-quiz.js` `onQuizKey`, `vQuiz` (+ `.kbhint` in css) |
+| Time-per-question analytics | `qTimeStats` (`04`), `vTimeCard` (`10`), slow list in `07a-view-profile.js`; review shows `Ns` per question in `09-result.js` |
 | Timer, scoring rule, what is saved per attempt | `08-quiz.js` (`tick`, `finish`); NEW saved field also: `03-sync.js` (`send`, `loadRemote` mapping) + `backend/Code.gs` (HEAD, doPost, doGet) + new column in Attempts |
 | Shuffle logic / exam start checks / guest home | `06-views-login-home.js` (`startRun`, `startCode`, `startGuest`, `vHome`), `02a-cfg.js` (`canStart`, `applyOv`) |
 | Question screen (math/LaTeX, options) | `08-quiz.js` `vQuiz`, `09-result.js` review, `esc()`/`mathify()` in `02-helpers.js` |

@@ -38,6 +38,7 @@ function vProfile(sid){
     o.last = !!k && c >= 0; o.lc = c; if(s > 0){ o.secs += s; o.sn++; }
   }));
   const weakQ = Object.values(qm).filter(o => !o.last && qinfo(o.exam, o.i)).sort((a, b) => b.w - a.w || b.n - a.n).slice(0, 10);
+  const cT = {}; qTimeStats(all).forEach(o => { cT[o.exam + '|' + o.i] = o.avg; });
   const slowQ = Object.values(qm).filter(o => o.sn && qinfo(o.exam, o.i)).sort((a, b) => b.secs / b.sn - a.secs / a.sn).slice(0, 5);
 
   // ---- auto summary (plain sentences)
@@ -86,7 +87,7 @@ function vProfile(sid){
     return `<div class="hist" style="display:block"><div class="muted">${esc(o.exam)} · ${esc(q.t || 'General')} · ${o.n} বারের মধ্যে ${o.w} বার ভুল/skip</div>
       <div>${esc(q.q)}</div><small>সঠিক: <b>${LET[q.a]}</b>. ${esc(q.o[q.a] || '')}${o.lc >= 0 ? ' · সে দিয়েছে: <b>' + LET[o.lc] + '</b>' : ' · skip করেছে'}</small></div>`;
   }).join('')}</div>`;
-  if(slowQ.length) h += `<div class="card"><h2>🐢 সবচেয়ে বেশি সময় নেয়</h2>${slowQ.map(o => { const q = qinfo(o.exam, o.i); return `<div class="hist" style="display:block"><div class="muted">${esc(o.exam)} · ${esc(q.t || 'General')} · গড় ${Math.round(o.secs / o.sn)} sec${o.sn > 1 ? ' (' + o.sn + ' বার)' : ''}</div><div>${esc(q.q)}</div></div>`; }).join('')}</div>`;
+  if(slowQ.length) h += `<div class="card"><h2>🐢 সবচেয়ে বেশি সময় নেয়</h2>${slowQ.map(o => { const q = qinfo(o.exam, o.i); return `<div class="hist" style="display:block"><div class="muted">${esc(o.exam)} · ${esc(q.t || 'General')} · গড় ${Math.round(o.secs / o.sn)} sec${o.sn > 1 ? ' (' + o.sn + ' বার)' : ''}${cT[o.exam + '|' + o.i] ? ' · class avg ' + Math.round(cT[o.exam + '|' + o.i]) + ' sec' : ''}</div><div>${esc(q.q)}</div></div>`; }).join('')}</div>`;
 
   // ---- full activity log
   h += `<div class="card"><h2>🕒 সব Activity (${n})</h2>` + recs.slice().reverse().map(r => {

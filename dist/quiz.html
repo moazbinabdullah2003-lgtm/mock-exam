@@ -71,6 +71,8 @@ details.sec>.in{padding:0 16px 16px}
 .oe input[type=text]{margin:3px 0}
 
 .stats.w{flex-wrap:wrap}.stats.w .stat{flex:1 1 30%;min-width:90px}
+.kbhint{font-size:12px;color:var(--m);margin:6px 0 2px}@media (hover:none){.kbhint{display:none}}
+.tbar{height:8px;background:var(--b);border-radius:5px;overflow:hidden;margin-top:4px}.tbar i{display:block;height:100%;background:var(--p)}
 </style>
 </head>
 <body>
@@ -401,6 +403,16 @@ function wrongIdx(sid, exam){
   return Object.keys(st).filter(i => !st[i]).map(Number);
 }
 
+/* প্রতি question-এ কত সময় গেছে (শুধু যেগুলোতে ≥1s ছিল): avg/max/accuracy */
+function qTimeStats(recs){
+  const m = {};
+  recs.forEach(r => r.d.forEach(([i, c, ok, s]) => {
+    if(!(s > 0)) return;
+    const k = r.exam + '|' + i, o = m[k] = m[k] || {exam:r.exam, i, n:0, sum:0, max:0, ok:0};
+    o.n++; o.sum += s; o.max = Math.max(o.max, s); if(c >= 0 && ok) o.ok++;
+  }));
+  return Object.values(m).filter(o => qinfo(o.exam, o.i)).map(o => ({...o, avg:o.sum / o.n}));
+}
 /* ============================================================
    State
    ============================================================ */
@@ -714,6 +726,7 @@ function vProfile(sid){
     o.last = !!k && c >= 0; o.lc = c; if(s > 0){ o.secs += s; o.sn++; }
   }));
   const weakQ = Object.values(qm).filter(o => !o.last && qinfo(o.exam, o.i)).sort((a, b) => b.w - a.w || b.n - a.n).slice(0, 10);
+  const cT = {}; qTimeStats(all).forEach(o => { cT[o.exam + '|' + o.i] = o.avg; });
   const slowQ = Object.values(qm).filter(o => o.sn && qinfo(o.exam, o.i)).sort((a, b) => b.secs / b.sn - a.secs / a.sn).slice(0, 5);
 
   // ---- auto summary (plain sentences)
@@ -762,7 +775,7 @@ function vProfile(sid){
     return `<div class="hist" style="display:block"><div class="muted">${esc(o.exam)} · ${esc(q.t || 'General')} · ${o.n} বারের মধ্যে ${o.w} বার ভুল/skip</div>
       <div>${esc(q.q)}</div><small>সঠিক: <b>${LET[q.a]}</b>. ${esc(q.o[q.a] || '')}${o.lc >= 0 ? ' · সে দিয়েছে: <b>' + LET[o.lc] + '</b>' : ' · skip করেছে'}</small></div>`;
   }).join('')}</div>`;
-  if(slowQ.length) h += `<div class="card"><h2>🐢 সবচেয়ে বেশি সময় নেয়</h2>${slowQ.map(o => { const q = qinfo(o.exam, o.i); return `<div class="hist" style="display:block"><div class="muted">${esc(o.exam)} · ${esc(q.t || 'General')} · গড় ${Math.round(o.secs / o.sn)} sec${o.sn > 1 ? ' (' + o.sn + ' বার)' : ''}</div><div>${esc(q.q)}</div></div>`; }).join('')}</div>`;
+  if(slowQ.length) h += `<div class="card"><h2>🐢 সবচেয়ে বেশি সময় নেয়</h2>${slowQ.map(o => { const q = qinfo(o.exam, o.i); return `<div class="hist" style="display:block"><div class="muted">${esc(o.exam)} · ${esc(q.t || 'General')} · গড় ${Math.round(o.secs / o.sn)} sec${o.sn > 1 ? ' (' + o.sn + ' বার)' : ''}${cT[o.exam + '|' + o.i] ? ' · class avg ' + Math.round(cT[o.exam + '|' + o.i]) + ' sec' : ''}</div><div>${esc(q.q)}</div></div>`; }).join('')}</div>`;
 
   // ---- full activity log
   h += `<div class="card"><h2>🕒 সব Activity (${n})</h2>` + recs.slice().reverse().map(r => {
@@ -780,7 +793,8 @@ function vQuiz(){
   const perm = (RUN.op && RUN.op[qi]) || q.o.map((_, i) => i);
   return `<div class="top"><div><b>${esc(e.title)}</b>${RUN.mode==='mistakes'?'<span class="tag">mistakes</span>':''}</div>${CFG.rules.timer ? '<div id="tm" class="tm"></div>' : ''}</div>
   <div class="card"><div class="muted">Question ${p+1} / ${last+1}</div><div class="q">${esc(q.q)}</div>
-    ${perm.map((oi, n) => `<button class="opt ${a===oi?'sel':''}" onclick="pick(${oi})"><span class="L">${LET[n]}</span><span>${esc(q.o[oi])}</span></button>`).join('')}
+    ${perm.map((oi, n) => `<button class="opt ${a===oi?'sel':''}" onclick="pick(${oi})"><span class="L">${n+1}</span><span>${esc(q.o[oi])}</span></button>`).join('')}
+    <div class="kbhint">⌨ ${perm.length > 1 ? '1–' + perm.length : '1'} = option · Enter = save &amp; next · ← → = prev / next</div>
     <div class="row"><button class="btn ghost" onclick="go(${p-1})" ${p===0?'disabled':''}>${esc(T('prev'))}</button>
       ${a!==undefined ? `<button class="link" onclick="pick(-1)">${esc(T('clear'))}</button>` : '<span></span>'}
       <button class="btn" onclick="go(${p+1})" ${p===last?'disabled':''}>${esc(T('next'))}</button></div></div>
@@ -794,6 +808,22 @@ function pick(i){
   if(i < 0) delete RUN.ans[RUN.cur]; else RUN.ans[RUN.cur] = i;
   LS.set('mq_run', RUN); render(true);
 }
+/* Keyboard: 1..N = option (দেখানো position), Enter = save & next (শেষ question-এ submit confirm), ← → = prev/next */
+function onQuizKey(e){
+  if(view !== 'quiz' || !RUN || e.ctrlKey || e.metaKey || e.altKey) return;
+  const t = e.target; if(t && /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName)) return;
+  const k = e.key;
+  if(confirming){
+    if(k === 'Enter'){ e.preventDefault(); finish(false); } else if(k === 'Escape'){ confirming = false; render(true); }
+    return;
+  }
+  const qi = RUN.order[RUN.cur], q = EXAMS[RUN.exam].questions[qi], perm = (RUN.op && RUN.op[qi]) || q.o.map((_, i) => i), last = RUN.order.length - 1;
+  if(/^[1-9]$/.test(k)){ if(+k <= perm.length){ e.preventDefault(); pick(perm[+k - 1]); } }
+  else if(k === 'Enter'){ e.preventDefault(); if(RUN.cur < last) go(RUN.cur + 1); else { confirming = true; render(true); } }
+  else if(k === 'ArrowRight'){ e.preventDefault(); go(RUN.cur + 1); }
+  else if(k === 'ArrowLeft'){ e.preventDefault(); go(RUN.cur - 1); }
+}
+if(typeof document !== 'undefined' && document.addEventListener) document.addEventListener('keydown', onQuizKey);
 function addTime(){
   const now = Date.now();
   RUN.secs[RUN.cur] = (RUN.secs[RUN.cur] || 0) + (now - RUN.last) / 1000;
@@ -904,6 +934,7 @@ function vTeacher(){
     <tr><th>Student</th>${topics.map(t => `<th>${esc(t.t)}</th>`).join('')}</tr>
     ${rows.map(r => { const m = {}; r.ts.forEach(t => m[t.t] = t); return `<tr><td>${esc(r.name)}</td>${topics.map(t => m[t.t] ? `<td class="h" style="background:${heat(m[t.t].p)}">${Math.round(m[t.t].p*100)}</td>` : '<td class="h">–</td>').join('')}</tr>`; }).join('')}
   </table></div></div>
+  ${vTimeCard(recs)}
   <div class="card"><h2>সবচেয়ে বেশি ভুল হওয়া Questions</h2>${hard.map(o => {
     const q = qinfo(o.exam, o.i), top = Object.entries(o.pick).sort((a,b) => b[1]-a[1])[0];
     return `<div class="hist" style="display:block"><div class="muted">${esc(o.exam)} · ${esc(q.t || '')} · ${Math.round(o.ok/o.n*100)}% correct (${o.ok}/${o.n})</div>
@@ -911,6 +942,20 @@ function vTeacher(){
   }).join('')}</div>`}`;
 }
 
+
+/* ⏱ কোন question-এ student-রা সবচেয়ে বেশি সময় দিচ্ছে (প্রতি question screen-এ থাকার সময় background-এ count হয়) */
+function vTimeCard(recs){
+  const ts = qTimeStats(recs).sort((a, b) => b.avg - a.avg).slice(0, 15);
+  if(!ts.length) return '';
+  const mx = ts[0].avg || 1, tot = qTimeStats(recs), all = tot.reduce((a, o) => a + o.avg, 0) / tot.length;
+  return `<div class="card"><h2>⏱ কোন question-এ বেশি সময় যাচ্ছে</h2>
+    <small class="muted">প্রতি question screen-এ student কতক্ষণ ছিল (সবার average) · সব question-এর average: ${Math.round(all)}s</small>
+    ${ts.map(o => { const q = qinfo(o.exam, o.i), a = o.ok / o.n;
+      const note = o.avg > all * 1.5 ? (a < 0.5 ? '🔴 সময় বেশি + ভুল বেশি → কঠিন/confusing' : a >= 0.8 ? '🟡 সময় বেশি কিন্তু সঠিক → lengthy' : '🟠 সময় বেশি') : '';
+      return `<div class="hist" style="display:block"><div class="row" style="margin:0"><span class="muted">${esc(o.exam)} · Q${o.i + 1} · ${esc(q.t || '')}</span><b>${Math.round(o.avg)}s</b></div>
+        <div>${esc(q.q)}</div><div class="tbar"><i style="width:${Math.round(o.avg / mx * 100)}%"></i></div>
+        <small class="muted">${o.n} জন/বার · max ${Math.round(o.max)}s · ${Math.round(a * 100)}% সঠিক ${note ? '· ' + note : ''}</small></div>`; }).join('')}</div>`;
+}
 /* ---------- Teacher: exam upload / manage ---------- */
 const escT = s => String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;');
 const sleep = ms => new Promise(r => setTimeout(r, ms));
