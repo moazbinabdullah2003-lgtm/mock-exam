@@ -77,5 +77,14 @@ TT.eq(allRecs().length, 1, 'teacher sees all attempts');
   TT.ok(ph.includes('Summary') && ph.includes('Topic-wise') && ph.includes('Exam-wise') && ph.includes('Activity'), 'profile renders all sections');
   TT.ok(/Attempts/.test(ph) && ph.includes('CT1'), 'profile shows attempts + exam');
   TT.ok(vProfile('nobody').includes('এখনো কোনো exam দেয়নি'), 'profile of student without attempts'); }
+B.post({ action: 'saveroster', key: 'teacher123', roster: JSON.stringify([{ id: '007', pin: 'pw1', name: 'Rahim' }]) });
+await asTestStudent();
+TT.ok(SESS && SESS.teacher && /নেই/.test(TSTMSG), 'no test student in roster -> stays teacher with message');
+B.post({ action: 'saveroster', key: 'teacher123', roster: JSON.stringify([{ id: '9999', pin: 'tpw', name: 'Test Student' }]) });
+await asTestStudent();
+TT.ok(SESS && SESS.sid === '9999' && !SESS.teacher && SESS.back && SESS.back.teacher && view === 'home', 'teacher -> test student in one click');
+TT.ok(vHome().includes('backToTeacher'), 'student home shows back-to-teacher button');
+backToTeacher();
+TT.ok(SESS && SESS.teacher && SESS.key === 'teacher123' && view === 'teacher', 'back to teacher keeps session');
 await delExam('CT1'); TT.eq(DELC, 'CT1', 'first tap asks confirmation');
 await delExam('CT1'); TT.eq(B.get({ action: 'exam', code: 'CT1' }).error, 'notfound', 'second tap deletes in backend');

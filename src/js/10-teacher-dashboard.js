@@ -20,7 +20,7 @@ function vTeacher(){
     if(c >= 0 && !ok) o.pick[c] = (o.pick[c] || 0) + 1;
   }));
   const hard = Object.values(qs).filter(o => qinfo(o.exam, o.i)).sort((a,b) => a.ok/a.n - b.ok/b.n).slice(0, 10);
-  const hd = `<div class="top"><b>👩‍🏫 Teacher</b><button class="link" onclick="logout()">Logout</button></div>${vTabs()}`;
+  const hd = `<div class="top"><b>👩‍🏫 Teacher</b><span><button class="btn sm ghost" onclick="asTestStudent()">🎓 Test student</button> <button class="link" onclick="logout()">Logout</button></span></div>${TSTMSG ? `<div class="warn">${esc(TSTMSG)}</div>` : ''}${vTabs()}`;
   if(TTAB === 'set') return hd + vSettings();
   if(TTAB === 'stu') return hd + vStudents();
   if(TTAB === 'exams') return hd + banner() + vExams();

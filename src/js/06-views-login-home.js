@@ -78,6 +78,24 @@ async function doTeacher(){
   if(!ok || id !== String(CFG.access.teacherId || 'teacher').trim().toLowerCase()){ msg = T('errLogin'); return render(true); }
   SESS = {sid:'TEACHER', name:'Teacher', teacher:true, key:pw}; LS.set('mq_sess', SESS); msg = ''; view = 'teacher'; render(); refresh();
 }
+/* Teacher → real test student (ID 9999) এক click-এ, আলাদা ID/password না লিখে: roster থেকে password teacher key দিয়ে পড়ে real login করে */
+const TEST_SID = '9999'; let TSTMSG = '';
+async function asTestStudent(){
+  const t = SESS; if(!t || !t.teacher) return;
+  TSTMSG = 'Test student খোলা হচ্ছে…'; render(true);
+  try{
+    const ro = await jget(CONFIG.SCRIPT_URL + '?action=roster&key=' + encodeURIComponent(t.key) + '&t=' + Date.now());
+    const me = Array.isArray(ro) && ro.find(x => norm(x.id) === TEST_SID);
+    if(!me || !String(me.pin || '').trim()){ TSTMSG = 'Roster-এ test student (ID ' + TEST_SID + ') নেই বা password খালি — Students tab-এ add করো।'; return render(true); }
+    const r = await jget(CONFIG.SCRIPT_URL + '?action=login&sid=' + encodeURIComponent(TEST_SID) + '&pin=' + encodeURIComponent(String(me.pin).trim()) + '&t=' + Date.now());
+    if(!r || Array.isArray(r) || !r.ok){ TSTMSG = r && r.reason === 'blocked' ? 'Test student block করা আছে — Students tab থেকে unblock করো।' : 'Test student login হয়নি।'; return render(true); }
+    SESS = {sid:TEST_SID, name:r.name || TEST_SID, teacher:false, back:t}; LS.set('mq_sess', SESS); TSTMSG = ''; msg = ''; view = 'home'; render(); refresh();
+  }catch(e){ TSTMSG = 'Network সমস্যা — আবার চেষ্টা করো।'; render(true); }
+}
+function backToTeacher(){
+  if(!SESS || !SESS.back) return;
+  SESS = SESS.back; LS.set('mq_sess', SESS); TSTU = null; TSTMSG = ''; RUN = null; LS.del('mq_run'); view = 'teacher'; render(); refresh();
+}
 function logout(){ SESS = null; LS.del('mq_sess'); view = 'login'; LMODE = ''; TSTU = null; msg = ''; render(); }
 async function refresh(){
   loading = true; render(true);
@@ -88,7 +106,7 @@ async function refresh(){
 
 function vHome(){
   const s = SESS;
-  const top = `<div class="top"><div><b>${esc(s.name)}</b> <small>${s.guest ? '' : 'ID: ' + esc(s.sid)}</small></div><button class="link" onclick="logout()">${esc(T('logout'))}</button></div>${banner()}${vNotice()}`;
+  const top = `<div class="top"><div><b>${esc(s.name)}</b> <small>${s.guest ? '' : 'ID: ' + esc(s.sid)}</small></div>${s.back ? '<button class="btn sm" onclick="backToTeacher()">← Teacher-এ ফিরো</button>' : `<button class="link" onclick="logout()">${esc(T('logout'))}</button>`}</div>${s.back ? '<div class="notice info" style="margin:6px 0">🎓 তুমি এখন <b>Test student</b> হিসেবে আছো</div>' : ''}${banner()}${vNotice()}`;
   const intro = `${introFor ? `<div class="modal"><div class="card"><h2>${esc(introFor)}</h2><div>${esc(introOf(introFor))}</div>
     <div class="row"><button class="btn ghost" onclick="introFor='';render(true)">${esc(T('cancel'))}</button><button class="btn" onclick="const c=introFor;introFor='';startRun(c,'full')">${esc(T('introStart'))}</button></div></div></div>` : ''}`;
   if(s.guest){
