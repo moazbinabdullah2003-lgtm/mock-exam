@@ -119,14 +119,20 @@ Full details & sheet layouts: `docs/ARCHITECTURE.md`.
 
 ---------------------------------------------------------------------------------------------------
 
+## 4b. UI design (2026-11-16 redesign)
+
+Brand **Muaz's Classroom** (📚, tagline) — stored in live cfg `brand.title/emoji/tagline` (DEF_CFG has the same defaults). Principle: **few big things up front, details in collapsible folds**. Login = hero (logo, name, tagline) + 3 choice cards. Student home = hello + big exam-code box + 3 tiles (attempts/avg/best) + folds (focus topics, trend, retake, history). Result = big score + tiles + folds (topic-wise, review). Teacher dashboard = filter + 4 tiles + "⚠ মনোযোগ দরকার" (students <60%) + folds. Profile = 4 tiles + summary + folds. Fold helper: `sec(id,title,body,sub)` in `13` (state in `SO`, survives re-render). Tiles: `tile(v,label,color)` in `07`. Page-enter animation: `#app.enter` + `html.anim` (theme.anim). CSS classes: `.hero .choices .choice .tiles .tile .btn.lg .bigin` (don't use `.big` on buttons — it's the score style).
+
 ## 5. Settings engine (`src/js/02a-cfg.js`) — how "control everything" works
 
 One JSON object **CFG** = `deepMerge(DEF_CFG, remote)`. Teacher edits a draft `CD` in Settings; `sp('a.b.c', value)` updates `CD`, re-merges `CFG` and calls `applyTheme()` (**live preview**); **Save all changes** (`saveAll()` in 13) POSTs `savecfg` (+ `saveroster` if the roster tab was loaded) and polls until the server returns the same JSON. Students call `loadCfg()` on every page load/refresh (cached in `localStorage.mq_cfg` so the theme appears instantly).
 
 ```
 CFG = {
-  theme:  {preset, primary, bg, card, text, ok, bad, radius, font, family}          // 8 presets in PRESETS
-  brand:  {title, emoji, notice, noticeType:info|warn|good|bad, intro, footer}        // notice on login+home; intro = popup before every exam
+  theme:  {preset, primary, bg, card, text, ok, bad, radius, font, family,
+           bgStyle:plain|gradient|dots, shadow:none|soft|strong, density:compact|normal|roomy, width:narrow|normal|wide,
+           btnShape:rounded|pill|square, hero:22-48 (login title px), align:center|left, anim:bool}   // 8 presets in PRESETS; applyTheme sets CSS vars --pad --w --btnr --hero --sh
+  brand:  {title, tagline, emoji, notice, noticeType:info|warn|good|bad, intro, footer}        // notice on login+home; intro = popup before every exam
   text:   {<key>:override}   // every UI label; defaults in TX, used via T('key')
   access: {guest:true, teacherId:'teacher'}
   rules:  {review:'full'|'marks'|'none', explain, showScore, passMark, retake, mistakes, maxAttempts,

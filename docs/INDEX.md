@@ -26,6 +26,7 @@ Other source: `src/css/app.css` (theme variables `--p --bg --card --t --m --b --
 ## Task -> where to edit (open ONLY these)
 | Task | Edit |
 |---|---|
+| Overall look / folds / tiles / animation | `src/css/app.css`; `sec()` (`13`), `tile()` (`07`), `vHero()` (`06`); teacher-editable style keys in `DEF_CFG.theme` + `applyTheme` (`02a`) + fields in `vSettings` (`13`) |
 | Colors / layout / mobile look (defaults) | `src/css/app.css` (+ markup strings in the view module). Teacher-editable look: `PRESETS`/`DEF_CFG.theme`/`applyTheme` in `02a-cfg.js` |
 | **Add a teacher-editable setting** | default in `DEF_CFG` (`02a`) → field in `vSettings()` (`13`) → use `CFG.x.y` where needed. No backend change |
 | **Change a button/label text** | add to `TX` (`02a`), use `T('key')`; it becomes editable in Settings → Texts automatically |
