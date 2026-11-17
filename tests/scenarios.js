@@ -148,6 +148,7 @@ el('#sid').value = '008'; el('#pw').value = 'pw2'; await doLogin();
 TT.ok(!SESS, 'blocked student rejected');
 el('#sid').value = '007'; el('#pw').value = 'pw1'; await doLogin();
 TT.ok(SESS && !SESS.teacher && SESS.name === 'Rahim', 'student logged in');
+TT.eq([view, msg], ['home', ''], 'student login goes straight to home (no stuck "Checking…")');
 
 // 4b. ✕ Exit exam (cancel = nothing saved) + 🔖 vault (folders, sync)
 TT.eq(SESS.pin, 'pw1', 'student session keeps password for vault sync');

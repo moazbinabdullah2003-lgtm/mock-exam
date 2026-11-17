@@ -787,7 +787,8 @@ async function doLogin(){
   try{ r = await jget(CONFIG.SCRIPT_URL + '?action=login&sid=' + encodeURIComponent(sid) + '&pin=' + encodeURIComponent(pw) + '&t=' + Date.now()); }
   catch(e){ return netFail(e, 'doLogin'); }
   if(!r || Array.isArray(r) || !r.ok){ msg = r && r.reason === 'blocked' ? T('errBlocked') : T('errLogin'); return render(true); }
-  SESS = {sid, name:r.name || sid, teacher:false, pin:pw}; LS.set('mq_sess', SESS);   // pin: vault sync-এর জন্য msg = ''; view = 'home'; render(); refresh();
+  SESS = {sid, name:r.name || sid, teacher:false, pin:pw}; LS.set('mq_sess', SESS);   // pin: vault sync-এর জন্য
+  msg = ''; view = 'home'; render(); refresh();
 }
 /* Guest: শুধু নাম + exam code (ID/password লাগে না); ওই exam-ই দিতে পারবে */
 async function doGuest(){
@@ -844,7 +845,9 @@ function backToTeacher(){
 function logout(){ SESS = null; LS.del('mq_sess'); view = 'login'; LMODE = ''; TSTU = null; msg = ''; render(); }
 async function refresh(){
   loading = true; render(true);
-  await loadCfg(); await loadRemote(); if(SESS && SESS.teacher){ await loadExamList(); await loadReps(); } else await loadMyRep(); await ensureExams(); await flush();
+  // independent server calls একসাথে (Apps Script ধীর — পরপর করলে ~10s লাগত)
+  await Promise.all([loadCfg(), loadRemote(), SESS && SESS.teacher ? Promise.all([loadExamList(), loadReps()]) : loadMyRep()]);
+  await Promise.all([ensureExams(), flush()]);
   loading = false;
   if(view === 'home' || view === 'teacher') render(true);
   if(SESS && !SESS.teacher) vPull();
